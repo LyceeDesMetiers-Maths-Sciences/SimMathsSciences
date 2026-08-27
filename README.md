@@ -11,7 +11,6 @@ Chaque simulation est un fichier HTML autonome (aucune dépendance, fonctionne h
 | Simulation | Niveau |
 |---|---|
 | [Chimie CAP](./CAP_Chimie-A/Chimie%20CAP.html) | 1CAP — Chimie (échelle de l'univers, molécule, sécurité chimique, granulaire) |
-| [Électricité — Circuit (PhET)](./GOOD_sciences-PHET_1cap-Electricite-circuit-construction-kit-dc_fr.html) | 1CAP — Électricité |
 | [Chimie — pH](./GOOD_sciences-tbp-Chimie_pH-TermBP_Sc_ChimiePh_Sim.html) | Term BP — Chimie |
 | [Chimie — Synthèses organiques](./GOOD_sciences-tbp-Chimie_syntheses_organiques-TermBP_Sc_ChimieSynthesesOrganiques_Sim.html) | Term BP — Chimie |
 
