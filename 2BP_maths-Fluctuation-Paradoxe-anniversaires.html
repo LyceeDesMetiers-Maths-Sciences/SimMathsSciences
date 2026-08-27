@@ -564,6 +564,9 @@ function drawConvergence(canvasId,series,xMax,prob){
     const last=series[series.length-1];
     ctx.lineTo(padL+(last.x/xm)*pW,H-padB-last.y*pH);ctx.stroke();
   }
+  const xLbl={expGraph:'nombre de parties',freqGraph:'nombre de lancers'}[canvasId]||'';
+  ctx.fillStyle='#cbd5e1';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText(xLbl,padL+pW/2,H-6);
 }
 
 function drawNFnGraph(){
@@ -599,6 +602,8 @@ function drawNFnGraph(){
     ctx.fillStyle='rgba(251,191,36,.9)';ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();
   });
+  ctx.fillStyle='#cbd5e1';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText('n (nombre de personnages)',padL+pW/2,H-6);
 }
 
 let probCells=[],probMode='compl';
