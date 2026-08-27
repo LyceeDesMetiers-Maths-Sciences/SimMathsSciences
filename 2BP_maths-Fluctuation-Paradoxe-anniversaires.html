@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paradoxe des Anniversaires — SMS</title>
+<style>
+  :root{
+    --primary:#6366f1;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+    --bg:#0f172a;--surface:#1e293b;--surface2:#334155;--text:#f1f5f9;
+    --dim:#94a3b8;--border:#475569;--blue:#3b82f6;--green:#22c55e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:radial-gradient(ellipse at top,#1e1b4b 0%,var(--bg) 60%);color:var(--text);min-height:100vh;padding:15px;}
+  .container{max-width:1400px;margin:0 auto;}
+  header{text-align:center;padding:12px;margin-bottom:12px;}
+  header h1{font-size:1.7em;background:linear-gradient(90deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  header p{color:var(--dim);margin-top:3px;font-size:.9em;}
+  .badge{display:inline-block;margin-top:6px;padding:3px 12px;background:var(--primary);border-radius:20px;font-size:.72em;font-weight:600;}
+
+  .tabs{display:flex;gap:10px;margin-bottom:15px;}
+  .tab{flex:1;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;font-weight:600;transition:all .2s;font-size:.9em;}
+  .tab.active{background:var(--primary);border-color:var(--primary);}
+  .tab:hover:not(.active){background:var(--surface2);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;animation:fadeIn .3s;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:15px;}
+  .card h2{color:#a78bfa;font-size:1.05em;margin-bottom:10px;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:12px;}
+  .control-group{display:flex;flex-direction:column;gap:4px;}
+  .control-group label{font-size:.78em;color:var(--dim);}
+  input[type=range]{width:140px;accent-color:var(--primary);}
+  input[type=number]{width:80px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;}
+  button{padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all .2s;font-size:.85em;}
+  button:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px);}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+  button.success{background:var(--success);}button.warning{background:var(--warning);}
+  button.secondary{background:var(--surface2);}
+
+  .j-presets{display:flex;gap:6px;}
+  .j-btn{padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.8em;color:var(--dim);}
+  .j-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+  .exp-layout{display:grid;grid-template-columns:320px 1fr 320px;gap:14px;align-items:start;}
+  @media(max-width:1050px){.exp-layout{grid-template-columns:1fr;}}
+  .freq-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start;}
+  @media(max-width:900px){.freq-layout{grid-template-columns:1fr;}}
+  .prob-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start;}
+  @media(max-width:900px){.prob-layout{grid-template-columns:1fr;}}
+
+  .panel-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;}
+  .panel-box h3{font-size:.8em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+
+  .circle-wrap{position:relative;width:100%;aspect-ratio:1;max-width:300px;margin:0 auto;}
+  .circle-bg{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(148,163,184,.2);}
+  .person-disc{position:absolute;width:42px;height:42px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:translate(-50%,-50%);transition:all .3s;z-index:2;font-size:.95em;}
+  .person-disc .p-day{font-size:.7em;font-weight:bold;color:var(--dim);}
+  .person-disc.drawn{border-color:var(--blue);background:rgba(59,130,246,.2);}
+  .person-disc.drawn .p-day{color:#93c5fd;}
+
+  /* Calendrier annuel : 4 colonnes de mois, sans ascenseur */
+  .year-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+  .month-box{background:var(--surface2);border-radius:4px;padding:3px;border:1px solid var(--border);}
+  .month-name{text-align:center;font-size:.5em;font-weight:bold;color:#a78bfa;margin-bottom:1px;text-transform:uppercase;line-height:1.1;white-space:nowrap;overflow:hidden;}
+  .month-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+  .day-cell{aspect-ratio:1;background:var(--bg);border-radius:1px;transition:background .3s;position:relative;min-width:0;}
+
+  .simp-grid{display:grid;gap:5px;}
+  .simp-cell{aspect-ratio:1;background:var(--surface2);border-radius:5px;display:flex;align-items:center;justify-content:center;position:relative;transition:all .3s;border:1px solid transparent;font-size:.7em;color:var(--dim);}
+  .simp-cell .cnt{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;border-radius:9px;background:var(--blue);color:#fff;font-size:.65em;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 3px;opacity:0;transition:opacity .3s;}
+  .simp-cell.occ{border-color:var(--blue);background:rgba(59,130,246,.2);}
+  .simp-cell.occ .cnt{opacity:1;}
+
+  .result-msg{margin-top:12px;padding:11px;border-radius:10px;text-align:center;font-weight:600;font-size:.92em;min-height:42px;display:flex;align-items:center;justify-content:center;background:var(--bg);border:1px dashed var(--border);color:var(--dim);}
+  .result-msg.win{background:rgba(34,197,94,.12);border:1px solid var(--green);color:#86efac;}
+  .result-msg.loss{background:rgba(59,130,246,.1);border:1px solid var(--blue);color:#93c5fd;}
+
+  .gamification-bar{display:flex;align-items:center;gap:12px;margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);}
+  .xp-section{flex:1;}
+  .xp-bar{background:var(--surface2);border-radius:20px;height:14px;overflow:hidden;margin-top:4px;}
+  .xp-fill{background:linear-gradient(90deg,#10b981,#34d399);height:100%;width:0%;transition:width .5s;}
+  .level-badge{padding:4px 12px;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:20px;font-weight:bold;font-size:.78em;white-space:nowrap;}
+  .coins{font-size:1.05em;font-weight:bold;color:#fbbf24;}
+
+  .counters{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;}
+  .counter{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center;}
+  .counter .val{font-size:1.25em;font-weight:bold;}
+  .counter .lbl{font-size:.7em;color:var(--dim);margin-top:2px;}
+  .counter.f .val{color:#fbbf24;}
+  .counter.p .val{color:#34d399;}
+
+  canvas{background:var(--bg);border-radius:10px;width:100%;display:block;border:1px solid var(--border);}
+  .legend{display:flex;gap:12px;justify-content:center;margin-top:5px;font-size:.7em;color:var(--dim);flex-wrap:wrap;}
+
+  .info-box{background:rgba(99,102,241,.1);border-left:3px solid var(--primary);padding:11px;border-radius:8px;margin:10px 0;font-size:.85em;line-height:1.6;}
+  .info-box strong{color:#a78bfa;}
+
+  .code-block{background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:14px;font-family:Consolas,Monaco,monospace;font-size:.82em;line-height:1.8;overflow-x:auto;white-space:pre;}
+  .code-block .line{display:block;padding:1px 0 1px 10px;border-left:3px solid transparent;transition:all .3s;}
+  .code-block .line.active{background:rgba(251,191,36,.15);border-left-color:#fbbf24;}
+  .kw{color:#ff7b72;}.num{color:#79c0ff;}.com{color:#8b949e;font-style:italic;}.fn{color:#d2a8ff;}.str{color:#a5d6ff;}
+
+  .swap-zone{display:flex;align-items:center;justify-content:center;gap:15px;margin:12px 0;}
+  .swap-btn{padding:10px 20px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;font-weight:bold;transition:all .2s;font-size:.9em;}
+  .swap-btn.active-compl{background:rgba(34,197,94,.2);border-color:var(--green);color:#86efac;}
+  .swap-btn.active-event{background:rgba(245,158,11,.2);border-color:var(--warning);color:#fcd34d;}
+  .swap-arrow{font-size:1.4em;color:var(--dim);}
+
+  .prod-display{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:12px;font-family:Consolas,monospace;text-align:center;}
+  .prod-terms{font-size:.9em;color:var(--dim);line-height:2;min-height:40px;}
+  .prod-terms .term{display:inline-block;padding:2px 6px;margin:2px;border-radius:5px;background:var(--surface2);transition:all .3s;}
+  .prod-terms .term.active{background:rgba(251,191,36,.3);color:#fcd34d;}
+  .prod-result{font-size:1.4em;font-weight:bold;color:#34d399;margin-top:8px;}
+
+  .var-table-wrap{margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;max-height:200px;overflow-y:auto;}
+  .var-table{width:100%;border-collapse:collapse;font-size:.78em;font-family:Consolas,monospace;}
+  .var-table th,.var-table td{padding:4px 7px;text-align:center;border-bottom:1px solid var(--border);}
+  .var-table th{background:var(--surface2);color:#a78bfa;position:sticky;top:0;}
+  .var-table td{color:var(--dim);}
+  .var-table .pval{color:#34d399;font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🎂 Le Paradoxe des Anniversaires</h1>
+    <p>Fluctuation de fréquence & algorithmique</p>
+    <span class="badge">PROJET SMS · SIMMATHSSCIENCES</span>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">🎮 1. Expérimentale</div>
+    <div class="tab" onclick="switchTab(1)">🎲 2. Fréquentiste</div>
+    <div class="tab" onclick="switchTab(2)">📐 3. Probabiliste</div>
+  </div>
+
+  <!-- ============ 1. EXPÉRIMENTALE ============ -->
+  <div class="tab-content active" id="tab-0">
+    <div class="card">
+      <h2>🎮 Expérimentation — joue et observe</h2>
+      <div class="controls">
+        <div class="control-group">
+          <label>Personnages (n) : <span id="expKVal" style="color:#fbbf24;font-weight:bold;">5</span></label>
+          <input type="range" id="expKSlider" min="2" max="60" value="5">
+        </div>
+        <button class="success" id="btnExpPlay">▶ Jouer</button>
+        <div class="control-group">
+          <label>Répéter</label>
+          <input type="number" id="expBatchN" value="20" min="1" max="5000">
+        </div>
+        <button class="warning" id="btnExpBatch">🔁 Répéter</button>
+        <button class="secondary" id="btnExpReset">🔄 Reset</button>
+      </div>
+
+      <div class="exp-layout">
+        <div class="panel-box">
+          <h3>Personnages</h3>
+          <div class="circle-wrap"><div class="circle-bg"></div><div id="expCircle"></div></div>
+        </div>
+        <div class="panel-box">
+          <h3>Calendrier (365 jours)</h3>
+          <div class="year-grid" id="expCalendar"></div>
+        </div>
+        <div>
+          <div class="panel-box" style="margin-bottom:10px;">
+            <h3>Fréquence des collisions</h3>
+            <canvas id="expGraph" height="180"></canvas>
+          </div>
+          <div class="panel-box">
+            <h3>Statistiques</h3>
+            <div class="counters">
+              <div class="counter"><div class="val" id="expRuns">0</div><div class="lbl">Parties</div></div>
+              <div class="counter"><div class="val" id="expWins">0</div><div class="lbl">Collisions</div></div>
+              <div class="counter f"><div class="val" id="expFreq">—</div><div class="lbl">Fréquence</div></div>
+              <div class="counter p"><div class="val" id="expProb">—</div><div class="lbl">Théorie</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-box" style="margin-top:10px;">
+        <h3>Graphe n ↦ f(n)</h3>
+        <canvas id="nfnGraph" height="240"></canvas>
+        <div class="legend">
+          <span><span style="color:#fbbf24;">●</span> Points expérimentaux (un point = m répétitions)</span>
+          <span><span style="color:#34d399;">—</span> Courbe théorique (365 jours)</span>
+        </div>
+      </div>
+
+      <div class="result-msg" id="expMsg">Choisis un nombre de personnages et joue.</div>
+
+      <div class="gamification-bar">
+        <div class="xp-section">
+          <div style="display:flex;justify-content:space-between;font-size:.78em;">
+            <span style="color:var(--dim);">XP : <span id="xpText">0</span></span>
+            <span class="level-badge" id="levelBadge">🌱 Débutant</span>
+          </div>
+          <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+        </div>
+        <div class="coins" id="coinsDisplay">🪙 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. FRÉQUENTISTE ============ -->
+  <div class="tab-content" id="tab-1">
+    <div class="card">
+      <h2>🎲 Fréquentiste — simuler et mesurer la fréquence</h2>
+      <div class="controls">
+        <div class="control-group">
+          <label>Personnages (k) : <span id="freqKVal" style="color:#fbbf24;font-weight:bold;">5</span></label>
+          <input type="range" id="freqKSlider" min="2" max="60" value="5">
+        </div>
+        <div class="control-group">
+          <label>Jours (J)</label>
+          <div class="j-presets" id="freqJPresets">
+            <div class="j-btn" data-j="12">12</div>
+            <div class="j-btn active" data-j="30">30</div>
+            <div class="j-btn" data-j="100">100</div>
+            <div class="j-btn" data-j="365">365</div>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Nombre de lancers</label>
+          <input type="number" id="batchN" value="200" min="1" max="20000">
+        </div>
+        <button class="success" id="btnFreqPlay">▶ 1 lancer</button>
+        <button class="warning" id="btnFreqBatch">🔁 Lancer le lot</button>
+        <button class="secondary" id="btnFreqReset">🔄 Reset</button>
+      </div>
+
+      <div class="freq-layout">
+        <div class="panel-box">
+          <h3>Tirage (<span id="freqJLabel">30</span> jours)</h3>
+          <div class="circle-wrap" style="max-width:260px;margin-bottom:12px;"><div class="circle-bg"></div><div id="freqCircle"></div></div>
+          <div class="simp-grid" id="freqCalendar"></div>
+        </div>
+        <div>
+          <div class="panel-box" style="margin-bottom:10px;">
+            <h3>Convergence de la fréquence</h3>
+            <canvas id="freqGraph" height="220"></canvas>
+            <div class="legend">
+              <span><span style="color:#fbbf24;">●</span> Fréquence observée</span>
+              <span><span style="color:#34d399;">—</span> Probabilité théorique</span>
+            </div>
+            <div class="counters" style="grid-template-columns:repeat(4,1fr);">
+              <div class="counter"><div class="val" id="fRuns">0</div><div class="lbl">Lancers</div></div>
+              <div class="counter"><div class="val" id="fMatches">0</div><div class="lbl">Collisions</div></div>
+              <div class="counter f"><div class="val" id="fFreq">—</div><div class="lbl">Fréquence</div></div>
+              <div class="counter p"><div class="val" id="fProb">—</div><div class="lbl">Théorie</div></div>
+            </div>
+          </div>
+          <div class="panel-box">
+            <h3>Code Python — simulation</h3>
+            <div class="code-block" id="simCode"></div>
+          </div>
+        </div>
+      </div>
+      <div class="result-msg" id="freqMsg">Choisis k et J, puis lance un lot de simulations.</div>
+    </div>
+  </div>
+
+  <!-- ============ 3. PROBABILISTE ============ -->
+  <div class="tab-content" id="tab-2">
+    <div class="card">
+      <h2>📐 Probabiliste — calculer exactement par l'événement contraire</h2>
+      <div class="info-box">
+        Calculer « <strong>au moins une collision</strong> » directement est complexe. On passe par l'<strong>événement contraire</strong> :
+        « <strong>aucune collision</strong> », plus simple, puis <strong>P(A) = 1 − P(Ā)</strong>.
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label>Personnages (k) : <span id="probKVal" style="color:#fbbf24;font-weight:bold;">5</span></label>
+          <input type="range" id="probKSlider" min="2" max="60" value="5">
+        </div>
+        <div class="control-group">
+          <label>Jours (J)</label>
+          <div class="j-presets" id="probJPresets">
+            <div class="j-btn" data-j="12">12</div>
+            <div class="j-btn active" data-j="30">30</div>
+            <div class="j-btn" data-j="100">100</div>
+            <div class="j-btn" data-j="365">365</div>
+          </div>
+        </div>
+        <button class="success" id="btnProbAnim">▶ Animer le calcul</button>
+      </div>
+
+      <div class="prob-layout">
+        <div class="panel-box">
+          <h3>Représentation concrète</h3>
+          <div class="swap-zone">
+            <div class="swap-btn active-compl" id="btnCompl">Ā : aucune collision</div>
+            <div class="swap-arrow">⇄</div>
+            <div class="swap-btn" id="btnEvent">A : au moins une collision</div>
+          </div>
+          <div id="probDesc" style="font-size:.85em;color:var(--dim);text-align:center;margin-bottom:10px;">
+            Tous les personnages ont des jours <strong style="color:#86efac;">distincts</strong>.
+          </div>
+          <div class="simp-grid" id="probCalendar"></div>
+          <div class="prod-display">
+            <div style="font-size:.75em;color:var(--dim);margin-bottom:6px;">P(Ā) = produit des facteurs</div>
+            <div class="prod-terms" id="prodTerms"></div>
+            <div class="prod-result" id="prodResult">—</div>
+          </div>
+        </div>
+        <div>
+          <div class="panel-box" style="margin-bottom:10px;">
+            <h3>Code Python — calcul exact</h3>
+            <div class="code-block" id="probCode"></div>
+          </div>
+          <div class="panel-box">
+            <h3>Résultat</h3>
+            <div class="prod-display" id="probFinalBox" style="margin-top:0;">
+              <div style="font-size:.75em;color:var(--dim);">Probabilité exacte P(A)</div>
+              <div class="prod-result" id="probFinal">—</div>
+              <div style="font-size:.8em;color:var(--dim);margin-top:6px;" id="probCompare"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let k=5;
+let J_freq=30, J_prob=30;
+let expRuns=0,expWins=0,expSeries=[];
+let fRuns=0,fMatches=0,fSeries=[];
+let nfnPoints=[];
+let xp=0,coins=0;
+const levels=[{min:0,name:'🌱 Débutant'},{min:25,name:'🔬 Observateur'},{min:50,name:'🎲 Simulateur'},{min:80,name:'📊 Statisticien'},{min:100,name:'🏆 Expert SMS'}];
+const PALETTE=['#f87171','#fbbf24','#34d399','#60a5fa','#c084fc','#f472b6','#fb923c','#a3e635','#22d3ee','#e879f9'];
+const MONTHS=[{n:'Jan',d:31},{n:'Fév',d:28},{n:'Mar',d:31},{n:'Avr',d:30},{n:'Mai',d:31},{n:'Juin',d:30},{n:'Juil',d:31},{n:'Aoû',d:31},{n:'Sep',d:30},{n:'Oct',d:31},{n:'Nov',d:30},{n:'Déc',d:31}];
+
+function theoreticalProb(kk,JJ){if(kk>JJ)return 1;let p=1;for(let i=0;i<kk;i++)p*=(JJ-i)/JJ;return 1-p;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-content').forEach((c,j)=>c.classList.toggle('active',j===i));
+  if(i===0)drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));
+  if(i===1)drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));
+}
+
+function buildCircle(containerId,n){
+  const c=document.getElementById(containerId);
+  c.innerHTML='';
+  const size=c.parentElement.clientWidth||300;
+  const cx=size/2,cy=size/2;
+  const R=size/2-28;
+  const psize=n<=12?42:n<=30?34:26;
+  const els=[];
+  for(let i=0;i<n;i++){
+    const a=(i/n)*2*Math.PI-Math.PI/2;
+    const x=cx+R*Math.cos(a);
+    const y=cy+R*Math.sin(a);
+    const d=document.createElement('div');
+    d.className='person-disc';
+    d.style.left=x+'px';d.style.top=y+'px';
+    d.style.width=psize+'px';d.style.height=psize+'px';
+    d.style.fontSize=(psize*0.5)+'px';
+    d.innerHTML='<span>🧑</span><span class="p-day">?</span>';
+    c.appendChild(d);
+    els.push(d);
+  }
+  return els;
+}
+
+let expPeople=[],expCells=[];
+function buildExpCalendar(){
+  const g=document.getElementById('expCalendar');
+  g.innerHTML='';expCells=[];
+  let gd=1;
+  MONTHS.forEach(m=>{
+    const mb=document.createElement('div');mb.className='month-box';
+    mb.innerHTML='<div class="month-name">'+m.n+'</div>';
+    const dg=document.createElement('div');dg.className='month-days';
+    for(let i=0;i<m.d;i++){
+      const c=document.createElement('div');c.className='day-cell';
+      c.dataset.day=gd;c.title='Jour '+gd;
+      dg.appendChild(c);expCells.push(c);gd++;
+    }
+    mb.appendChild(dg);g.appendChild(mb);
+  });
+}
+function resetExp(){
+  expPeople.forEach(p=>{p.classList.remove('drawn');p.querySelector('.p-day').textContent='?';p.style.borderColor='';});
+  expCells.forEach(c=>{c.className='day-cell';c.style.background='';});
+}
+async function playExp(){
+  const btn=document.getElementById('btnExpPlay');btn.disabled=true;
+  resetExp();
+  const days=[],count={};
+  for(let i=0;i<k;i++){
+    const d=1+Math.floor(Math.random()*365);
+    days.push(d);count[d]=(count[d]||0)+1;
+    expPeople[i].classList.add('drawn');
+    expPeople[i].querySelector('.p-day').textContent=d;
+    expCells[d-1].style.background='rgba(59,130,246,.5)';
+    await sleep(80);
+  }
+  const collisionDays=Object.keys(count).filter(d=>count[d]>=2).map(Number);
+  const collision=collisionDays.length>0;
+  collisionDays.forEach((d,idx)=>{
+    const col=PALETTE[idx%PALETTE.length];
+    expCells[d-1].style.background=col;
+    days.forEach((dd,i)=>{if(dd===d)expPeople[i].style.borderColor=col;});
+  });
+  const msg=document.getElementById('expMsg');
+  if(collision){
+    msg.className='result-msg win';
+    msg.textContent='🎉 Collision ! Jour(s) '+collisionDays.join(', ')+' — gagné';
+    expWins++;addCoins(Math.round(1000/k));addXP(5);
+  }else{
+    msg.className='result-msg loss';
+    msg.textContent='Aucune collision : '+k+' jours tous distincts.';
+    addXP(2);
+  }
+  expRuns++;
+  expSeries.push({x:expRuns,y:expWins/expRuns});
+  updateExpCounters();drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));
+  btn.disabled=false;
+}
+function playExpBatch(){
+  const N=parseInt(document.getElementById('expBatchN').value);
+  if(isNaN(N)||N<1){alert('Nombre invalide');return;}
+  let lastDays=null,lastCount=null;
+  let batchWins=0;
+  for(let t=0;t<N;t++){
+    const days=[],count={};
+    for(let i=0;i<k;i++){const d=1+Math.floor(Math.random()*365);days.push(d);count[d]=(count[d]||0)+1;}
+    const collision=Object.keys(count).some(d=>count[d]>=2);
+    expRuns++;if(collision){expWins++;batchWins++;}
+    expSeries.push({x:expRuns,y:expWins/expRuns});
+    lastDays=days;lastCount=count;
+  }
+  nfnPoints.push({n:k,f:batchWins/N});
+  drawNFnGraph();
+  resetExp();
+  lastDays.forEach((d,i)=>{expPeople[i].classList.add('drawn');expPeople[i].querySelector('.p-day').textContent=d;expCells[d-1].style.background='rgba(59,130,246,.5)';});
+  const cd=Object.keys(lastCount).filter(d=>lastCount[d]>=2).map(Number);
+  cd.forEach((d,idx)=>{const col=PALETTE[idx%PALETTE.length];expCells[d-1].style.background=col;lastDays.forEach((dd,i)=>{if(dd===d)expPeople[i].style.borderColor=col;});});
+  updateExpCounters();drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));
+  const msg=document.getElementById('expMsg');
+  msg.className='result-msg win';
+  msg.textContent='📊 '+N+' parties jouées — dernière partie affichée.';
+  addXP(Math.min(10,Math.floor(N/10)));
+}
+function updateExpCounters(){
+  document.getElementById('expRuns').textContent=expRuns;
+  document.getElementById('expWins').textContent=expWins;
+  document.getElementById('expFreq').textContent=expRuns?(expWins/expRuns*100).toFixed(1)+'%':'—';
+  document.getElementById('expProb').textContent=(theoreticalProb(k,365)*100).toFixed(1)+'%';
+}
+function addCoins(a){coins+=a;document.getElementById('coinsDisplay').textContent='🪙 '+coins;}
+function addXP(a){
+  xp=Math.min(200,xp+a);
+  document.getElementById('xpFill').style.width=Math.min(100,xp)+'%';
+  document.getElementById('xpText').textContent=xp;
+  let l=levels[0];for(const x of levels)if(xp>=x.min)l=x;
+  document.getElementById('levelBadge').textContent=l.name;
+}
+
+let freqPeople=[],freqCells=[];
+function buildFreqCalendar(){
+  const g=document.getElementById('freqCalendar');
+  g.innerHTML='';freqCells=[];
+  document.getElementById('freqJLabel').textContent=J_freq;
+  const cols=J_freq<=12?6:J_freq<=30?10:J_freq<=100?10:20;
+  g.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  for(let d=1;d<=J_freq;d++){
+    const c=document.createElement('div');c.className='simp-cell';
+    c.innerHTML=(J_freq<=100?d:'')+'<span class="cnt"></span>';
+    g.appendChild(c);freqCells.push(c);
+  }
+}
+function resetFreq(){
+  freqPeople.forEach(p=>{p.classList.remove('drawn');p.querySelector('.p-day').textContent='?';p.style.borderColor='';});
+  freqCells.forEach(c=>{c.classList.remove('occ');c.style.background='';c.style.borderColor='';c.querySelector('.cnt').textContent='';});
+}
+function simulate(kk,JJ){
+  const days=[],count={};
+  for(let i=0;i<kk;i++){const d=1+Math.floor(Math.random()*JJ);days.push(d);count[d]=(count[d]||0)+1;}
+  const collisionDays=Object.keys(count).filter(d=>count[d]>=2).map(Number);
+  return{days,count,collision:collisionDays.length>0,collisionDays};
+}
+function renderFreq(res){
+  resetFreq();
+  res.days.forEach((d,i)=>{
+    freqPeople[i].classList.add('drawn');
+    freqPeople[i].querySelector('.p-day').textContent=d;
+    freqCells[d-1].classList.add('occ');
+    freqCells[d-1].querySelector('.cnt').textContent=res.count[d];
+  });
+  res.collisionDays.forEach((d,idx)=>{
+    const col=PALETTE[idx%PALETTE.length];
+    freqCells[d-1].style.background=col;
+    freqCells[d-1].style.borderColor=col;
+    res.days.forEach((dd,i)=>{if(dd===d)freqPeople[i].style.borderColor=col;});
+  });
+}
+async function playFreqSingle(){
+  const res=simulate(k,J_freq);
+  renderFreq(res);
+  fRuns++;if(res.collision)fMatches++;
+  fSeries.push({x:fRuns,y:fMatches/fRuns});
+  updateFreqCounters();drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));
+  const msg=document.getElementById('freqMsg');
+  msg.className=res.collision?'result-msg win':'result-msg loss';
+  msg.textContent=res.collision?'🎉 Collision détectée.':'Aucune collision cette fois.';
+}
+function runFreqBatch(){
+  const N=parseInt(document.getElementById('batchN').value);
+  if(isNaN(N)||N<1){alert('Nombre invalide');return;}
+  let last=null;const sampleEvery=Math.max(1,Math.floor(N/500));
+  for(let t=1;t<=N;t++){
+    const r=simulate(k,J_freq);last=r;
+    fRuns++;if(r.collision)fMatches++;
+    if(t%sampleEvery===0||t===N)fSeries.push({x:fRuns,y:fMatches/fRuns});
+  }
+  renderFreq(last);
+  updateFreqCounters();drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));
+  const msg=document.getElementById('freqMsg');
+  msg.className='result-msg win';
+  msg.textContent='📊 '+fRuns+' lancers | '+fMatches+' collisions | f='+(fMatches/fRuns*100).toFixed(2)+'% | théorie='+(theoreticalProb(k,J_freq)*100).toFixed(2)+'%';
+}
+function updateFreqCounters(){
+  document.getElementById('fRuns').textContent=fRuns;
+  document.getElementById('fMatches').textContent=fMatches;
+  document.getElementById('fFreq').textContent=fRuns?(fMatches/fRuns*100).toFixed(2)+'%':'—';
+  document.getElementById('fProb').textContent=(theoreticalProb(k,J_freq)*100).toFixed(2)+'%';
+}
+
+function drawConvergence(canvasId,series,xMax,prob){
+  const cv=document.getElementById(canvasId);
+  const cssW=cv.clientWidth||500;cv.width=cssW;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const padL=42,padR=12,padT=12,padB=30;
+  const pW=W-padL-padR,pH=H-padT-padB;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(148,163,184,.15)';ctx.lineWidth=1;
+  ctx.fillStyle='#94a3b8';ctx.font='10px sans-serif';ctx.textAlign='right';
+  for(let pc=0;pc<=100;pc+=25){const y=H-padB-(pc/100)*pH;ctx.fillText(pc+'%',padL-4,y+3);ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();}
+  const xm=Math.max(xMax,10);
+  ctx.textAlign='center';const xs=Math.max(1,Math.ceil(xm/6));
+  for(let x=0;x<=xm;x+=xs){ctx.fillText(x,padL+(x/xm)*pW,H-padB+13);}
+  ctx.strokeStyle='#475569';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,H-padB);ctx.lineTo(W-padR,H-padB);ctx.stroke();
+  const yP=H-padB-prob*pH;
+  ctx.strokeStyle='#34d399';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(padL,yP);ctx.lineTo(W-padR,yP);ctx.stroke();ctx.setLineDash([]);
+  if(series.length){
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.beginPath();
+    const step=Math.max(1,Math.floor(series.length/600));let first=true;
+    for(let i=0;i<series.length;i+=step){
+      const pt=series[i];const px=padL+(pt.x/xm)*pW;const py=H-padB-pt.y*pH;
+      if(first){ctx.moveTo(px,py);first=false;}else ctx.lineTo(px,py);
+    }
+    const last=series[series.length-1];
+    ctx.lineTo(padL+(last.x/xm)*pW,H-padB-last.y*pH);ctx.stroke();
+  }
+}
+
+function drawNFnGraph(){
+  const cv=document.getElementById('nfnGraph');
+  const cssW=cv.clientWidth||500;cv.width=cssW;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const padL=42,padR=12,padT=14,padB=30;
+  const pW=W-padL-padR,pH=H-padT-padB;
+  ctx.clearRect(0,0,W,H);
+  // grille horizontale (fréquence en %)
+  ctx.strokeStyle='rgba(148,163,184,.15)';ctx.lineWidth=1;
+  ctx.fillStyle='#94a3b8';ctx.font='10px sans-serif';ctx.textAlign='right';
+  for(let pc=0;pc<=100;pc+=20){const y=H-padB-(pc/100)*pH;ctx.fillText(pc+'%',padL-4,y+3);ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();}
+  // axe des abscisses : n (nombre de personnages)
+  const xMax=60;
+  ctx.textAlign='center';
+  for(let n=0;n<=xMax;n+=10){const x=padL+(n/xMax)*pW;ctx.fillText(n,x,H-padB+13);}
+  // axes
+  ctx.strokeStyle='#475569';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,H-padB);ctx.lineTo(W-padR,H-padB);ctx.stroke();
+  // courbe théorique (365 jours)
+  ctx.strokeStyle='#34d399';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();let first=true;
+  for(let n=2;n<=xMax;n++){
+    const x=padL+(n/xMax)*pW;const y=H-padB-theoreticalProb(n,365)*pH;
+    if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+  }
+  ctx.stroke();ctx.setLineDash([]);
+  // points expérimentaux (un point = une expérience de m répétitions pour n personnages)
+  nfnPoints.forEach(pt=>{
+    const x=padL+(pt.n/xMax)*pW;const y=H-padB-pt.f*pH;
+    ctx.fillStyle='rgba(251,191,36,.9)';ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+  });
+}
+
+let probCells=[],probMode='compl';
+const simPyLines=[
+  {i:0,h:'<span class="kw">from</span> random <span class="kw">import</span> randint'},
+  {i:0,h:''},
+  {i:0,h:'<span class="kw">def</span> <span class="fn">simuler</span>(k, J):'},
+  {i:1,h:'<span class="com"># renvoie True si au moins une collision</span>'},
+  {i:1,h:'jours = []'},
+  {i:1,h:'<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k):'},
+  {i:2,h:'d = <span class="fn">randint</span>(<span class="num">1</span>, J)'},
+  {i:2,h:'<span class="kw">if</span> d <span class="kw">in</span> jours:'},
+  {i:3,h:'<span class="kw">return</span> <span class="kw">True</span>'},
+  {i:2,h:'jours.append(d)'},
+  {i:1,h:'<span class="kw">return</span> <span class="kw">False</span>'},
+  {i:0,h:''},
+  {i:0,h:'N = <span class="num">1000</span>'},
+  {i:0,h:'compteur = <span class="fn">sum</span>(<span class="fn">simuler</span>(k, J) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(N))'},
+  {i:0,h:'frequence = compteur / N'}
+];
+const probPyLines=[
+  {i:0,h:'<span class="kw">def</span> <span class="fn">proba_collision</span>(k, J):'},
+  {i:1,h:'<span class="com"># événement contraire : aucune collision</span>'},
+  {i:1,h:'p_sans = <span class="num">1</span>'},
+  {i:1,h:'<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k):'},
+  {i:2,h:'p_sans *= (J - i) / J'},
+  {i:1,h:'<span class="com"># P(A) = 1 - P(Ā)</span>'},
+  {i:1,h:'<span class="kw">return</span> <span class="num">1</span> - p_sans'}
+];
+function buildCode(elId,lines){
+  const box=document.getElementById(elId);box.innerHTML='';
+  lines.forEach((l,idx)=>{
+    const d=document.createElement('div');d.className='line';d.dataset.line=idx;
+    d.innerHTML='\u00A0'.repeat(l.i*4)+l.h;
+    box.appendChild(d);
+  });
+}
+function buildProbCalendar(){
+  const g=document.getElementById('probCalendar');
+  g.innerHTML='';probCells=[];
+  const cols=J_prob<=12?6:J_prob<=30?10:10;
+  g.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  for(let d=1;d<=J_prob;d++){
+    const c=document.createElement('div');c.className='simp-cell';
+    c.innerHTML=(J_prob<=100?d:'');
+    g.appendChild(c);probCells.push(c);
+  }
+}
+function renderProbMode(){
+  probCells.forEach(c=>{c.classList.remove('occ');c.style.background='';c.style.borderColor='';});
+  const desc=document.getElementById('probDesc');
+  if(probMode==='compl'){
+    const pool=[...Array(J_prob).keys()].map(x=>x+1);
+    const chosen=[];
+    for(let i=0;i<Math.min(k,J_prob);i++){
+      const idx=Math.floor(Math.random()*pool.length);
+      chosen.push(pool.splice(idx,1)[0]);
+    }
+    chosen.forEach(d=>{probCells[d-1].classList.add('occ');probCells[d-1].style.background='rgba(34,197,94,.4)';probCells[d-1].style.borderColor='#22c55e';});
+    desc.innerHTML='Ā : tous les personnages ont des jours <strong style="color:#86efac;">distincts</strong> (aucune collision).';
+    document.getElementById('btnCompl').className='swap-btn active-compl';
+    document.getElementById('btnEvent').className='swap-btn';
+  }else{
+    const pool=[...Array(J_prob).keys()].map(x=>x+1);
+    const chosen=[];
+    const fixed=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    chosen.push(fixed,fixed);
+    for(let i=2;i<k;i++){if(pool.length)chosen.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);}
+    const count={};chosen.forEach(d=>count[d]=(count[d]||0)+1);
+    chosen.forEach(d=>{
+      probCells[d-1].classList.add('occ');
+      if(count[d]>=2){probCells[d-1].style.background='rgba(245,158,11,.5)';probCells[d-1].style.borderColor='#f59e0b';}
+      else{probCells[d-1].style.background='rgba(59,130,246,.3)';probCells[d-1].style.borderColor='#3b82f6';}
+    });
+    desc.innerHTML='A : au moins deux personnages partagent le <strong style="color:#fcd34d;">même jour</strong> (collision).';
+    document.getElementById('btnEvent').className='swap-btn active-event';
+    document.getElementById('btnCompl').className='swap-btn';
+  }
+}
+async function animateProb(){
+  const btn=document.getElementById('btnProbAnim');btn.disabled=true;
+  const terms=document.getElementById('prodTerms');
+  const resEl=document.getElementById('prodResult');
+  terms.innerHTML='';resEl.textContent='—';
+  document.querySelectorAll('#probCode .line').forEach(l=>l.classList.remove('active'));
+  highlightProb(2);
+  let p=1;
+  await sleep(400);
+  for(let i=0;i<k;i++){
+    highlightProb(4);
+    const factor=(J_prob-i)/J_prob;
+    p*=factor;
+    const t=document.createElement('span');
+    t.className='term active';
+    t.textContent='('+(J_prob-i)+'/'+J_prob+')';
+    terms.appendChild(t);
+    setTimeout(()=>t.classList.remove('active'),400);
+    resEl.textContent=p.toFixed(5);
+    await sleep(Math.max(80,500-k*6));
+  }
+  highlightProb(6);
+  const result=1-p;
+  document.getElementById('probFinal').textContent=(result*100).toFixed(3)+'%';
+  const approx=k*(k-1)/(2*J_prob);
+  document.getElementById('probCompare').innerHTML=
+    'P(Ā) = '+p.toFixed(5)+' → P(A) = 1 − '+p.toFixed(5)+' = '+(result*100).toFixed(3)+'%<br>'+
+    '<span style="color:#fbbf24;">Approximation C(k,2)/J ≈ '+(approx*100).toFixed(3)+'%</span>';
+  btn.disabled=false;
+}
+function highlightProb(i){
+  document.querySelectorAll('#probCode .line').forEach(l=>l.classList.remove('active'));
+  const el=document.querySelector('#probCode .line[data-line="'+i+'"]');
+  if(el)el.classList.add('active');
+}
+
+function syncK(val){
+  k=val;
+  document.getElementById('expKVal').textContent=k;
+  document.getElementById('freqKVal').textContent=k;
+  document.getElementById('probKVal').textContent=k;
+  document.getElementById('expKSlider').value=k;
+  document.getElementById('freqKSlider').value=k;
+  document.getElementById('probKSlider').value=k;
+}
+document.getElementById('expKSlider').addEventListener('input',e=>{syncK(+e.target.value);expPeople=buildCircle('expCircle',k);resetExp();updateExpCounters();});
+document.getElementById('freqKSlider').addEventListener('input',e=>{syncK(+e.target.value);freqPeople=buildCircle('freqCircle',k);resetFreq();updateFreqCounters();});
+document.getElementById('probKSlider').addEventListener('input',e=>{syncK(+e.target.value);});
+document.getElementById('btnExpPlay').addEventListener('click',playExp);
+document.getElementById('btnExpBatch').addEventListener('click',playExpBatch);
+document.getElementById('btnExpReset').addEventListener('click',()=>{expRuns=0;expWins=0;expSeries=[];resetExp();updateExpCounters();drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));document.getElementById('expMsg').className='result-msg';document.getElementById('expMsg').textContent='Choisis un nombre de personnages et joue.';});
+document.getElementById('btnFreqPlay').addEventListener('click',playFreqSingle);
+document.getElementById('btnFreqBatch').addEventListener('click',runFreqBatch);
+document.getElementById('btnFreqReset').addEventListener('click',()=>{fRuns=0;fMatches=0;fSeries=[];resetFreq();updateFreqCounters();drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));});
+document.querySelectorAll('#freqJPresets .j-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#freqJPresets .j-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');J_freq=+b.dataset.j;buildFreqCalendar();resetFreq();updateFreqCounters();
+}));
+document.querySelectorAll('#probJPresets .j-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#probJPresets .j-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');J_prob=+b.dataset.j;buildProbCalendar();renderProbMode();
+}));
+document.getElementById('btnCompl').addEventListener('click',()=>{probMode='compl';renderProbMode();});
+document.getElementById('btnEvent').addEventListener('click',()=>{probMode='event';renderProbMode();});
+document.getElementById('btnProbAnim').addEventListener('click',animateProb);
+
+document.addEventListener('DOMContentLoaded',function(){
+  buildExpCalendar();
+  expPeople=buildCircle('expCircle',k);
+  buildFreqCalendar();
+  freqPeople=buildCircle('freqCircle',k);
+  buildProbCalendar();
+  buildCode('simCode',simPyLines);
+  buildCode('probCode',probPyLines);
+  renderProbMode();
+  updateExpCounters();updateFreqCounters();
+  drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));
+  drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));
+  drawNFnGraph();
+  window.addEventListener('resize',()=>{drawConvergence('expGraph',expSeries,expRuns,theoreticalProb(k,365));drawConvergence('freqGraph',fSeries,fRuns,theoreticalProb(k,J_freq));drawNFnGraph();});
+});
+</script>
+</body>
+</html>
