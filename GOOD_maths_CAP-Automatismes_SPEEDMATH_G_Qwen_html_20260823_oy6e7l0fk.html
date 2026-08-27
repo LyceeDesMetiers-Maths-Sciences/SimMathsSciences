@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Calcul Mental — Méthode des Cercles (Layout Horizontal Corrigé)</title>
+<style>
+  :root {
+    --bg-0: #0a0e27;
+    --bg-1: #131836;
+    --bg-2: #1e2550;
+    --neon-cyan: #00f0ff;
+    --neon-magenta: #ff2bd6;
+    --neon-yellow: #ffe600;
+    --neon-green: #39ff14;
+    --neon-red: #ff3860;
+    --neon-orange: #ff8c00;
+    --neon-purple: #bf00ff;
+    --text-0: #f0f4ff;
+    --text-1: #a8b2d1;
+    --glass: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --radius: 16px;
+    --shadow-neon: 0 0 20px rgba(0, 240, 255, 0.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(ellipse at top, var(--bg-2) 0%, var(--bg-0) 60%);
+    color: var(--text-0);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  
+  /* HEADER */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .logo {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .logo span { font-size: 0.75em; opacity: 0.7; font-weight: 400; margin-left: 8px; color: var(--text-1); -webkit-text-fill-color: var(--text-1); }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stat b { color: var(--neon-cyan); font-weight: 700; }
+  .stat.streak b { color: var(--neon-yellow); }
+
+  /* CONTROLS */
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .control-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .control-card label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-1);
+    margin-bottom: 8px;
+  }
+  .mode-switch {
+    display: flex;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .mode-switch button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-1);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .mode-switch button.active {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+    color: var(--bg-0);
+    box-shadow: var(--shadow-neon);
+  }
+  .ref-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ref-chip {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    color: var(--text-0);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .ref-chip:hover { border-color: var(--neon-cyan); }
+  .ref-chip.active {
+    background: var(--neon-cyan);
+    color: var(--bg-0);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0,240,255,0.5);
+  }
+
+  /* CASE SELECTOR */
+  .case-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .case-btn {
+    flex: 1;
+    min-width: 140px;
+    background: var(--glass);
+    border: 2px solid var(--glass-border);
+    color: var(--text-0);
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .case-btn:hover { border-color: var(--neon-cyan); transform: translateY(-2px); }
+  .case-btn.active {
+    border-color: var(--neon-yellow);
+    background: rgba(255,230,0,0.1);
+    box-shadow: 0 0 15px rgba(255,230,0,0.3);
+  }
+  .case-btn .case-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+  .case-btn .case-label { font-size: 0.8rem; color: var(--text-1); font-weight: 400; }
+
+  /* MAIN LAYOUT - HORIZONTAL */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* LEFT COLUMN - DIAGRAM */
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* STEP INDICATOR */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  .step-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--glass-border);
+    transition: all 0.3s;
+  }
+  .step-dot.active {
+    background: var(--neon-yellow);
+    box-shadow: 0 0 10px var(--neon-yellow);
+    transform: scale(1.3);
+  }
+  .step-dot.done {
+    background: var(--neon-green);
+  }
+
+  /* DIAGRAM 2D */
+  .diagram-wrapper {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .diagram-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(0,240,255,0.08), transparent 40%),
+                radial-gradient(circle at 70% 80%, rgba(255,43,214,0.08), transparent 40%);
+    pointer-events: none;
+  }
+  .diagram-container {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    aspect-ratio: 720 / 520;
+  }
+  .diagram-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Floating inputs */
+  .field {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.5);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-0);
+    font-size: 1.4rem;
+    font-weight: 800;
+    padding: 6px 10px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.3s ease;
+    z-index: 10;
+    min-width: 60px;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 18px rgba(0,240,255,0.5);
+    background: rgba(0,0,0,0.7);
+  }
+  .field.correct {
+    border-color: var(--neon-green);
+    background: rgba(57,255,20,0.15);
+    color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(57,255,20,0.4);
+  }
+  .field.wrong {
+    border-color: var(--neon-red);
+    background: rgba(255,56,96,0.15);
+    animation: shake 0.4s ease;
+  }
+  .field.locked {
+    border-color: var(--neon-yellow);
+    background: rgba(255,230,0,0.1);
+    color: var(--neon-yellow);
+    cursor: not-allowed;
+  }
+  .field.auto {
+    border-color: var(--neon-orange);
+    background: rgba(255,140,0,0.15);
+    color: var(--neon-orange);
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .field.small { font-size: 1.1rem; min-width: 50px; padding: 4px 8px; }
+  .field.tiny { font-size: 0.95rem; min-width: 45px; padding: 3px 6px; }
+
+  @keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+    25% { transform: translate(-50%, -50%) translateX(-6px); }
+    75% { transform: translate(-50%, -50%) translateX(6px); }
+  }
+  @keyframes popIn {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* SVG elements */
+  .svg-el { opacity: 0; transition: opacity 0.5s ease; }
+  .svg-el.visible { opacity: 1; }
+  .svg-el.pop { animation: popSvg 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  @keyframes popSvg {
+    0% { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .diagonal {
+    stroke-dasharray: 8 4;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .diagonal.active {
+    opacity: 1;
+    animation: diagBlink 0.6s ease-in-out 3;
+  }
+  @keyframes diagBlink {
+    0%, 100% { stroke-width: 3; filter: drop-shadow(0 0 4px currentColor); }
+    50% { stroke-width: 6; filter: drop-shadow(0 0 16px currentColor); }
+  }
+  .cross-arrow {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    transition: stroke-dashoffset 0.8s ease;
+  }
+  .cross-arrow.drawn { stroke-dashoffset: 0; }
+
+  /* RIGHT COLUMN - INFO PANELS */
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* INFO BOXES */
+  .info-box {
+    border-radius: 16px;
+    padding: 18px 22px;
+    backdrop-filter: blur(10px);
+  }
+  .mnemonic-box {
+    background: rgba(255,230,0,0.08);
+    border: 2px solid var(--neon-yellow);
+  }
+  .tips-box {
+    background: rgba(191,0,255,0.08);
+    border: 2px solid var(--neon-purple);
+  }
+  .info-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .mnemonic-box .info-title { color: var(--neon-yellow); }
+  .tips-box .info-title { color: var(--neon-purple); }
+  .mnemonic-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--text-0);
+  }
+  .mnemonic-text b { color: var(--neon-cyan); }
+  .mnemonic-text i { color: var(--neon-magenta); }
+  .mnemonic-text .res { color: var(--neon-green); font-weight: 800; }
+  .tips-list {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-1);
+  }
+  .tips-list ul { margin-left: 20px; }
+  .tips-list li { margin-bottom: 6px; }
+  .tips-list b { color: var(--text-0); }
+  .tips-list .warn { color: var(--neon-red); }
+  .tips-list .ok { color: var(--neon-green); }
+
+  /* BUTTONS PANEL */
+  .buttons-panel {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+    color: var(--bg-0);
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-neon); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn.secondary {
+    background: var(--glass);
+    color: var(--text-0);
+    border: 1px solid var(--glass-border);
+  }
+  .btn.secondary:hover { border-color: var(--neon-cyan); }
+  .btn.demo {
+    background: linear-gradient(135deg, var(--neon-yellow), var(--neon-orange));
+    color: var(--bg-0);
+  }
+
+  .feedback {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-height: 28px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+  }
+  .feedback.correct { color: var(--neon-green); }
+  .feedback.wrong { color: var(--neon-red); }
+  .feedback.hint { color: var(--neon-yellow); }
+  .feedback.info { color: var(--neon-cyan); }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--text-1);
+    margin-top: 8px;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main-layout {
+      grid-template-columns: 1fr;
+    }
+    .right-column {
+      order: 2;
+    }
+    .left-column {
+      order: 1;
+    }
+    .diagram-container {
+      max-width: 500px;
+    }
+  }
+  @media (max-width: 600px) {
+    .field { font-size: 1.1rem; min-width: 50px; padding: 4px 6px; }
+    .field.small { font-size: 0.95rem; }
+    .field.tiny { font-size: 0.85rem; }
+    .diagram-wrapper { padding: 10px; }
+    .case-btn { min-width: 100px; padding: 8px 12px; }
+    .info-box { padding: 14px 16px; }
+    .mnemonic-text { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"> Multiplication rapide<span> technique avec une référence</span></div>
+    <div class="stats">
+      <div class="stat">✅ <b id="score">0</b></div>
+      <div class="stat streak"> <b id="streak">0</b></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="control-card">
+      <label>Mode</label>
+      <div class="mode-switch">
+        <button id="modeDemo" class="active">🎬 Démo animée</button>
+        <button id="modePlay">🎮 Jouer</button>
+      </div>
+    </div>
+    <div class="control-card">
+      <label>Référence</label>
+      <div class="ref-chips" id="refChips">
+        <button class="ref-chip active" data-ref="10">10</button>
+        <button class="ref-chip" data-ref="20">20</button>
+        <button class="ref-chip" data-ref="50">50</button>
+        <button class="ref-chip" data-ref="100">100</button>
+        <button class="ref-chip" data-ref="200">200</button>
+        <button class="ref-chip" data-ref="500">500</button>
+        <button class="ref-chip" data-ref="1000">1000</button>
+      </div>
+    </div>
+    <div class="control-card">
+      <label>Difficulté</label>
+      <div class="mode-switch">
+        <button id="diffEasy" class="active">Facile</button>
+        <button id="diffMed">Moyen</button>
+        <button id="diffHard">Difficile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASE SELECTOR -->
+  <div class="case-selector">
+    <button class="case-btn active" data-case="pp">
+      <span class="case-icon">️⬆️</span>
+      <div>Cas ++</div>
+      <div class="case-label">Deux nombres au-dessus<br>ex: 13 × 12 (ref 10)</div>
+    </button>
+    <button class="case-btn" data-case="pm">
+      <span class="case-icon">️⬇️</span>
+      <div>Cas +−</div>
+      <div class="case-label">Un dessus, un dessous<br>ex: 108 × 95 (ref 100)</div>
+    </button>
+    <button class="case-btn" data-case="mm">
+      <span class="case-icon">️⬇️</span>
+      <div>Cas −−</div>
+      <div class="case-label">Deux nombres en-dessous<br>ex: 97 × 96 (ref 100)</div>
+    </button>
+  </div>
+
+  <!-- MAIN HORIZONTAL LAYOUT -->
+  <div class="main-layout">
+    <!-- LEFT COLUMN: DIAGRAM -->
+    <div class="left-column">
+      <!-- STEP INDICATOR -->
+      <div class="step-indicator" id="stepIndicator">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+
+      <!-- 2D DIAGRAM -->
+      <div class="diagram-wrapper">
+        <div class="diagram-container" id="diagramContainer">
+          <svg id="diagramSvg" viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glowCyan" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glowMagenta" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glowYellow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glowGreen" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="8" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glowRed" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <marker id="arrowYellow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+                <path d="M 0 1 L 9 5 L 0 9 z" fill="#ffe600"/>
+              </marker>
+            </defs>
+
+            <!-- Reference badge -->
+            <g id="svgRef" class="svg-el">
+              <rect x="280" y="8" width="160" height="34" rx="17" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)"/>
+              <text x="360" y="31" text-anchor="middle" fill="#f0f4ff" font-size="15" font-weight="700">RÉF = <tspan id="svgRefVal" fill="#00f0ff">10</tspan></text>
+            </g>
+
+            <!-- Diagonals -->
+            <line id="diag1" class="diagonal" x1="200" y1="170" x2="500" y2="380" stroke="#ffe600" stroke-width="3"/>
+            <line id="diag2" class="diagonal" x1="500" y1="170" x2="200" y2="380" stroke="#ffe600" stroke-width="3"/>
+
+            <!-- Left circle (a) -->
+            <g id="svgCircleA" class="svg-el">
+              <circle cx="200" cy="220" r="75" fill="none" stroke="#00f0ff" stroke-width="4" filter="url(#glowCyan)"/>
+              <text id="svgA" x="200" y="235" text-anchor="middle" fill="#00f0ff" font-size="60" font-weight="800">13</text>
+            </g>
+
+            <!-- Right circle (b) -->
+            <g id="svgCircleB" class="svg-el">
+              <circle cx="520" cy="220" r="75" fill="none" stroke="#ff2bd6" stroke-width="4" filter="url(#glowMagenta)"/>
+              <text id="svgB" x="520" y="235" text-anchor="middle" fill="#ff2bd6" font-size="60" font-weight="800">12</text>
+            </g>
+
+            <!-- Cross arrow -->
+            <g id="svgArrow" class="svg-el">
+              <path id="svgArrowPath" class="cross-arrow" d="M 490 130 Q 360 60 230 160" fill="none" stroke="#ffe600" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowYellow)" filter="url(#glowYellow)"/>
+            </g>
+
+            <!-- Labels -->
+            <text id="labelProd1" x="220" y="455" text-anchor="middle" fill="#00f0ff" font-size="13" font-weight="600" opacity="0">cross × ref</text>
+            <text id="labelProd2" x="500" y="455" text-anchor="middle" fill="#ff2bd6" font-size="13" font-weight="600" opacity="0">ea × eb</text>
+            <text id="labelFinal" x="360" y="505" text-anchor="middle" fill="#39ff14" font-size="14" font-weight="700" opacity="0">P1 + P2</text>
+          </svg>
+
+          <!-- Floating inputs -->
+          <input type="number" class="field" id="fieldEcartA" placeholder="?">
+          <input type="number" class="field" id="fieldEcartB" placeholder="?">
+          <input type="number" class="field small" id="fieldCross" placeholder="?">
+          <input type="number" class="field tiny" id="fieldProd1" placeholder="?">
+          <input type="number" class="field tiny" id="fieldProd2" placeholder="?">
+          <input type="number" class="field small" id="fieldFinal" placeholder="?">
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><span class="dot" style="background:var(--neon-green)"></span> Correct</span>
+        <span><span class="dot" style="background:var(--neon-orange)"></span> Auto-rempli</span>
+        <span><span class="dot" style="background:var(--neon-yellow)"></span> À remplir</span>
+        <span><span class="dot" style="background:var(--neon-red); border:1px solid var(--neon-red)"></span> Écart négatif</span>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: BUTTONS FIRST, THEN INFO -->
+    <div class="right-column">
+      <!-- BUTTONS PANEL (Top) -->
+      <div class="buttons-panel">
+        <div class="btn-area">
+          <button class="btn demo" id="animBtn">🎬 Voir l'animation complète</button>
+          <button class="btn" id="checkBtn">✅ Vérifier</button>
+          <button class="btn secondary" id="resetBtn">🔄 Réinitialiser</button>
+          <button class="btn secondary" id="newBtn">➡️ Nouveau calcul</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+
+      <!-- MNEMONIC BOX (Yellow) -->
+      <div class="info-box mnemonic-box">
+        <div class="info-title"> Phrase à se dire (calcul mental)</div>
+        <div class="mnemonic-text" id="mnemonicText">
+          "<b>13</b> + <i>2</i> = <b>15</b>, donc <b>15</b> × 10 = 150, plus <i>3</i> × <i>2</i> = 6 → <span class="res">156</span>"
+        </div>
+      </div>
+
+      <!-- TIPS BOX (Purple) -->
+      <div class="info-box tips-box">
+        <div class="info-title">💡 Astuces & Limites</div>
+        <div class="tips-list" id="tipsText">
+          <ul>
+            <li><b class="ok">✓ Optimal</b> pour nombres à 2 chiffres proches d'une référence</li>
+            <li><b class="warn">✗ Décimaux</b> : méthode inadaptée (écarts complexes)</li>
+            <li><b class="warn">✗ Grands nombres</b> : 23×723 → trop complexe mentalement</li>
+            <li><b>Pour 23×723</b> : utiliser décomposition (20+3)×723 ou (700+23)×23</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const examples = {
+    pp: [
+      { ref: 10, a: 13, b: 12 },
+      { ref: 10, a: 14, b: 13 },
+      { ref: 100, a: 106, b: 104 },
+      { ref: 20, a: 23, b: 22 },
+      { ref: 50, a: 53, b: 52 }
+    ],
+    pm: [
+      { ref: 100, a: 108, b: 95 },
+      { ref: 100, a: 103, b: 97 },
+      { ref: 10, a: 12, b: 8 },
+      { ref: 50, a: 54, b: 47 },
+      { ref: 200, a: 205, b: 197 }
+    ],
+    mm: [
+      { ref: 100, a: 97, b: 96 },
+      { ref: 100, a: 98, b: 94 },
+      { ref: 10, a: 8, b: 7 },
+      { ref: 50, a: 47, b: 48 },
+      { ref: 20, a: 18, b: 17 }
+    ]
+  };
+
+  const state = {
+    mode: 'demo',
+    currentCase: 'pp',
+    ref: 10,
+    difficulty: 'easy',
+    a: 13, b: 12,
+    ea: 3, eb: 2,
+    cross: 15,
+    prod1: 150,
+    prod2: 6,
+    total: 156,
+    score: 0,
+    streak: 0,
+    filled: { ecartA: false, ecartB: false, cross: false, prod1: false, prod2: false, final: false },
+    currentStep: 0
+  };
+
+  const $ = id => document.getElementById(id);
+
+  function loadExample(caseType, index = 0) {
+    const ex = examples[caseType][index % examples[caseType].length];
+    state.ref = ex.ref;
+    state.a = ex.a;
+    state.b = ex.b;
+    state.ea = ex.a - ex.ref;
+    state.eb = ex.b - ex.ref;
+    state.cross = ex.a + state.eb;
+    state.prod1 = state.cross * ex.ref;
+    state.prod2 = state.ea * state.eb;
+    state.total = state.prod1 + state.prod2;
+    state.filled = { ecartA: false, ecartB: false, cross: false, prod1: false, prod2: false, final: false };
+    state.currentStep = 0;
+  }
+
+  function positionFields() {
+    const container = $('diagramContainer');
+    const rect = container.getBoundingClientRect();
+    const scaleX = rect.width / 720;
+    const scaleY = rect.height / 520;
+
+    const place = (el, x, y) => {
+      el.style.left = (x * scaleX) + 'px';
+      el.style.top = (y * scaleY) + 'px';
+    };
+
+    const devAY = state.ea >= 0 ? 110 : 330;
+    const devBY = state.eb >= 0 ? 110 : 330;
+    place($('fieldEcartA'), 200, devAY);
+    place($('fieldEcartB'), 520, devBY);
+    place($('fieldCross'), 360, 380);
+    place($('fieldProd1'), 220, 455);
+    place($('fieldProd2'), 500, 455);
+    place($('fieldFinal'), 360, 500);
+  }
+
+  function updateSVG() {
+    const { a, b, ea, eb, ref } = state;
+
+    $('svgRefVal').textContent = ref;
+    $('svgA').textContent = a;
+    $('svgB').textContent = b;
+
+    const startY = eb >= 0 ? 130 : 310;
+    const endY = ea >= 0 ? 160 : 280;
+    const midY = eb >= 0 ? 60 : 340;
+    $('svgArrowPath').setAttribute('d', `M 490 ${startY} Q 360 ${midY} 230 ${endY}`);
+    $('svgArrowPath').classList.remove('drawn');
+
+    $('diag1').setAttribute('x1', 200); $('diag1').setAttribute('y1', ea >= 0 ? 145 : 295);
+    $('diag1').setAttribute('x2', 520); $('diag1').setAttribute('y2', eb >= 0 ? 305 : 135);
+    $('diag2').setAttribute('x1', 520); $('diag2').setAttribute('y1', eb >= 0 ? 145 : 295);
+    $('diag2').setAttribute('x2', 200); $('diag2').setAttribute('y2', ea >= 0 ? 305 : 135);
+    $('diag1').classList.remove('active');
+    $('diag2').classList.remove('active');
+
+    $('labelProd1').textContent = `${state.cross} × ${ref}`;
+    $('labelProd2').textContent = `${ea >= 0 ? '+' : ''}${ea} × ${eb >= 0 ? '+' : ''}${eb}`;
+    $('labelProd1').setAttribute('opacity', 0);
+    $('labelProd2').setAttribute('opacity', 0);
+    $('labelFinal').setAttribute('opacity', 0);
+  }
+
+  function updateMnemonic() {
+    const { a, b, ea, eb, cross, prod1, prod2, total, ref } = state;
+    const ebDisplay = eb >= 0 ? eb : `(${eb})`;
+    const eaAbs = Math.abs(ea), ebAbs = Math.abs(eb);
+    const prod2Abs = Math.abs(prod2);
+    const sign = prod2 >= 0 ? 'plus' : 'moins';
+
+    $('mnemonicText').innerHTML =
+      `"${b} + ${ebDisplay} = <b>${cross}</b>, donc <b>${cross}</b> × ${ref} = ${prod1}, ${sign} ${eaAbs} × ${ebAbs} = ${prod2Abs} → <span class="res">${total}</span>"`;
+  }
+
+  function updateTips() {
+    const { ea, eb, ref } = state;
+    const caseDesc = ea >= 0 && eb >= 0 ? '++' : (ea * eb < 0 ? '+−' : '−−');
+    
+    let tips = `<ul>
+      <li><b>Cas ${caseDesc}</b> : ${ea >= 0 && eb >= 0 ? 'Deux écarts positifs' : ea * eb < 0 ? 'Écarts de signes opposés' : 'Deux écarts négatifs'}</li>
+      <li><b>Produit des écarts</b> : ${ea * eb >= 0 ? '<span class="ok">positif (on ajoute)</span>' : '<span class="warn">négatif (on soustrait)</span>'}</li>
+      <li><b>Référence ${ref}</b> : ${ref < 100 ? 'Idéal pour nombres à 2 chiffres' : ref < 500 ? 'Pour nombres entre 50 et 200' : 'Pour grands nombres proches de ' + ref}</li>`;
+    
+    if (Math.abs(ea) > 10 || Math.abs(eb) > 10) {
+      tips += `<li class="warn"><b>⚠️ Écarts grands</b> : méthode moins efficace, préférer décomposition</li>`;
+    }
+    
+    tips += `</ul>`;
+    $('tipsText').innerHTML = tips;
+  }
+
+  function resetFields() {
+    ['fieldEcartA','fieldEcartB','fieldCross','fieldProd1','fieldProd2','fieldFinal'].forEach(id => {
+      const el = $(id);
+      el.value = '';
+      el.classList.remove('correct','wrong','locked','auto');
+      el.disabled = false;
+    });
+    state.filled = { ecartA: false, ecartB: false, cross: false, prod1: false, prod2: false, final: false };
+    state.currentStep = 0;
+    updateStepIndicator();
+    $('feedback').textContent = '';
+    $('feedback').className = 'feedback';
+  }
+
+  function updateStepIndicator() {
+    const dots = document.querySelectorAll('.step-dot');
+    dots.forEach((dot, i) => {
+      dot.classList.remove('active', 'done');
+      if (i < state.currentStep) dot.classList.add('done');
+      if (i === state.currentStep) dot.classList.add('active');
+    });
+  }
+
+  function setFieldState(id, state_cls) {
+    const el = $(id);
+    el.classList.remove('correct','wrong','locked','auto');
+    if (state_cls) el.classList.add(state_cls);
+  }
+
+  function checkField(id, expected, key) {
+    const el = $(id);
+    const val = parseInt(el.value);
+    if (isNaN(val)) return false;
+    if (val === expected) {
+      setFieldState(id, 'correct');
+      state.filled[key] = true;
+      el.disabled = true;
+      state.currentStep++;
+      updateStepIndicator();
+      return true;
+    } else {
+      setFieldState(id, 'wrong');
+      setTimeout(() => {
+        el.classList.remove('wrong');
+        el.value = '';
+        el.focus();
+      }, 500);
+      return false;
+    }
+  }
+
+  function autoFill(id, value, key) {
+    const el = $(id);
+    el.value = value;
+    setFieldState(id, 'auto');
+    state.filled[key] = true;
+    el.disabled = true;
+    state.currentStep++;
+    updateStepIndicator();
+  }
+
+  function checkCascades() {
+    const { ea, eb, cross, prod1, prod2, total } = state;
+    const f = state.filled;
+
+    if (f.ecartA && f.ecartB && !f.cross) {
+      $('fieldCross').disabled = false;
+      $('fieldCross').focus();
+    }
+
+    if (f.cross && !f.prod1) {
+      $('diag1').classList.add('active');
+      $('diag2').classList.add('active');
+      $('labelProd1').setAttribute('opacity', 1);
+      $('labelProd2').setAttribute('opacity', 1);
+      $('fieldProd1').disabled = false;
+      $('fieldProd2').disabled = false;
+    }
+
+    if (f.prod1) {
+      $('labelFinal').setAttribute('opacity', 1);
+    }
+
+    if (f.prod1 && f.prod2 && !f.final) {
+      autoFill('fieldFinal', total, 'final');
+      onProblemComplete();
+    }
+  }
+
+  function onProblemComplete() {
+    state.score++;
+    state.streak++;
+    updateStats();
+    $('feedback').textContent = `🎉 Bravo ! ${state.a} × ${state.b} = ${state.total}`;
+    $('feedback').className = 'feedback correct';
+    launchConfetti();
+
+    if (state.mode === 'play') {
+      setTimeout(() => nextRandomProblem(), 2200);
+    }
+  }
+
+  async function runFullAnimation() {
+    resetFields();
+    state.currentStep = 0;
+    updateStepIndicator();
+    
+    const sequence = [
+      () => { $('svgRef').classList.add('visible', 'pop'); },
+      () => { $('svgCircleA').classList.add('visible', 'pop'); },
+      () => { $('svgCircleB').classList.add('visible', 'pop'); },
+      () => {
+        $('svgArrow').classList.add('visible', 'pop');
+        $('svgArrowPath').classList.add('drawn');
+      },
+      () => {
+        const devA = $('fieldEcartA');
+        const devB = $('fieldEcartB');
+        devA.value = state.ea;
+        devB.value = state.eb;
+        devA.classList.add('auto');
+        devB.classList.add('auto');
+        state.filled.ecartA = true;
+        state.filled.ecartB = true;
+        state.currentStep = 2;
+        updateStepIndicator();
+      },
+      () => {
+        $('diag1').classList.add('active');
+        $('diag2').classList.add('active');
+      },
+      () => {
+        const cross = $('fieldCross');
+        cross.value = state.cross;
+        cross.classList.add('auto');
+        state.filled.cross = true;
+        state.currentStep = 3;
+        updateStepIndicator();
+        $('labelProd1').setAttribute('opacity', 1);
+        $('labelProd2').setAttribute('opacity', 1);
+      },
+      () => {
+        const p1 = $('fieldProd1');
+        p1.value = state.prod1;
+        p1.classList.add('auto');
+        state.filled.prod1 = true;
+        state.currentStep = 4;
+        updateStepIndicator();
+        $('labelFinal').setAttribute('opacity', 1);
+      },
+      () => {
+        const p2 = $('fieldProd2');
+        p2.value = state.prod2;
+        p2.classList.add('auto');
+        state.filled.prod2 = true;
+        state.currentStep = 5;
+        updateStepIndicator();
+      },
+      () => {
+        autoFill('fieldFinal', state.total, 'final');
+        $('feedback').textContent = `✅ ${state.a} × ${state.b} = ${state.total}`;
+        $('feedback').className = 'feedback correct';
+      }
+    ];
+
+    for (let i = 0; i < sequence.length; i++) {
+      await new Promise(resolve => setTimeout(() => {
+        sequence[i]();
+        resolve();
+      }, 600));
+    }
+  }
+
+  function validateAll() {
+    const { ea, eb, cross, prod1, prod2, total } = state;
+    let progress = 0;
+
+    if (!state.filled.ecartA) {
+      if (checkField('fieldEcartA', ea, 'ecartA')) progress++;
+    } else progress++;
+    if (!state.filled.ecartB) {
+      if (checkField('fieldEcartB', eb, 'ecartB')) progress++;
+    } else progress++;
+
+    if (state.filled.ecartA && state.filled.ecartB && !state.filled.cross) {
+      if (checkField('fieldCross', cross, 'cross')) progress++;
+    } else if (state.filled.cross) progress++;
+
+    if (!state.filled.prod1 && state.filled.cross) {
+      if (checkField('fieldProd1', prod1, 'prod1')) progress++;
+    } else if (state.filled.prod1) progress++;
+
+    if (!state.filled.prod2 && state.filled.ecartA && state.filled.ecartB) {
+      if (checkField('fieldProd2', prod2, 'prod2')) progress++;
+    } else if (state.filled.prod2) progress++;
+
+    if (!state.filled.final && state.filled.prod1 && state.filled.prod2) {
+      if (checkField('fieldFinal', total, 'final')) progress++;
+    } else if (state.filled.final) progress++;
+
+    checkCascades();
+
+    if (progress === 0 && Object.values(state.filled).some(v => !v)) {
+      $('feedback').textContent = '💡 Remplis les champs dans l\'ordre : écarts → croisé → produits → total';
+      $('feedback').className = 'feedback hint';
+    }
+  }
+
+  function initProblem() {
+    resetFields();
+    positionFields();
+    updateSVG();
+    updateMnemonic();
+    updateTips();
+    
+    document.querySelectorAll('.svg-el').forEach(el => {
+      el.classList.remove('visible', 'pop');
+    });
+    $('svgArrowPath').classList.remove('drawn');
+    $('diag1').classList.remove('active');
+    $('diag2').classList.remove('active');
+
+    if (state.mode === 'demo') {
+      $('feedback').textContent = ` Cas ${state.currentCase.toUpperCase()} : ${state.a} × ${state.b} (ref ${state.ref}). Cliquez sur "Voir l'animation" ou remplissez les champs.`;
+      $('feedback').className = 'feedback info';
+    } else {
+      $('feedback').textContent = `🎯 ${state.a} × ${state.b} = ? (ref ${state.ref}). Trouvez les écarts !`;
+      $('feedback').className = 'feedback hint';
+    }
+
+    setTimeout(() => $('fieldEcartA').focus(), 600);
+  }
+
+  function nextRandomProblem() {
+    const cases = ['pp', 'pm', 'mm'];
+    const randomCase = cases[Math.floor(Math.random() * cases.length)];
+    state.currentCase = randomCase;
+    
+    document.querySelectorAll('.case-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.case === randomCase);
+    });
+    
+    const randomIdx = Math.floor(Math.random() * examples[randomCase].length);
+    loadExample(randomCase, randomIdx);
+    initProblem();
+  }
+
+  function newProblem() {
+    if (state.mode === 'demo') {
+      state.mode = 'play';
+      $('modePlay').classList.add('active');
+      $('modeDemo').classList.remove('active');
+    }
+    nextRandomProblem();
+  }
+
+  function resetProblem() {
+    initProblem();
+  }
+
+  function updateStats() {
+    $('score').textContent = state.score;
+    $('streak').textContent = state.streak;
+  }
+
+  function launchConfetti() {
+    const colors = ['#00f0ff', '#ff2bd6', '#ffe600', '#39ff14'];
+    for (let i = 0; i < 30; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.top = '-10px';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (1 + Math.random()) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 2500);
+    }
+  }
+
+  $('checkBtn').addEventListener('click', validateAll);
+  $('resetBtn').addEventListener('click', resetProblem);
+  $('newBtn').addEventListener('click', newProblem);
+  $('animBtn').addEventListener('click', runFullAnimation);
+
+  document.querySelectorAll('.case-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.case-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.currentCase = btn.dataset.case;
+      loadExample(state.currentCase, 0);
+      initProblem();
+    });
+  });
+
+  $('modeDemo').addEventListener('click', () => {
+    state.mode = 'demo';
+    $('modeDemo').classList.add('active');
+    $('modePlay').classList.remove('active');
+    initProblem();
+  });
+  $('modePlay').addEventListener('click', () => {
+    state.mode = 'play';
+    $('modePlay').classList.add('active');
+    $('modeDemo').classList.remove('active');
+    nextRandomProblem();
+  });
+
+  document.querySelectorAll('.ref-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.ref-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.ref = parseInt(chip.dataset.ref);
+      const found = Object.values(examples).flat().find(ex => ex.ref === state.ref);
+      if (found) {
+        state.a = found.a;
+        state.b = found.b;
+      }
+      initProblem();
+    });
+  });
+
+  ['diffEasy','diffMed','diffHard'].forEach((id, i) => {
+    const levels = ['easy','medium','hard'];
+    $(id).addEventListener('click', () => {
+      document.querySelectorAll('#diffEasy,#diffMed,#diffHard').forEach(b => b.classList.remove('active'));
+      $(id).classList.add('active');
+      state.difficulty = levels[i];
+      if (state.mode === 'play') nextRandomProblem();
+    });
+  });
+
+  const fieldOrder = ['fieldEcartA','fieldEcartB','fieldCross','fieldProd1','fieldProd2','fieldFinal'];
+  fieldOrder.forEach((id, i) => {
+    $(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const checks = {
+          fieldEcartA: () => checkField('fieldEcartA', state.ea, 'ecartA'),
+          fieldEcartB: () => checkField('fieldEcartB', state.eb, 'ecartB'),
+          fieldCross: () => checkField('fieldCross', state.cross, 'cross'),
+          fieldProd1: () => checkField('fieldProd1', state.prod1, 'prod1'),
+          fieldProd2: () => checkField('fieldProd2', state.prod2, 'prod2'),
+          fieldFinal: () => checkField('fieldFinal', state.total, 'final')
+        };
+        if (checks[id]()) {
+          checkCascades();
+          if (i < fieldOrder.length - 1) {
+            const next = $(fieldOrder[i + 1]);
+            if (!next.disabled) next.focus();
+          }
+        }
+      }
+    });
+  });
+
+  window.addEventListener('resize', positionFields);
+
+  loadExample('pp', 0);
+  initProblem();
+})();
+</script>
+</body>
+</html>

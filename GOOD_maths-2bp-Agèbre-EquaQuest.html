@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÉquaQuest - Jeu & Balance</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Patrick+Hand&family=Architects+Daughter&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-border: #1e3a8a;
+            --accent-orange: #f97316;
+            --accent-orange-border: #7c2d12;
+            --accent-green: #22c55e;
+            --accent-green-border: #14532d;
+            --accent-yellow: #facc15;
+            --accent-yellow-border: #713f12;
+            --chalkboard-bg: #1e293b;
+            --board-frame: #ca8a04;
+            --text-chalk: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--chalkboard-bg);
+            font-family: 'Fredoka One', cursive, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-chalk);
+            position: relative;
+        }
+
+        /* Chalkboard Background Drawings */
+        .chalk-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 1024px;
+            max-height: 768px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        /* --- GLOBAL TABS --- */
+        .global-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            background: rgba(30, 41, 59, 0.6);
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 10px 25px;
+            font-size: 1.2rem;
+            font-family: 'Fredoka One', cursive, sans-serif;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-yellow);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(185deg, #3b82f6 0%, #1d4ed8 100%);
+            border-color: var(--accent-yellow);
+            color: white;
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4), 0 0 10px rgba(250, 204, 21, 0.2);
+        }
+
+        .global-tab-content {
+            display: none;
+            width: 100%;
+            height: calc(100% - 65px);
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .global-tab-content.active {
+            display: flex;
+        }
+
+        /* --- LEVEL SELECTOR (BALANCE) --- */
+        .level-selector-balance {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .level-btn-balance {
+            background: rgba(30, 41, 59, 0.6);
+            color: var(--text-chalk);
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Fredoka One', cursive, sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s ease-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .level-btn-balance:hover {
+            border-color: var(--accent-yellow);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .level-btn-balance.active {
+            background: linear-gradient(185deg, #3b82f6 0%, #1d4ed8 100%);
+            border-color: var(--accent-yellow);
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .balance-body-row {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: calc(100% - 65px);
+            align-items: stretch;
+        }
+
+        .balance-card-wood {
+            background: rgba(27, 38, 59, 0.7);
+            border: 10px solid var(--board-frame);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.8);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .balance-view-card {
+            flex: 1.3;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .equation-display-balance {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--text-chalk);
+            margin: 5px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid var(--primary);
+            font-family: 'Architects Daughter', cursive;
+            letter-spacing: 1px;
+        }
+
+        .level-goal {
+            background: rgba(250, 204, 21, 0.15);
+            border-left: 4px solid var(--accent-yellow);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.2rem;
+            line-height: 1.4;
+            color: #fef08a;
+        }
+
+        .status-balance {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            padding: 8px 24px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            font-family: 'Fredoka One', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .status-balance.balanced {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        }
+
+        .status-balance.unbalanced {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .balance-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .balance-actions button {
+            flex: 1;
+        }
+
+        /* SVG Balance styling */
+        .balance-svg {
+            width: 100%;
+            height: 250px;
+        }
+
+        .box-x {
+            fill: #a855f7;
+            stroke: #d8b4fe;
+            stroke-width: 2;
+            rx: 4px;
+        }
+
+        .weight-unit {
+            fill: #facc15;
+            stroke: #ca8a04;
+            stroke-width: 1.5;
+        }
+
+        /* Custom range sliders */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.25rem;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .label-highlight {
+            color: var(--accent-yellow);
+            font-weight: bold;
+            font-family: 'Fredoka One', sans-serif;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            height: 10px;
+            border-radius: 5px;
+            outline: none;
+            margin: 10px 0;
+            width: 100%;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            border: 3px solid var(--accent-yellow-border);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            border: 3px solid var(--accent-yellow-border);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* --- EQUAQUEST VIEWS --- */
+        .view {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        /* Bubble/Glassy Button Styles */
+        .btn-bubble {
+            background: linear-gradient(185deg, #60a5fa 0%, #2563eb 100%);
+            border: 5px solid var(--accent-yellow);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.8rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 var(--accent-yellow-border), 0 15px 20px rgba(0,0,0,0.4), inset 0 4px 0 rgba(255,255,255,0.4);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-bubble:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 var(--accent-yellow-border), 0 5px 10px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4);
+        }
+
+        .btn-orange {
+            background: linear-gradient(185deg, #fb923c 0%, #ea580c 100%);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 8px 0 var(--accent-yellow-border), 0 15px 20px rgba(0,0,0,0.4), inset 0 4px 0 rgba(255,255,255,0.4);
+        }
+
+        .btn-green {
+            background: linear-gradient(185deg, #4ade80 0%, #16a34a 100%);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 8px 0 var(--accent-yellow-border), 0 15px 20px rgba(0,0,0,0.4), inset 0 4px 0 rgba(255,255,255,0.4);
+        }
+
+        /* --- TITLE SCREEN --- */
+        .title-screen h1 {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-screen h1 span.title-sub {
+            font-size: 2.2rem;
+            color: var(--accent-yellow);
+        }
+
+        .menu-row {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            margin-top: 20px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Test Tube SVG Animation */
+        .test-tube-container {
+            width: 120px;
+            height: 280px;
+            position: relative;
+        }
+
+        .liquid {
+            fill: #3b82f6;
+            animation: liquid-wave 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes liquid-wave {
+            0% { d: path("M 20 120 Q 40 115, 60 120 T 100 120 L 100 240 Q 100 260, 60 260 Q 20 260, 20 240 Z"); }
+            50% { d: path("M 20 124 Q 40 129, 60 124 T 100 124 L 100 240 Q 100 260, 60 260 Q 20 260, 20 240 Z"); }
+            100% { d: path("M 20 120 Q 40 125, 60 120 T 100 120 L 100 240 Q 100 260, 60 260 Q 20 260, 20 240 Z"); }
+        }
+
+        /* --- LEVEL SELECT SCREEN --- */
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .level-btn {
+            font-size: 1.8rem;
+            padding: 25px;
+            border-radius: 20px;
+        }
+
+        .back-btn {
+            margin-top: 40px;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+        }
+
+        /* --- INFO SCREEN --- */
+        .info-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 5px solid var(--accent-yellow);
+            border-radius: 24px;
+            padding: 30px;
+            width: 85%;
+            max-width: 700px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .info-card h2 {
+            margin-top: 0;
+            color: var(--accent-yellow);
+            font-family: 'Fredoka One', sans-serif;
+            text-align: center;
+        }
+
+        /* --- GAMEPLAY SCREEN --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 60px;
+        }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 20px;
+            border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .star {
+            width: 25px;
+            height: 25px;
+            fill: #475569;
+            transition: fill 0.3s;
+        }
+
+        .star.filled {
+            fill: var(--accent-yellow);
+            filter: drop-shadow(0 0 4px var(--accent-yellow));
+        }
+
+        .level-badge {
+            background: linear-gradient(to bottom, #60a5fa, #2563eb);
+            border: 3px solid var(--accent-yellow);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+        }
+
+        .btn-close {
+            background: linear-gradient(to bottom, #fca5a5, #ef4444);
+            border: 3px solid var(--accent-yellow);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--accent-yellow-border);
+            font-weight: bold;
+        }
+
+        .btn-close:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--accent-yellow-border);
+        }
+
+        /* Main Chalkboard Box */
+        .board-frame {
+            border: 15px solid var(--board-frame);
+            background-color: #1b263b;
+            border-radius: 24px;
+            width: 100%;
+            height: 220px;
+            position: relative;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .board-frame::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border: 2px solid #a16207;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .equation-box {
+            font-size: 3.5rem;
+            font-weight: bold;
+            font-family: 'Architects Daughter', cursive;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.2);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-reset {
+            position: absolute;
+            bottom: -25px;
+            background: linear-gradient(to bottom, #86efac, #22c55e);
+            border: 3px solid var(--accent-yellow);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--accent-yellow-border);
+            z-index: 10;
+        }
+
+        .btn-reset:active {
+            transform: translateY(2px) rotate(-45deg);
+            box-shadow: 0 2px 0 var(--accent-yellow-border);
+        }
+
+        .btn-reset svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* Interactive balance scale */
+        .balance-box {
+            width: 100%;
+            height: 110px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Fractions rendering support */
+        .fraction-container {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 1.1;
+            padding: 0 5px;
+            font-size: 2.8rem;
+        }
+
+        .fraction-container .numerator {
+            border-bottom: 3px solid currentColor;
+            padding-bottom: 2px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .fraction-container .denominator {
+            padding-top: 2px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Controls Section */
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .op-select-circle {
+            background: linear-gradient(185deg, #4ade80 0%, #16a34a 100%);
+            border: 5px solid var(--accent-yellow);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--accent-yellow-border), 0 8px 10px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .op-select-circle:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 var(--accent-yellow-border), 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Floating popover for choosing operation */
+        .op-popover {
+            display: none;
+            position: absolute;
+            bottom: 95px;
+            background: rgba(15,23,42,0.95);
+            border: 4px solid var(--accent-yellow);
+            border-radius: 16px;
+            padding: 10px;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .op-popover.active {
+            display: flex;
+        }
+
+        .op-bubble {
+            background: linear-gradient(to bottom, #60a5fa, #2563eb);
+            border: 3px solid white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
+
+        .op-bubble:hover {
+            transform: scale(1.1);
+        }
+
+        /* Value display bubble */
+        .val-display-box {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 5px solid var(--primary);
+            border-radius: 20px;
+            padding: 10px 30px;
+            min-width: 140px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-family: 'Architects Daughter', cursive;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.6);
+            color: #60a5fa;
+            position: relative;
+        }
+
+        /* Undo backspace arrow button */
+        .btn-undo {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background: linear-gradient(to bottom, #fed7aa, #f97316);
+            border: 3px solid var(--accent-yellow);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--accent-yellow-border);
+        }
+
+        .btn-undo:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 var(--accent-yellow-border);
+        }
+
+        .btn-valider {
+            font-size: 1.8rem;
+            padding: 15px 35px;
+            border-radius: 25px;
+        }
+
+        /* Arcade Keyboard Section */
+        .keyboard-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+            position: relative;
+        }
+
+        /* Curve layout for numbers */
+        .number-arc {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            height: 90px;
+        }
+
+        .key-circle {
+            background: linear-gradient(185deg, #60a5fa 0%, #2563eb 100%);
+            border: 4px solid var(--accent-yellow);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--accent-yellow-border), 0 5px 8px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .key-circle:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 var(--accent-yellow-border);
+        }
+
+        .key-x {
+            background: linear-gradient(185deg, #d8b4fe 0%, #a855f7 100%);
+        }
+
+        .key-minus {
+            background: linear-gradient(185deg, #fb923c 0%, #ea580c 100%);
+        }
+
+        .trash-btn {
+            background: linear-gradient(to bottom, #fecaca, #ef4444);
+            border: 4px solid var(--accent-yellow);
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--accent-yellow-border);
+            margin-top: 10px;
+        }
+
+        .trash-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--accent-yellow-border);
+        }
+
+        .trash-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        /* Toast Feedback */
+        .toast {
+            display: none;
+            position: absolute;
+            top: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 4px solid var(--accent-yellow);
+            border-radius: 20px;
+            padding: 10px 30px;
+            font-size: 1.6rem;
+            color: var(--text-chalk);
+            z-index: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            animation: slide-in 0.3s ease-out;
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+        }
+
+        @keyframes slide-in {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === Term Compensation Animation === */
+        .eq-term {
+            display: inline-block;
+            position: relative;
+            transition: all 0.4s ease;
+            padding: 0 2px;
+        }
+        .op-applied {
+            color: #fbbf24;
+            font-weight: bold;
+            animation: chalk-write 0.5s ease-out;
+        }
+        @keyframes chalk-write {
+            0%   { opacity: 0; transform: translateY(-10px) scale(0.7); }
+            60%  { opacity: 1; transform: translateY(2px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .anim-blink {
+            animation: term-blink 0.25s ease-in-out 4 alternate;
+        }
+        @keyframes term-blink {
+            0%   { color: inherit; text-shadow: 2px 2px 5px rgba(0,0,0,0.7); }
+            100% { color: #fbbf24; text-shadow: 0 0 20px #fbbf24, 0 0 40px #f59e0b; }
+        }
+        .anim-strike { position: relative; }
+        .anim-strike::after {
+            content: '';
+            position: absolute;
+            left: -4px; top: 45%;
+            width: 0; height: 4px;
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            transform: rotate(-12deg);
+            border-radius: 2px;
+            animation: strike-draw 0.5s ease-out forwards;
+            box-shadow: 0 0 8px rgba(239,68,68,0.6);
+        }
+        @keyframes strike-draw {
+            0%   { width: 0; }
+            100% { width: calc(100% + 8px); }
+        }
+        .fade-away {
+            opacity: 0 !important;
+            transform: scale(0.5) translateY(-10px) !important;
+            transition: opacity 0.5s ease, transform 0.5s ease !important;
+        }
+        .eq-locked .btn-valider,
+        .eq-locked .key-circle,
+        .eq-locked .op-select-circle,
+        .eq-locked .trash-btn,
+        .eq-locked .btn-undo {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* --- OVERLAY MODALS --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-modal {
+            background: #1e293b;
+            border: 6px solid var(--board-frame);
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+            max-width: 480px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Fredoka One', cursive, sans-serif;
+        }
+
+        .overlay.active .success-modal {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            font-size: 4.5rem;
+            margin-bottom: 15px;
+            animation: bounce 1.5s infinite;
+        }
+
+        .success-title {
+            font-size: 2rem;
+            color: var(--accent-green);
+            margin-bottom: 12px;
+        }
+
+        .success-text {
+            color: var(--text-chalk);
+            margin-bottom: 25px;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.5rem;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Chalkboard drawings -->
+    <svg class="chalk-bg" viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 50 150 Q 80 130 110 150 T 170 150" fill="none" stroke="#f8fafc" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="60" y="120" fill="#f8fafc" font-family="'Architects Daughter'" font-size="20">\theta = \pi / 3</text>
+        <circle cx="200" cy="500" r="40" fill="none" stroke="#f8fafc" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <line x1="200" y1="460" x2="200" y2="540" stroke="#f8fafc" stroke-width="1.5"/>
+        <line x1="160" y1="500" x2="240" y2="500" stroke="#f8fafc" stroke-width="1.5"/>
+        <path d="M 700 100 Q 750 200 800 120 T 900 150" fill="none" stroke="#f8fafc" stroke-width="2"/>
+        <text x="730" y="80" fill="#f8fafc" font-family="'Architects Daughter'" font-size="22">f(x) = ax + b</text>
+        <text x="100" y="680" fill="#f8fafc" font-family="'Architects Daughter'" font-size="24">x + 5 = 6 \Rightarrow x = 1</text>
+        <text x="800" y="650" fill="#f8fafc" font-family="'Architects Daughter'" font-size="20">\Delta = b^2 - 4ac</text>
+        <rect x="820" y="300" width="80" height="80" fill="none" stroke="#f8fafc" stroke-width="2"/>
+        <line x1="820" y1="300" x2="900" y2="380" stroke="#f8fafc" stroke-width="1.5"/>
+    </svg>
+
+    <div class="container">
+        
+        <!-- Toast System (used by EquaQuest) -->
+        <div class="toast" id="game-toast">
+            <span id="toast-text">Félicitations !</span>
+        </div>
+
+        <!-- Global Header Tabs -->
+        <div class="global-tabs">
+            <button class="tab-btn active" id="tab-balance" onclick="changeGlobalTab('balance')">⚖️ Balance Algébrique</button>
+            <button class="tab-btn" id="tab-equaquest" onclick="changeGlobalTab('equaquest')">🎮 Défi ÉquaQuest</button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB CONTENT: BALANCE ALGEBRIQUE               -->
+        <!-- ============================================== -->
+        <div id="global-view-balance" class="global-tab-content active">
+            <!-- Balance Selector Bar -->
+            <div class="level-selector-balance">
+                <button class="level-btn-balance active" onclick="selectBalanceLevel('free')">Mode Libre</button>
+                <button class="level-btn-balance" onclick="selectBalanceLevel(1)">Niveau 1</button>
+                <button class="level-btn-balance" onclick="selectBalanceLevel(2)">Niveau 2</button>
+                <button class="level-btn-balance" onclick="selectBalanceLevel(3)">Niveau 3</button>
+                <button class="level-btn-balance" onclick="selectBalanceLevel(4)">Niveau 4</button>
+            </div>
+
+            <!-- Main Layout columns -->
+            <div class="balance-body-row">
+                <!-- Left Control Panel -->
+                <div class="balance-card-wood">
+                    <h3 id="panel-title-balance" style="margin: 0; font-size: 1.3rem; color: var(--accent-yellow); font-family: 'Fredoka One'; text-align: center;">Paramètres de l'équation</h3>
+                    
+                    <div class="level-goal" id="goal-container-balance" style="display: none;">
+                        La balance commence à l'équilibre. Modifiez les plateaux pour isoler x (1x d'un côté, 0 de l'autre) tout en gardant l'équilibre.
+                    </div>
+
+                    <!-- Step-by-step Help explanation inside slate -->
+                    <div class="level-goal" id="balance-help-box" style="display: none; background: rgba(59, 130, 246, 0.15); border-left-color: var(--primary); color: #93c5fd;">
+                        Aide
+                    </div>
+
+                    <div id="sliders-container-balance" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; justify-content: center;">
+                        <div class="control-group">
+                            <label for="coef-a-bal">Inconnues <i>x</i> à gauche (a) : <span class="label-highlight" id="val-a-bal">2</span></label>
+                            <input type="range" id="coef-a-bal" min="0" max="5" value="2" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="val-b-bal">Masse à gauche (b) : <span class="label-highlight"><span id="val-b-text-bal">4</span> kg</span></label>
+                            <input type="range" id="val-b-bal" min="0" max="20" value="4" step="1">
+                        </div>
+
+                        <hr style="border: 0; border-top: 2px dashed rgba(255,255,255,0.1); width: 100%; margin: 5px 0;">
+
+                        <div class="control-group">
+                            <label for="coef-c-bal">Inconnues <i>x</i> à droite (c) : <span class="label-highlight" id="val-c-bal">0</span></label>
+                            <input type="range" id="coef-c-bal" min="0" max="5" value="0" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="val-d-bal">Masse à droite (d) : <span class="label-highlight"><span id="val-d-text-bal">10</span> kg</span></label>
+                            <input type="range" id="val-d-bal" min="0" max="20" value="10" step="1">
+                        </div>
+                    </div>
+
+                    <div class="equation-display-balance" id="equation-text-balance">
+                        2x + 4 = 10
+                    </div>
+
+                    <div class="balance-actions">
+                        <button class="btn-bubble btn-orange" id="solve-btn-balance" onclick="solveOneStepBalance()" style="font-size: 1.1rem; padding: 10px 15px; border-radius: 20px; border-width: 3px; box-shadow: 0 4px 0 var(--accent-yellow-border);">Aide (1 étape)</button>
+                        <button class="btn-bubble reset" onclick="resetSimBalance()" style="font-size: 1.1rem; padding: 10px 15px; border-radius: 20px; border-width: 3px; box-shadow: 0 4px 0 var(--accent-yellow-border); background: linear-gradient(185deg, #ef4444 0%, #dc2626 100%);">Réinitialiser</button>
+                    </div>
+                </div>
+
+                <!-- Right Visual Area -->
+                <div class="balance-card-wood balance-view-card">
+                    <h3 style="margin: 0; font-size: 1.3rem; color: var(--accent-yellow); font-family: 'Fredoka One'; text-align: center;">Aperçu de la balance physique</h3>
+                    
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 15px; width: 100%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 4px 10px rgba(0,0,0,0.6); flex-grow: 1; margin: 10px 0;">
+                        <svg class="balance-svg" viewBox="0 0 400 250" id="balance-view-svg" style="max-height: 230px;">
+                            <!-- Stand -->
+                            <rect x="195" y="100" width="10" height="110" fill="#ca8a04" rx="2" />
+                            <path d="M 160 210 L 240 210 L 220 200 L 180 200 Z" fill="#854d0e" />
+                            
+                            <!-- Main Beam -->
+                            <line id="beam-svg" x1="100" y1="100" x2="300" y2="100" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round" />
+                            <circle cx="200" cy="100" r="7" fill="#475569" />
+
+                            <!-- Left plate hook and plate -->
+                            <g id="left-plate-group-svg">
+                                <line x1="100" y1="100" x2="100" y2="160" stroke="#94a3b8" stroke-width="2" />
+                                <line x1="60" y1="160" x2="140" y2="160" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" />
+                                <g id="left-content-svg"></g>
+                            </g>
+
+                            <!-- Right plate hook and plate -->
+                            <g id="right-plate-group-svg">
+                                <line x1="300" y1="100" x2="300" y2="160" stroke="#94a3b8" stroke-width="2" />
+                                <line x1="260" y1="160" x2="340" y2="160" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" />
+                                <g id="right-content-svg"></g>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div id="balance-status-bal" class="status-balance balanced">Balance équilibrée !</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB CONTENT: DEFI EQUAQUEST                     -->
+        <!-- ============================================== -->
+        <div id="global-view-equaquest" class="global-tab-content">
+            
+            <!-- --- 1. TITLE SCREEN VIEW --- -->
+            <div class="view active" id="view-title">
+                <h1>
+                    <span>ÉQUAQUEST</span>
+                    <span class="title-sub">Le Défi Algébrique</span>
+                </h1>
+                
+                <div class="menu-row">
+                    <div class="test-tube-container">
+                        <svg width="100%" height="100%" viewBox="0 0 120 300">
+                            <path class="liquid" d="M 20 120 Q 40 115, 60 120 T 100 120 L 100 240 Q 100 260, 60 260 Q 20 260, 20 240 Z" />
+                            <path d="M 20 40 L 20 240 Q 20 280, 60 280 Q 100 280, 100 240 L 100 40 L 10 40 L 10 30 L 110 30 L 110 40 L 100 40" fill="none" stroke="#f8fafc" stroke-width="6" stroke-linecap="round" />
+                            <line x1="35" y1="80" x2="55" y2="80" stroke="#f8fafc" stroke-width="3" />
+                            <line x1="35" y1="120" x2="55" y2="120" stroke="#f8fafc" stroke-width="3" />
+                            <line x1="35" y1="160" x2="55" y2="160" stroke="#f8fafc" stroke-width="3" />
+                            <line x1="35" y1="200" x2="55" y2="200" stroke="#f8fafc" stroke-width="3" />
+                        </svg>
+                    </div>
+                    
+                    <div class="menu-buttons">
+                        <button class="btn-bubble" onclick="switchView('view-levels')">Jouer !</button>
+                        <button class="btn-bubble btn-orange" onclick="switchView('view-info')">Infos</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- --- 2. LEVEL SELECTION VIEW --- -->
+            <div class="view" id="view-levels">
+                <h1 style="font-size: 3rem; color: var(--accent-yellow); text-shadow: 0 5px 10px rgba(0,0,0,0.5);">Choisis ton Défi !</h1>
+                
+                <div class="level-grid">
+                    <button class="btn-bubble level-btn" onclick="startLevel(1)">Niveau 1</button>
+                    <button class="btn-bubble level-btn" onclick="startLevel(2)">Niveau 2</button>
+                    <button class="btn-bubble level-btn" onclick="startLevel(3)">Niveau 3</button>
+                    <button class="btn-bubble level-btn" onclick="startLevel(4)">Niveau 4</button>
+                </div>
+                
+                <button class="btn-bubble btn-orange back-btn" onclick="switchView('view-title')">Retour</button>
+            </div>
+
+            <!-- --- 3. INFOS / COMMENT JOUER VIEW --- -->
+            <div class="view" id="view-info">
+                <div class="info-card">
+                    <h2>Comment jouer à ÉquaQuest ?</h2>
+                    <p style="margin: 10px 0;">Le but est d'<strong>isoler l'inconnue x</strong> (la laisser toute seule d'un côté du signe =) pour trouver sa valeur secrète.</p>
+                    <p style="margin: 10px 0;">Pour cela, tu dois effectuer des opérations sur l'équation. Mais attention : <strong>la règle d'or de l'algèbre</strong> est de faire exactement la même opération sur les deux membres (gauche et droite) pour maintenir l'équilibre !</p>
+                    <p style="margin: 10px 0;"><strong>Contrôles :</strong></p>
+                    <ul style="margin: 5px 0; padding-left: 20px;">
+                        <li>Appuie sur le cercle vert de gauche pour choisir ton opération (+, -, ×, ÷).</li>
+                        <li>Saisis la valeur numérique ou l'inconnue x à l'aide du clavier.</li>
+                        <li>Appuie sur <strong>Valider</strong> pour voir l'effet et l'animation de compensation !</li>
+                    </ul>
+                </div>
+                
+                <button class="btn-bubble btn-orange back-btn" onclick="switchView('view-title')">Retour</button>
+            </div>
+
+            <!-- --- 4. MAIN GAMEPLAY VIEW --- -->
+            <div class="view" id="view-game">
+                
+                <div class="header">
+                    <div class="btn-close" onclick="exitGame()">×</div>
+                    <div class="level-badge" id="level-badge-display">Niveau 1</div>
+                    <div class="progress-box">
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">Progression</span>
+                        <div class="stars">
+                            <svg class="star" id="star-1" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <svg class="star" id="star-2" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <svg class="star" id="star-3" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blackboard Frame -->
+                <div class="board-frame">
+                    <div class="equation-box" id="eq-box-display">
+                        x + 5 = 6
+                    </div>
+
+                    <div class="btn-reset" onclick="resetEquation()" title="Réinitialiser l'équation">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-6h2v6zm0-8h-2V6h2v2z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- SVG Balance Scale (Compact visual feedback) -->
+                <div class="balance-box">
+                    <svg width="220" height="110" viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Base stand -->
+                        <rect x="107" y="30" width="6" height="55" fill="#64748b" rx="2"/>
+                        <path d="M 85 85 L 135 85 L 125 78 L 95 78 Z" fill="#475569"/>
+                        
+                        <!-- Main tilting beam -->
+                        <g id="scale-beam-group">
+                            <line id="scale-beam" x1="45" y1="40" x2="175" y2="40" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+                            <circle cx="110" cy="40" r="5" fill="#334155"/>
+                        </g>
+                        
+                        <!-- Left Hanging Pan -->
+                        <g id="scale-left-pan">
+                            <line x1="45" y1="40" x2="45" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+                            <line x1="25" y1="70" x2="65" y2="70" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+                            <rect x="27" y="60" width="36" height="8" rx="2" fill="rgba(59, 130, 246, 0.4)"/>
+                        </g>
+
+                        <!-- Right Hanging Pan -->
+                        <g id="scale-right-pan">
+                            <line x1="175" y1="40" x2="175" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+                            <line x1="155" y1="70" x2="195" y2="70" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+                            <rect x="157" y="60" width="36" height="8" rx="2" fill="rgba(16, 185, 129, 0.4)"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Operations and value panel -->
+                <div class="control-row">
+                    
+                    <!-- Popover Menu Anchor -->
+                    <div style="position: relative;">
+                        <div class="op-select-circle" id="active-op-circle" onclick="toggleOpPopover()">-</div>
+                        
+                        <!-- Operation popover picker -->
+                        <div class="op-popover" id="op-picker">
+                            <div class="op-bubble" onclick="selectOp('+')">+</div>
+                            <div class="op-bubble" onclick="selectOp('-')">-</div>
+                            <div class="op-bubble" onclick="selectOp('×')">×</div>
+                            <div class="op-bubble" onclick="selectOp('÷')">÷</div>
+                        </div>
+                    </div>
+
+                    <!-- Input display capsule -->
+                    <div class="val-display-box" id="val-input-display">
+                        ?
+                        <div class="btn-undo" onclick="pressBackspace()" title="Effacer">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <button class="btn-bubble btn-orange btn-valider" onclick="validateStep()">Valider</button>
+                </div>
+
+                <!-- Keyboard Layout -->
+                <div class="keyboard-area">
+                    <div class="number-arc">
+                        <button class="key-circle" onclick="pressKey('1')">1</button>
+                        <button class="key-circle" onclick="pressKey('2')">2</button>
+                        <button class="key-circle" onclick="pressKey('3')">3</button>
+                        <button class="key-circle" onclick="pressKey('4')">4</button>
+                        <button class="key-circle" onclick="pressKey('5')">5</button>
+                        <button class="key-circle key-x" id="btn-key-x" onclick="pressKey('x')">x</button>
+                        <button class="key-circle" onclick="pressKey('6')">6</button>
+                        <button class="key-circle" onclick="pressKey('7')">7</button>
+                        <button class="key-circle" onclick="pressKey('8')">8</button>
+                        <button class="key-circle" onclick="pressKey('9')">9</button>
+                        <button class="key-circle" onclick="pressKey('0')">0</button>
+                        <button class="key-circle key-minus" onclick="pressKey('-')">-</button>
+                    </div>
+
+                    <button class="trash-btn" onclick="clearInput()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Success Modal (Balance Algébrique) -->
+    <div class="overlay" id="success-overlay-bal">
+        <div class="success-modal">
+            <div class="success-icon">🎉</div>
+            <div class="success-title">Équation Résolue !</div>
+            <div class="success-text" id="success-text-bal">Félicitations ! Vous avez maintenu l'équilibre et isolé x !</div>
+            <button class="btn-bubble" onclick="nextEquationBal()" style="width: 100%; font-size: 1.4rem; padding: 12px 20px; border-radius: 30px; border-width: 4px; box-shadow: 0 6px 0 var(--accent-yellow-border);">Équation Suivante</button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // --- COMMON STATE & SOUND SYSTEM ---
+        // =========================================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSynthBeep(frequency, type, duration) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.type = type;
+                osc.frequency.value = frequency;
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio not allowed yet");
+            }
+        }
+
+        function playSuccessSound() {
+            playSynthBeep(523.25, 'sine', 0.1); // C5
+            setTimeout(() => playSynthBeep(659.25, 'sine', 0.15), 100); // E5
+        }
+
+        function playFailSound() {
+            playSynthBeep(180, 'sawtooth', 0.25); // Low buzz
+        }
+
+        function playLevelUpSound() {
+            playSynthBeep(523.25, 'triangle', 0.15); // C5
+            setTimeout(() => playSynthBeep(659.25, 'triangle', 0.15), 100); // E5
+            setTimeout(() => playSynthBeep(783.99, 'triangle', 0.15), 200); // G5
+            setTimeout(() => playSynthBeep(1046.50, 'triangle', 0.35), 300); // C6
+        }
+
+        // --- GLOBAL TABS NAV ---
+        function changeGlobalTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.global-tab-content').forEach(view => view.classList.remove('active'));
+
+            if (tabName === 'balance') {
+                document.getElementById('tab-balance').classList.add('active');
+                document.getElementById('global-view-balance').classList.add('active');
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } else {
+                document.getElementById('tab-equaquest').classList.add('active');
+                document.getElementById('global-view-equaquest').classList.add('active');
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+        }
+
+        // =========================================================================
+        // --- 1. ACTIVITE : LA BALANCE ALGEBRIQUE ---
+        // =========================================================================
+        let currentLevelBal = 'free';
+        let xSolutionBal = 3;
+
+        function selectBalanceLevel(level) {
+            currentLevelBal = level;
+            
+            // Toggle active buttons
+            document.querySelectorAll('.level-btn-balance').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            let btnIndex = level === 'free' ? 0 : level;
+            document.querySelectorAll('.level-btn-balance')[btnIndex].classList.add('active');
+
+            const goalContainer = document.getElementById('goal-container-balance');
+            const panelTitle = document.getElementById('panel-title-balance');
+            const helpBox = document.getElementById('balance-help-box');
+            if (helpBox) helpBox.style.display = 'none';
+
+            if (level === 'free') {
+                goalContainer.style.display = 'none';
+                panelTitle.innerText = "Paramètres de l'équation";
+                resetSimBalance();
+            } else {
+                goalContainer.style.display = 'block';
+                panelTitle.innerText = "Résoudre l'équation";
+                generateBalanceLevelEquation(level);
+            }
+        }
+
+        function generateBalanceLevelEquation(level) {
+            // Pick a solution value for x between 2 and 6 to avoid visual crowding
+            xSolutionBal = Math.floor(Math.random() * 5) + 2; 
+            let a = 0, b = 0, c = 0, d = 0;
+            const goalContainer = document.getElementById('goal-container-balance');
+
+            switch (level) {
+                case 1: // Form: x + b = d
+                    a = 1;
+                    c = 0;
+                    b = Math.floor(Math.random() * 8) + 2;
+                    d = a * xSolutionBal + b;
+                    goalContainer.innerHTML = "<strong>Niveau 1 : type x + b = d</strong><br>La balance commence équilibrée. Modifiez les plateaux (ex: soustraire le poids constant des deux côtés) pour isoler x tout en gardant l'équilibre.";
+                    break;
+                case 2: // Form: ax = d
+                    a = Math.floor(Math.random() * 3) + 2; // 2 to 4
+                    c = 0;
+                    b = 0;
+                    d = a * xSolutionBal;
+                    goalContainer.innerHTML = "<strong>Niveau 2 : type ax = d</strong><br>La balance commence équilibrée. Divisez la quantité de chaque plateau par le nombre de boîtes x pour en isoler une seule sans déséquilibrer.";
+                    break;
+                case 3: // Form: ax + b = d
+                    a = Math.floor(Math.random() * 3) + 2; // 2 to 4
+                    c = 0;
+                    b = Math.floor(Math.random() * 6) + 1; // 1 to 6
+                    d = a * xSolutionBal + b;
+                    goalContainer.innerHTML = "<strong>Niveau 3 : type ax + b = d</strong><br>Combinez les opérations (soustraire puis diviser) pour isoler x tout en maintenant la balance droite.";
+                    break;
+                case 4: // Form: ax + b = cx + d
+                    c = Math.floor(Math.random() * 2) + 1; // 1 to 2
+                    a = c + Math.floor(Math.random() * 2) + 1; // a > c
+                    b = Math.floor(Math.random() * 4) + 1;
+                    d = (a - c) * xSolutionBal + b;
+                    goalContainer.innerHTML = "<strong>Niveau 4 : type ax + b = cx + d</strong><br>Retirez des boîtes x et des poids pour regrouper l'inconnue d'un seul côté, toujours à l'équilibre !";
+                    break;
+            }
+
+            // Sync sliders
+            document.getElementById('coef-a-bal').value = a;
+            document.getElementById('val-b-bal').value = b;
+            document.getElementById('coef-c-bal').value = c;
+            document.getElementById('val-d-bal').value = d;
+
+            updateSimulationBalance();
+        }
+
+        function nextEquationBal() {
+            document.getElementById('success-overlay-bal').classList.remove('active');
+            generateBalanceLevelEquation(currentLevelBal);
+        }
+
+        function updateSimulationBalance() {
+            const inputA = document.getElementById('coef-a-bal');
+            const inputB = document.getElementById('val-b-bal');
+            const inputC = document.getElementById('coef-c-bal');
+            const inputD = document.getElementById('val-d-bal');
+
+            const a = parseInt(inputA.value);
+            const b = parseInt(inputB.value);
+            const c = parseInt(inputC.value);
+            const d = parseInt(inputD.value);
+
+            document.getElementById('val-a-bal').innerText = a;
+            document.getElementById('val-b-text-bal').innerText = b;
+            document.getElementById('val-c-bal').innerText = c;
+            document.getElementById('val-d-text-bal').innerText = d;
+
+            // Update Equation text
+            let leftSide = `${a}x` + (b > 0 ? ` + ${b}` : (a === 0 ? '0' : ''));
+            let rightSide = (c > 0 ? `${c}x` : '') + (d > 0 ? (c > 0 ? ` + ${d}` : `${d}`) : (c === 0 ? '0' : ''));
+            document.getElementById('equation-text-balance').innerText = `${leftSide} = ${rightSide}`;
+
+            // Draw contents on plates
+            drawPlateContentBal('left-content-svg', a, b, 60, 160);
+            drawPlateContentBal('right-content-svg', c, d, 260, 160);
+
+            // Calculate weight based on the actual target solution of x
+            const leftWeight = a * xSolutionBal + b;
+            const rightWeight = c * xSolutionBal + d;
+
+            const beam = document.getElementById('beam-svg');
+            const leftPlateGroup = document.getElementById('left-plate-group-svg');
+            const rightPlateGroup = document.getElementById('right-plate-group-svg');
+            const balanceStatus = document.getElementById('balance-status-bal');
+
+            if (leftWeight === rightWeight) {
+                beam.setAttribute('y1', '100');
+                beam.setAttribute('y2', '100');
+                leftPlateGroup.setAttribute('transform', 'translate(0, 0)');
+                rightPlateGroup.setAttribute('transform', 'translate(0, 0)');
+                
+                balanceStatus.className = "status-balance balanced";
+                balanceStatus.innerText = "Balance équilibrée !";
+
+                // Check win condition: balance is balanced AND x is isolated on one side
+                const isLeftIsolated = (a === 1 && b === 0 && c === 0);
+                const isRightIsolated = (c === 1 && d === 0 && a === 0);
+
+                if (currentLevelBal !== 'free' && (isLeftIsolated || isRightIsolated)) {
+                    setTimeout(() => {
+                        document.getElementById('success-text-bal').innerText = `Félicitations ! Vous avez isolé l'inconnue. La solution est x = ${xSolutionBal} kg.`;
+                        document.getElementById('success-overlay-bal').classList.add('active');
+                        playSuccessSound();
+                    }, 500);
+                }
+            } else {
+                const tilt = Math.min(Math.max((leftWeight - rightWeight) * 4, -18), 18);
+                beam.setAttribute('y1', (100 + tilt).toString());
+                beam.setAttribute('y2', (100 - tilt).toString());
+                leftPlateGroup.setAttribute('transform', `translate(0, ${tilt})`);
+                rightPlateGroup.setAttribute('transform', `translate(0, ${-tilt})`);
+                
+                balanceStatus.className = "status-balance unbalanced";
+                balanceStatus.innerText = leftWeight > rightWeight ? "Déséquilibrée (Surcharge à gauche !)" : "Déséquilibrée (Surcharge à droite !)";
+            }
+        }
+
+        function drawPlateContentBal(elementId, xCount, weightCount, startX, yBase) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            let currentX = startX + 5;
+
+            // Draw x boxes
+            for (let i = 0; i < xCount; i++) {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', currentX.toString());
+                rect.setAttribute('y', (yBase - 25).toString());
+                rect.setAttribute('width', '15');
+                rect.setAttribute('height', '25');
+                rect.setAttribute('class', 'box-x');
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', (currentX + 4).toString());
+                text.setAttribute('y', (yBase - 8).toString());
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-size', '12px');
+                text.setAttribute('font-family', 'Fredoka One, sans-serif');
+                text.setAttribute('font-weight', 'bold');
+                text.textContent = 'x';
+
+                container.appendChild(rect);
+                container.appendChild(text);
+                currentX += 18;
+            }
+
+            // Draw weights (1kg circles)
+            currentX = startX + 5;
+            let level = 0;
+            for (let i = 0; i < weightCount; i++) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                const cx = currentX + (i % 6) * 12;
+                const cy = yBase - 5 - level * 10;
+                circle.setAttribute('cx', cx.toString());
+                circle.setAttribute('cy', cy.toString());
+                circle.setAttribute('r', '5');
+                circle.setAttribute('class', 'weight-unit');
+                container.appendChild(circle);
+
+                if ((i + 1) % 6 === 0) {
+                    level++;
+                }
+            }
+        }
+
+        function solveOneStepBalance() {
+            const inputA = document.getElementById('coef-a-bal');
+            const inputB = document.getElementById('val-b-bal');
+            const inputC = document.getElementById('coef-c-bal');
+            const inputD = document.getElementById('val-d-bal');
+
+            const a = parseInt(inputA.value);
+            const b = parseInt(inputB.value);
+            const c = parseInt(inputC.value);
+            const d = parseInt(inputD.value);
+            
+            const helpBox = document.getElementById('balance-help-box');
+
+            if (b > 0 && d > 0) {
+                // Step 1: subtract the minimum constant from both sides
+                const minC = Math.min(b, d);
+                inputB.value = b - minC;
+                inputD.value = d - minC;
+                helpBox.innerHTML = `<strong>Étape 1 : Retirer les constantes</strong><br>On soustrait la plus petite masse (${minC} kg) des deux côtés pour simplifier les plateaux.`;
+                helpBox.style.display = 'block';
+                playSuccessSound();
+            } else if (a > 0 && c > 0) {
+                // Step 2: subtract the minimum x from both sides
+                const minX = Math.min(a, c);
+                inputA.value = a - minX;
+                inputC.value = c - minX;
+                helpBox.innerHTML = `<strong>Étape 2 : Regrouper les inconnues</strong><br>On retire ${minX} boîte(s) <i>x</i> de chaque plateau pour avoir les inconnues d'un seul côté.`;
+                helpBox.style.display = 'block';
+                playSuccessSound();
+            } else if (a > 0 && b === 0 && c === 0 && d > 0) {
+                // Step 3: division (left side has x)
+                const sol = d / a;
+                helpBox.innerHTML = `<strong>Étape 3 : Isoler x par division</strong><br>Pour trouver <i>x</i>, on divise le poids de droite (${d} kg) par le nombre de boîtes à gauche (${a}). On trouve <i>x</i> = <strong>${sol.toFixed(2)} kg</strong>.`;
+                helpBox.style.display = 'block';
+                inputD.value = sol;
+                inputA.value = 1;
+                playLevelUpSound();
+            } else if (c > 0 && d === 0 && a === 0 && b > 0) {
+                // Step 3: division (right side has x)
+                const sol = b / c;
+                helpBox.innerHTML = `<strong>Étape 3 : Isoler x par division</strong><br>Pour trouver <i>x</i>, on divise le poids de gauche (${b} kg) par le nombre de boîtes à droite (${c}). On trouve <i>x</i> = <strong>${sol.toFixed(2)} kg</strong>.`;
+                helpBox.style.display = 'block';
+                inputB.value = sol;
+                inputC.value = 1;
+                playLevelUpSound();
+            } else {
+                helpBox.style.display = 'none';
+            }
+            updateSimulationBalance();
+        }
+
+        function resetSimBalance() {
+            const helpBox = document.getElementById('balance-help-box');
+            if (helpBox) helpBox.style.display = 'none';
+
+            if (currentLevelBal === 'free') {
+                document.getElementById('coef-a-bal').value = 2;
+                document.getElementById('val-b-bal').value = 4;
+                document.getElementById('coef-c-bal').value = 0;
+                document.getElementById('val-d-bal').value = 10;
+                updateSimulationBalance();
+            } else {
+                generateBalanceLevelEquation(currentLevelBal);
+            }
+        }
+
+        // =========================================================================
+        // --- 2. EXACT FRACTION CLASS (USED BY EQUAQUEST) ---
+        // =========================================================================
+        class Fraction {
+            constructor(num, den = 1) {
+                if (den === 0) throw new Error("Denominator cannot be 0");
+                if (den < 0) {
+                    num = -num;
+                    den = -den;
+                }
+                this.num = Math.round(num);
+                this.den = Math.round(den);
+                this.simplify();
+            }
+
+            simplify() {
+                const g = this.gcd(Math.abs(this.num), Math.abs(this.den));
+                this.num /= g;
+                this.den /= g;
+            }
+
+            gcd(a, b) {
+                while (b) {
+                    let t = b;
+                    b = a % b;
+                    a = t;
+                }
+                return a || 1;
+            }
+
+            add(other) {
+                return new Fraction(this.num * other.den + other.num * this.den, this.den * other.den);
+            }
+
+            sub(other) {
+                return new Fraction(this.num * other.den - other.num * this.den, this.den * other.den);
+            }
+
+            mul(other) {
+                return new Fraction(this.num * other.num, this.den * other.den);
+            }
+
+            div(other) {
+                return new Fraction(this.num * other.den, this.den * other.num);
+            }
+
+            isZero() {
+                return this.num === 0;
+            }
+
+            isNegative() {
+                return this.num < 0;
+            }
+
+            equals(other) {
+                return this.num === other.num && this.den === other.den;
+            }
+
+            toHTML(showSign = false) {
+                if (this.num === 0) return "0";
+                
+                let sign = "";
+                let absNum = Math.abs(this.num);
+                if (this.num < 0) {
+                    sign = "-";
+                } else if (showSign) {
+                    sign = "+";
+                }
+
+                if (this.den === 1) {
+                    return sign + absNum;
+                }
+
+                return `${sign}<span class="fraction-container"><span class="numerator">${absNum}</span><span class="denominator">${this.den}</span></span>`;
+            }
+
+            toFloat() {
+                return this.num / this.den;
+            }
+        }
+
+        // =========================================================================
+        // --- 3. ACTIVITE : LE DEFI EQUAQUEST ---
+        // =========================================================================
+        let currentView = 'view-title';
+        let currentLevel = 1;
+        let score = 0; 
+        let inputVal = ""; 
+        let activeOp = "-"; 
+        
+        let coeffA = new Fraction(1);
+        let coeffB = new Fraction(0);
+        let coeffC = new Fraction(0);
+        let coeffD = new Fraction(0);
+
+        let initialCoeffA, initialCoeffB, initialCoeffC, initialCoeffD;
+        let equationSolvedValue = 0;
+
+        function switchView(viewId) {
+            document.getElementById(currentView).classList.remove('active');
+            document.getElementById(viewId).classList.add('active');
+            currentView = viewId;
+        }
+
+        function exitGame() {
+            switchView('view-levels');
+        }
+
+        function startLevel(lvl) {
+            currentLevel = lvl;
+            score = 0;
+            updateStars();
+            document.getElementById('level-badge-display').innerText = "Niveau " + currentLevel;
+            
+            const btnX = document.getElementById('btn-key-x');
+            if (currentLevel === 4) {
+                btnX.style.opacity = "1";
+                btnX.style.pointerEvents = "auto";
+            } else {
+                btnX.style.opacity = "0.3";
+                btnX.style.pointerEvents = "none";
+            }
+
+            generateNewQuestion();
+            switchView('view-game');
+        }
+
+        function generateNewQuestion() {
+            let sol = Math.floor(Math.random() * 8) + 2; 
+            equationSolvedValue = sol;
+            clearInput();
+
+            if (currentLevel === 1) {
+                coeffA = new Fraction(1);
+                coeffC = new Fraction(0);
+                let bVal = Math.floor(Math.random() * 8) + 1;
+                let sign = Math.random() > 0.5 ? 1 : -1;
+                coeffB = new Fraction(bVal * sign);
+                coeffD = new Fraction(sol).add(coeffB);
+            } 
+            else if (currentLevel === 2) {
+                coeffB = new Fraction(0);
+                coeffC = new Fraction(0);
+                let aVal = Math.floor(Math.random() * 4) + 2; 
+                coeffA = new Fraction(aVal);
+                coeffD = coeffA.mul(new Fraction(sol));
+            } 
+            else if (currentLevel === 3) {
+                coeffC = new Fraction(0);
+                let aVal = Math.floor(Math.random() * 3) + 2; 
+                coeffA = new Fraction(aVal);
+                let bVal = Math.floor(Math.random() * 8) + 1;
+                let sign = Math.random() > 0.5 ? 1 : -1;
+                coeffB = new Fraction(bVal * sign);
+                coeffD = coeffA.mul(new Fraction(sol)).add(coeffB);
+            } 
+            else {
+                let cVal = Math.floor(Math.random() * 2) + 1; 
+                let aVal = cVal + Math.floor(Math.random() * 3) + 1; 
+                coeffA = new Fraction(aVal);
+                coeffC = new Fraction(cVal);
+                let bVal = Math.floor(Math.random() * 7) + 1;
+                coeffB = new Fraction(bVal);
+                coeffD = coeffA.sub(coeffC).mul(new Fraction(sol)).add(coeffB);
+            }
+
+            initialCoeffA = new Fraction(coeffA.num, coeffA.den);
+            initialCoeffB = new Fraction(coeffB.num, coeffB.den);
+            initialCoeffC = new Fraction(coeffC.num, coeffC.den);
+            initialCoeffD = new Fraction(coeffD.num, coeffD.den);
+
+            updateEquationDisplay();
+            updateBalanceTilt();
+        }
+
+        function resetEquation() {
+            coeffA = new Fraction(initialCoeffA.num, initialCoeffA.den);
+            coeffB = new Fraction(initialCoeffB.num, initialCoeffB.den);
+            coeffC = new Fraction(initialCoeffC.num, initialCoeffC.den);
+            coeffD = new Fraction(initialCoeffD.num, initialCoeffD.den);
+            
+            clearInput();
+            updateEquationDisplay();
+            updateBalanceTilt();
+            showToast("Équation réinitialisée !", false);
+        }
+
+        function updateEquationDisplay() {
+            const displayEl = document.getElementById('eq-box-display');
+            let htmlStr = "";
+
+            let leftParts = [];
+            if (!coeffA.isZero()) {
+                if (coeffA.equals(new Fraction(1))) leftParts.push("x");
+                else if (coeffA.equals(new Fraction(-1))) leftParts.push("-x");
+                else leftParts.push(coeffA.toHTML() + "x");
+            }
+            if (!coeffB.isZero() || leftParts.length === 0) {
+                leftParts.push(coeffB.toHTML(leftParts.length > 0));
+            }
+            htmlStr += leftParts.join(" ");
+
+            htmlStr += " = ";
+
+            let rightParts = [];
+            if (!coeffC.isZero()) {
+                if (coeffC.equals(new Fraction(1))) rightParts.push("x");
+                else if (coeffC.equals(new Fraction(-1))) rightParts.push("-x");
+                else rightParts.push(coeffC.toHTML() + "x");
+            }
+            if (!coeffD.isZero() || rightParts.length === 0) {
+                rightParts.push(coeffD.toHTML(rightParts.length > 0));
+            }
+            htmlStr += rightParts.join(" ");
+
+            displayEl.innerHTML = htmlStr;
+        }
+
+        function updateBalanceTilt() {
+            const beam = document.getElementById('scale-beam-group');
+            const leftPan = document.getElementById('scale-left-pan');
+            const rightPan = document.getElementById('scale-right-pan');
+
+            const xVal = equationSolvedValue;
+            const leftWeight = coeffA.toFloat() * xVal + coeffB.toFloat();
+            const rightWeight = coeffC.toFloat() * xVal + coeffD.toFloat();
+
+            let diff = leftWeight - rightWeight;
+            let angle = Math.min(Math.max(diff * 1.5, -10), 10);
+
+            beam.style.transform = `rotate(${angle}deg)`;
+            beam.style.transformOrigin = "110px 40px";
+            beam.style.transition = "transform 0.5s ease-out";
+
+            const offsetLeft = 65 * Math.sin(angle * Math.PI / 180);
+            const offsetRight = -offsetLeft;
+
+            leftPan.style.transform = `translateY(${offsetLeft}px)`;
+            leftPan.style.transition = "transform 0.5s ease-out";
+
+            rightPan.style.transform = `translateY(${offsetRight}px)`;
+            rightPan.style.transition = "transform 0.5s ease-out";
+        }
+
+        function showToast(text, isError = false) {
+            const toast = document.getElementById('game-toast');
+            toast.className = "toast" + (isError ? " error" : "");
+            document.getElementById('toast-text').innerText = text;
+            toast.style.display = "flex";
+            
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 2500);
+        }
+
+        function pressKey(char) {
+            if (char === '-') {
+                if (inputVal.startsWith('-')) {
+                    inputVal = inputVal.slice(1);
+                } else {
+                    inputVal = '-' + inputVal;
+                }
+            } else if (char === 'x') {
+                if (inputVal.includes('x')) return;
+                inputVal += 'x';
+            } else {
+                if (inputVal.endsWith('x')) return;
+                inputVal += char;
+            }
+            updateInputUI();
+        }
+
+        function pressBackspace() {
+            if (inputVal.length > 0) {
+                inputVal = inputVal.slice(0, -1);
+                updateInputUI();
+            }
+        }
+
+        function clearInput() {
+            inputVal = "";
+            updateInputUI();
+        }
+
+        function updateInputUI() {
+            const disp = document.getElementById('val-input-display');
+            if (inputVal === "") {
+                disp.innerHTML = "?";
+            } else {
+                disp.innerHTML = inputVal;
+            }
+        }
+
+        function toggleOpPopover() {
+            document.getElementById('op-picker').classList.toggle('active');
+        }
+
+        function selectOp(op) {
+            activeOp = op;
+            document.getElementById('active-op-circle').innerText = activeOp;
+            document.getElementById('op-picker').classList.remove('active');
+        }
+
+        // --- EQUAQUEST ANIMATION ENGINE ---
+        let animationInProgress = false;
+
+        function renderSideHTML(cVar, cConst, prefix) {
+            let parts = [];
+            if (!cVar.isZero()) {
+                let h;
+                if (cVar.equals(new Fraction(1))) h = 'x';
+                else if (cVar.equals(new Fraction(-1))) h = '-x';
+                else h = cVar.toHTML() + 'x';
+                parts.push('<span class="eq-term" id="' + prefix + '-var">' + h + '</span>');
+            }
+            if (!cConst.isZero() || parts.length === 0) {
+                let h2 = cConst.toHTML(parts.length > 0);
+                parts.push('<span class="eq-term" id="' + prefix + '-const">' + h2 + '</span>');
+            }
+            return parts.join(' ');
+        }
+
+        function findCancellations(op, valNum, valIsX) {
+            let c = { lv: false, lc: false, rv: false, rc: false };
+            if (!valIsX) {
+                if (op === '-') {
+                    if (Math.abs(coeffB.toFloat() - valNum) < 0.001 && !coeffB.isZero()) c.lc = true;
+                    if (Math.abs(coeffD.toFloat() - valNum) < 0.001 && !coeffD.isZero()) c.rc = true;
+                } else if (op === '+') {
+                    if (Math.abs(coeffB.toFloat() + valNum) < 0.001 && !coeffB.isZero()) c.lc = true;
+                    if (Math.abs(coeffD.toFloat() + valNum) < 0.001 && !coeffD.isZero()) c.rc = true;
+                }
+            } else {
+                if (op === '-') {
+                    if (Math.abs(coeffA.toFloat() - valNum) < 0.001 && !coeffA.isZero()) c.lv = true;
+                    if (Math.abs(coeffC.toFloat() - valNum) < 0.001 && !coeffC.isZero()) c.rv = true;
+                } else if (op === '+') {
+                    if (Math.abs(coeffA.toFloat() + valNum) < 0.001 && !coeffA.isZero()) c.lv = true;
+                    if (Math.abs(coeffC.toFloat() + valNum) < 0.001 && !coeffC.isZero()) c.rv = true;
+                }
+            }
+            return c;
+        }
+
+        function animateStep(op, valNum, valIsX, newA, newB, newC, newD, isSimplify, afterDone) {
+            animationInProgress = true;
+            let gameView = document.getElementById('view-game');
+            gameView.classList.add('eq-locked');
+            let displayEl = document.getElementById('eq-box-display');
+            let origFontSize = displayEl.style.fontSize;
+
+            // Build operation text
+            let opText;
+            if (valIsX) {
+                if (valNum === 1) opText = op + ' x';
+                else if (valNum === -1) opText = op + ' (-x)';
+                else if (valNum < 0) opText = op + ' (' + valNum + 'x)';
+                else opText = op + ' ' + valNum + 'x';
+            } else {
+                if (valNum < 0) {
+                    opText = op + ' (' + valNum + ')';
+                } else {
+                    opText = op + ' ' + valNum;
+                }
+            }
+
+            // ====== ETAPE 1 : Poser l'operation sur les deux membres ======
+            let leftSide = renderSideHTML(coeffA, coeffB, 'L');
+            let rightSide = renderSideHTML(coeffC, coeffD, 'R');
+            let leftOp = '<span class="eq-term op-applied" id="L-op">' + opText + '</span>';
+            let rightOp = '<span class="eq-term op-applied" id="R-op">' + opText + '</span>';
+
+            let eqHTML;
+            if (op === '+' || op === '-') {
+                eqHTML = '<span>' + leftSide + ' ' + leftOp + ' = ' + rightSide + ' ' + rightOp + '</span>';
+            } else {
+                eqHTML = '<span>(' + leftSide + ') ' + leftOp + ' = (' + rightSide + ') ' + rightOp + '</span>';
+            }
+            displayEl.innerHTML = eqHTML;
+            displayEl.style.fontSize = '2.5rem';
+
+            let cancels = findCancellations(op, valNum, valIsX);
+            let anyCancels = cancels.lv || cancels.lc || cancels.rv || cancels.rc;
+
+            // ====== ETAPE 2 : Realisation – clignotement puis barre rouge ======
+            setTimeout(function() {
+                if (anyCancels) {
+                    let toCancel = [];
+                    if (cancels.lc) {
+                        let e1 = document.getElementById('L-const');
+                        let e2 = document.getElementById('L-op');
+                        if (e1) toCancel.push(e1);
+                        if (e2) toCancel.push(e2);
+                    }
+                    if (cancels.lv) {
+                        let e1 = document.getElementById('L-var');
+                        let e2 = document.getElementById('L-op');
+                        if (e1) toCancel.push(e1);
+                        if (e2 && toCancel.indexOf(e2) === -1) toCancel.push(e2);
+                    }
+                    if (cancels.rc) {
+                        let e1 = document.getElementById('R-const');
+                        let e2 = document.getElementById('R-op');
+                        if (e1) toCancel.push(e1);
+                        if (e2) toCancel.push(e2);
+                    }
+                    if (cancels.rv) {
+                        let e1 = document.getElementById('R-var');
+                        let e2 = document.getElementById('R-op');
+                        if (e1) toCancel.push(e1);
+                        if (e2 && toCancel.indexOf(e2) === -1) toCancel.push(e2);
+                    }
+
+                    // Phase clignotement
+                    toCancel.forEach(function(el) { el.classList.add('anim-blink'); });
+
+                    // Phase barrer (trait rouge)
+                    setTimeout(function() {
+                        toCancel.forEach(function(el) {
+                            el.classList.remove('anim-blink');
+                            el.classList.add('anim-strike');
+                        });
+
+                        // Phase disparition
+                        setTimeout(function() {
+                            toCancel.forEach(function(el) { el.classList.add('fade-away'); });
+
+                            // ====== ETAPE 3 : Afficher le resultat simplifie ======
+                            setTimeout(function() {
+                                applyAndFinish(newA, newB, newC, newD, displayEl, origFontSize, gameView, afterDone);
+                            }, 500);
+                        }, 600);
+                    }, 1000);
+                } else {
+                    // Pas de compensation directe : flash les termes ajoutes
+                    let ops = document.querySelectorAll('.op-applied');
+                    ops.forEach(function(el) { el.classList.add('anim-blink'); });
+
+                    setTimeout(function() {
+                        applyAndFinish(newA, newB, newC, newD, displayEl, origFontSize, gameView, afterDone);
+                    }, 1000);
+                }
+            }, 800);
+        }
+
+        function applyAndFinish(newA, newB, newC, newD, displayEl, origFontSize, gameView, afterDone) {
+            coeffA = newA;
+            coeffB = newB;
+            coeffC = newC;
+            coeffD = newD;
+            displayEl.style.fontSize = origFontSize || '';
+            updateEquationDisplay();
+            updateBalanceTilt();
+            gameView.classList.remove('eq-locked');
+            animationInProgress = false;
+            afterDone();
+        }
+
+        function validateStep() {
+            if (animationInProgress) return;
+            if (inputVal === "") {
+                showToast("Saisis une valeur !", true);
+                playFailSound();
+                return;
+            }
+
+            let valNum = 1;
+            let valIsX = false;
+            if (inputVal === "-") {
+                showToast("Saisis un nombre après le signe - !", true);
+                playFailSound();
+                return;
+            }
+            if (inputVal === "x") {
+                valIsX = true; valNum = 1;
+            } else if (inputVal === "-x") {
+                valIsX = true; valNum = -1;
+            } else if (inputVal.endsWith("x")) {
+                valIsX = true;
+                let coeffStr = inputVal.slice(0, -1);
+                valNum = parseInt(coeffStr);
+                if (isNaN(valNum)) valNum = 1;
+            } else {
+                valNum = parseInt(inputVal);
+            }
+
+            const stepValue = new Fraction(valNum);
+
+            let isSimplifyingStep = false;
+            if (activeOp === '-') {
+                if (!valIsX) {
+                    if (coeffB.toFloat() === valNum && !coeffB.isZero()) isSimplifyingStep = true;
+                    if (coeffD.toFloat() === valNum && !coeffD.isZero()) isSimplifyingStep = true;
+                } else {
+                    if (coeffA.toFloat() === valNum && !coeffA.isZero()) isSimplifyingStep = true;
+                    if (coeffC.toFloat() === valNum && !coeffC.isZero()) isSimplifyingStep = true;
+                }
+            } else if (activeOp === '+') {
+                if (!valIsX) {
+                    if (coeffB.toFloat() === -valNum && !coeffB.isZero()) isSimplifyingStep = true;
+                    if (coeffD.toFloat() === -valNum && !coeffD.isZero()) isSimplifyingStep = true;
+                } else {
+                    if (coeffA.toFloat() === -valNum && !coeffA.isZero()) isSimplifyingStep = true;
+                    if (coeffC.toFloat() === -valNum && !coeffC.isZero()) isSimplifyingStep = true;
+                }
+            } else if (activeOp === '÷') {
+                if (!valIsX && coeffA.toFloat() === valNum && coeffB.isZero() && coeffC.isZero()) isSimplifyingStep = true;
+            }
+
+            let newA, newB, newC, newD;
+            try {
+                if (valIsX) {
+                    if (activeOp === '+') {
+                        newA = coeffA.add(stepValue); newB = new Fraction(coeffB.num, coeffB.den);
+                        newC = coeffC.add(stepValue); newD = new Fraction(coeffD.num, coeffD.den);
+                    } else if (activeOp === '-') {
+                        newA = coeffA.sub(stepValue); newB = new Fraction(coeffB.num, coeffB.den);
+                        newC = coeffC.sub(stepValue); newD = new Fraction(coeffD.num, coeffD.den);
+                    } else {
+                        showToast("Opération interdite avec x !", true);
+                        playFailSound();
+                        return;
+                    }
+                } else {
+                    if (activeOp === '+') {
+                        newA = new Fraction(coeffA.num, coeffA.den); newB = coeffB.add(stepValue);
+                        newC = new Fraction(coeffC.num, coeffC.den); newD = coeffD.add(stepValue);
+                    } else if (activeOp === '-') {
+                        newA = new Fraction(coeffA.num, coeffA.den); newB = coeffB.sub(stepValue);
+                        newC = new Fraction(coeffC.num, coeffC.den); newD = coeffD.sub(stepValue);
+                    } else if (activeOp === '×') {
+                        if (valNum === 0) {
+                            showToast("Multiplier par 0 interdit !", true);
+                            playFailSound();
+                            return;
+                        }
+                        newA = coeffA.mul(stepValue); newB = coeffB.mul(stepValue);
+                        newC = coeffC.mul(stepValue); newD = coeffD.mul(stepValue);
+                    } else if (activeOp === '÷') {
+                        if (valNum === 0) {
+                            showToast("Division par 0 impossible !", true);
+                            playFailSound();
+                            return;
+                        }
+                        newA = coeffA.div(stepValue); newB = coeffB.div(stepValue);
+                        newC = coeffC.div(stepValue); newD = coeffD.div(stepValue);
+                    }
+                }
+            } catch (e) {
+                showToast("Calcul impossible !", true);
+                playFailSound();
+                return;
+            }
+
+            clearInput();
+
+            animateStep(activeOp, valNum, valIsX, newA, newB, newC, newD, isSimplifyingStep, function() {
+                let solvedRight = coeffA.equals(new Fraction(1)) && coeffB.isZero() && coeffC.isZero() && coeffD.equals(new Fraction(equationSolvedValue));
+                let solvedLeft = coeffC.equals(new Fraction(1)) && coeffD.isZero() && coeffA.isZero() && coeffB.equals(new Fraction(equationSolvedValue));
+
+                if (solvedLeft || solvedRight) {
+                    playSuccessSound();
+                    showToast('Bravo ! x = ' + equationSolvedValue, false);
+                    score++;
+                    updateStars();
+                    setTimeout(function() {
+                        if (score >= 3) {
+                            playLevelUpSound();
+                            alert('Niveau ' + currentLevel + ' terminé !');
+                            switchView('view-levels');
+                        } else {
+                            generateNewQuestion();
+                        }
+                    }, 2000);
+                } else {
+                    if (isSimplifyingStep) {
+                        playSuccessSound();
+                        showToast("Bonne opération !", false);
+                    } else {
+                        playFailSound();
+                        showToast("Opération correcte, mais n'isole pas x.", true);
+                    }
+                }
+            });
+        }
+
+        function updateStars() {
+            for (let i = 1; i <= 3; i++) {
+                const star = document.getElementById("star-" + i);
+                if (i <= score) {
+                    star.classList.add("filled");
+                } else {
+                    star.classList.remove("filled");
+                }
+            }
+        }
+
+        // =========================================================================
+        // --- 4. INITIALIZATION ---
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const inputA = document.getElementById('coef-a-bal');
+            const inputB = document.getElementById('val-b-bal');
+            const inputC = document.getElementById('coef-c-bal');
+            const inputD = document.getElementById('val-d-bal');
+
+            [inputA, inputB, inputC, inputD].forEach(input => {
+                input.addEventListener('input', updateSimulationBalance);
+            });
+
+            selectBalanceLevel('free');
+        });
+    </script>
+</body>
+</html>

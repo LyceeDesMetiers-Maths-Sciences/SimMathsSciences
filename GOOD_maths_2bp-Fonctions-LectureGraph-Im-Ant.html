@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1re Bac Pro — Fonctions : lecture graphique (image, antécédent, seuil)</title>
+    <!-- Importation de polices modernes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.4);
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.4);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --grid-line: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            max-width: 800px;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .badge {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* SVG Graph Styling */
+        .graph-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        .grid-line {
+            stroke: var(--grid-line);
+            stroke-width: 1;
+        }
+
+        .axis {
+            stroke: rgba(255, 255, 255, 0.4);
+            stroke-width: 1.5;
+        }
+
+        .axis-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            fill: var(--text-muted);
+            text-anchor: middle;
+        }
+
+        .axis-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            fill: var(--text-main);
+        }
+
+        .curve {
+            fill: none;
+            stroke: url(#curve-gradient);
+            stroke-width: 4;
+            stroke-linecap: round;
+            filter: drop-shadow(0 2px 8px var(--primary-glow));
+        }
+
+        .threshold-line {
+            stroke: var(--danger);
+            stroke-width: 2;
+            stroke-dasharray: 6 4;
+            opacity: 0.8;
+            transition: y 0.2s ease;
+        }
+
+        .tracker-line-x {
+            stroke: rgba(255, 255, 255, 0.25);
+            stroke-width: 1;
+            stroke-dasharray: 4 4;
+        }
+
+        .tracker-line-y {
+            stroke: rgba(255, 255, 255, 0.25);
+            stroke-width: 1;
+            stroke-dasharray: 4 4;
+        }
+
+        .tracker-point {
+            fill: var(--accent);
+            stroke: var(--bg-color);
+            stroke-width: 2.5;
+            r: 7;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+            transition: cx 0.1s ease, cy 0.1s ease;
+        }
+
+        .intersection-point {
+            fill: var(--danger);
+            stroke: var(--text-main);
+            stroke-width: 2;
+            r: 5;
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+        }
+
+        /* Controls & Information Panels */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-val {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            transition: background 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .equation-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .math-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #93c5fd, #a7f3d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .explanation {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .explanation strong {
+            color: var(--text-main);
+        }
+
+        .alert-banner {
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .alert-safe {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+        }
+
+        .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(239, 68, 68, 0.2); }
+            50% { border-color: rgba(239, 68, 68, 0.6); }
+            100% { border-color: rgba(239, 68, 68, 0.2); }
+        }
+
+        .indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .bg-safe { background-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+        .bg-danger { background-color: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+
+        /* Values Table Card */
+        .table-card {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        td {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .highlight-col {
+            background-color: rgba(59, 130, 246, 0.08);
+            border: 1.5px solid var(--primary);
+        }
+
+        .solutions-list {
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #fca5a5;
+        }
+
+        .btn {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="badge">1re Bac Pro — Maths : Fonctions</span>
+        <h1>Lecture graphique d'une fonction (image, antécédent, seuil)</h1>
+        <p>Simulation de 1re Bac Pro. Introduction aux notions de fonction, d'image, d'antécédent et de seuil d'alerte à partir d'un relevé de température.</p>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- Graph Area -->
+        <div class="card graph-container">
+            <svg viewBox="-50 -30 650 400" id="math-graph">
+                <defs>
+                    <linearGradient id="curve-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3b82f6" />
+                        <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Grid -->
+                <!-- Horizontal Grid Lines every 1 degree (from 15 to 25) -->
+                <!-- Vertical Grid Lines every 1 hour (from 0 to 12) -->
+                <g id="grid-lines"></g>
+
+                <!-- Axes -->
+                <line x1="0" y1="300" x2="520" y2="300" class="axis" /> <!-- X axis -->
+                <line x1="0" y1="0" x2="0" y2="320" class="axis" />   <!-- Y axis -->
+
+                <!-- X Axis Labels -->
+                <g id="x-labels"></g>
+                <!-- Y Axis Labels -->
+                <g id="y-labels"></g>
+
+                <!-- Titles -->
+                <text x="530" y="305" class="axis-label" style="text-anchor: start; font-weight: bold; fill: var(--text-main);">x (heures)</text>
+                <text x="-15" y="-15" class="axis-label" style="text-anchor: start; font-weight: bold; fill: var(--text-main);">T (°C)</text>
+
+                <!-- Threshold Alert Area -->
+                <line x1="0" y1="150" x2="500" y2="150" class="threshold-line" id="threshold-line-svg" />
+
+                <!-- Main Function Curve -->
+                <path d="" class="curve" id="function-curve-svg" />
+
+                <!-- Tracker Elements -->
+                <line x1="0" y1="300" x2="0" y2="300" class="tracker-line-x" id="tracker-x-line" />
+                <line x1="0" y1="300" x2="0" y2="300" class="tracker-line-y" id="tracker-y-line" />
+                <circle cx="0" cy="300" class="tracker-point" id="tracker-point-svg" />
+
+                <!-- Intersection points -->
+                <g id="intersections-group"></g>
+            </svg>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="card controls-panel">
+            
+            <!-- Equation Display -->
+            <div class="equation-box">
+                <div class="math-display" id="function-notation">f(0.0) = 17.9</div>
+                <div class="explanation">
+                    <ul>
+                        <li><strong>x</strong> est le temps (l'<strong>antécédent</strong>, en abscisse).</li>
+                        <li><strong>f(x)</strong> est la température (l'<strong>image</strong> de x, en ordonnée).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Active Point Slider -->
+            <div class="control-group">
+                <label for="time-slider">
+                    <span>Heure de la ronde (x) :</span>
+                    <span class="control-val" id="time-val">0.0 h</span>
+                </label>
+                <input type="range" id="time-slider" min="0" max="12" step="0.1" value="0">
+            </div>
+
+            <!-- Threshold Alarm Slider -->
+            <div class="control-group">
+                <label for="threshold-slider">
+                    <span>Seuil d'Alarme de Température :</span>
+                    <span class="control-val" id="threshold-val">22.0 °C</span>
+                </label>
+                <input type="range" id="threshold-slider" min="16" max="24" step="0.5" value="22">
+            </div>
+
+            <!-- Status Alerts Banner -->
+            <div class="alert-banner alert-safe" id="status-banner">
+                <span class="indicator-dot bg-safe" id="status-dot"></span>
+                <span id="status-text">Température normale dans le local.</span>
+            </div>
+
+            <!-- Solutions display to f(x) = c -->
+            <div class="control-group" style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1rem;">
+                <span style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.95rem;">
+                    Résolution de l'équation : <span style="font-family: 'JetBrains Mono', monospace; color: var(--danger);">f(x) = <span id="eq-threshold-val">22.0</span></span>
+                </span>
+                <div class="solutions-list" id="solutions-output">
+                    Aucun déclenchement d'alarme sur cette période.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Values Table Area -->
+        <div class="card table-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 600;">Tableau de valeurs de la fonction f</h3>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Points extraits régulièrement toutes les 2 heures</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr id="table-header-x">
+                            <th>x (heures)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="table-body-y">
+                            <td style="font-weight: 600;">f(x) (°C)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Graph dimensions and mapping math coordinates to SVG coordinates
+        // Math coordinates: x in [0, 12], y in [15, 25]
+        // SVG coordinates: width=500, height=300 (inner area)
+        const SVG_W = 500;
+        const SVG_H = 300;
+        
+        const MathXMin = 0;
+        const MathXMax = 12;
+        const MathYMin = 15;
+        const MathYMax = 25;
+
+        // Function mapping Math coords to SVG pixels
+        function toSvgX(x) {
+            return (x / MathXMax) * SVG_W;
+        }
+
+        function toSvgY(y) {
+            // Y is inverted in SVG coordinates
+            return SVG_H - ((y - MathYMin) / (MathYMax - MathYMin)) * SVG_H;
+        }
+
+        function toMathX(svgX) {
+            return (svgX / SVG_W) * MathXMax;
+        }
+
+        function toMathY(svgY) {
+            return MathYMin + ((SVG_H - svgY) / SVG_H) * (MathYMax - MathYMin);
+        }
+
+        // Define a smooth mathematical temperature function f(x)
+        // Nice wave shape with some variations
+        function f(x) {
+            return 19.5 + 2.4 * Math.sin(0.55 * x - 1.1) + 1.1 * Math.cos(1.15 * x + 0.6);
+        }
+
+        // DOM elements
+        const timeSlider = document.getElementById('time-slider');
+        const timeVal = document.getElementById('time-val');
+        const thresholdSlider = document.getElementById('threshold-slider');
+        const thresholdVal = document.getElementById('threshold-val');
+        const eqThresholdVal = document.getElementById('eq-threshold-val');
+        
+        const functionCurveSvg = document.getElementById('function-curve-svg');
+        const thresholdLineSvg = document.getElementById('threshold-line-svg');
+        const trackerPointSvg = document.getElementById('tracker-point-svg');
+        const trackerXLine = document.getElementById('tracker-x-line');
+        const trackerYLine = document.getElementById('tracker-y-line');
+        
+        const functionNotation = document.getElementById('function-notation');
+        const statusBanner = document.getElementById('status-banner');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        
+        const intersectionsGroup = document.getElementById('intersections-group');
+        const solutionsOutput = document.getElementById('solutions-output');
+
+        // Draw grid lines and labels dynamically
+        function setupGrid() {
+            const gridLinesGroup = document.getElementById('grid-lines');
+            const xLabelsGroup = document.getElementById('x-labels');
+            const yLabelsGroup = document.getElementById('y-labels');
+
+            // Draw vertical grid lines and labels (0h to 12h)
+            for (let x = 0; x <= 12; x += 1) {
+                const svgX = toSvgX(x);
+                // Grid line
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", svgX);
+                line.setAttribute("y1", 0);
+                line.setAttribute("x2", svgX);
+                line.setAttribute("y2", SVG_H + 5);
+                line.setAttribute("class", "grid-line");
+                gridLinesGroup.appendChild(line);
+
+                // Label
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", svgX);
+                text.setAttribute("y", SVG_H + 20);
+                text.setAttribute("class", "axis-label");
+                text.textContent = x;
+                xLabelsGroup.appendChild(text);
+            }
+
+            // Draw horizontal grid lines and labels (15°C to 25°C)
+            for (let y = 15; y <= 25; y += 1) {
+                const svgY = toSvgY(y);
+                // Grid line
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", -5);
+                line.setAttribute("y1", svgY);
+                line.setAttribute("x2", SVG_W);
+                line.setAttribute("y2", svgY);
+                line.setAttribute("class", "grid-line");
+                gridLinesGroup.appendChild(line);
+
+                // Label
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", -20);
+                text.setAttribute("y", svgY + 4);
+                text.setAttribute("class", "axis-label");
+                text.textContent = y + "°";
+                yLabelsGroup.appendChild(text);
+            }
+        }
+
+        // Draw function curve path
+        function drawCurve() {
+            let pathD = "";
+            const steps = 120; // Resolution of curve
+            for (let i = 0; i <= steps; i++) {
+                const x = (i / steps) * 12;
+                const y = f(x);
+                const svgX = toSvgX(x);
+                const svgY = toSvgY(y);
+                if (i === 0) {
+                    pathD += `M ${svgX} ${svgY}`;
+                } else {
+                    pathD += ` L ${svgX} ${svgY}`;
+                }
+            }
+            functionCurveSvg.setAttribute("d", pathD);
+        }
+
+        // Generate the values table for x = 0, 2, 4, 6, 8, 10, 12
+        function generateTable() {
+            const headerX = document.getElementById('table-header-x');
+            const bodyY = document.getElementById('table-body-y');
+            
+            for (let x = 0; x <= 12; x += 2) {
+                const th = document.createElement('th');
+                th.textContent = x;
+                th.id = `th-x-${x}`;
+                headerX.appendChild(th);
+
+                const td = document.createElement('td');
+                td.textContent = f(x).toFixed(1);
+                td.id = `td-y-${x}`;
+                bodyY.appendChild(td);
+            }
+        }
+
+        // Highlight active column in table based on slider value
+        function updateTableHighlight(currentX) {
+            // Find closest index of 0, 2, 4, 6, 8, 10, 12
+            for (let x = 0; x <= 12; x += 2) {
+                const th = document.getElementById(`th-x-${x}`);
+                const td = document.getElementById(`td-y-${x}`);
+                if (Math.abs(currentX - x) < 0.9) {
+                    th.classList.add('highlight-col');
+                    td.classList.add('highlight-col');
+                } else {
+                    th.classList.remove('highlight-col');
+                    td.classList.remove('highlight-col');
+                }
+            }
+        }
+
+        // Update Tracker Point and active displays
+        function updateTracker() {
+            const x = parseFloat(timeSlider.value);
+            const y = f(x);
+
+            timeVal.textContent = x.toFixed(1) + " h";
+            
+            const svgX = toSvgX(x);
+            const svgY = toSvgY(y);
+
+            // Update SVGs tracker coordinates
+            trackerPointSvg.setAttribute("cx", svgX);
+            trackerPointSvg.setAttribute("cy", svgY);
+
+            trackerXLine.setAttribute("x1", svgX);
+            trackerXLine.setAttribute("y1", svgY);
+            trackerXLine.setAttribute("x2", svgX);
+            trackerXLine.setAttribute("y2", SVG_H);
+
+            trackerYLine.setAttribute("x1", svgX);
+            trackerYLine.setAttribute("y1", svgY);
+            trackerYLine.setAttribute("x2", 0);
+            trackerYLine.setAttribute("y2", svgY);
+
+            // Update mathematical notation
+            functionNotation.textContent = `f(${x.toFixed(1)}) = ${y.toFixed(1)}`;
+
+            // Check if active point is in danger zone
+            const threshold = parseFloat(thresholdSlider.value);
+            if (y >= threshold) {
+                statusBanner.className = "alert-banner alert-danger";
+                statusDot.className = "indicator-dot bg-danger";
+                statusText.innerHTML = `Attention : Surchauffe à <strong>${x.toFixed(1)} h</strong> (température = <strong>${y.toFixed(1)} °C</strong> &ge; ${threshold.toFixed(1)} °C)`;
+            } else {
+                statusBanner.className = "alert-banner alert-safe";
+                statusDot.className = "indicator-dot bg-safe";
+                statusText.innerHTML = `Température normale. État correct du local à <strong>${x.toFixed(1)} h</strong>.`;
+            }
+
+            updateTableHighlight(x);
+        }
+
+        // Find intersections between function f(x) and threshold line
+        function updateIntersections() {
+            const threshold = parseFloat(thresholdSlider.value);
+            thresholdVal.textContent = threshold.toFixed(1) + " °C";
+            eqThresholdVal.textContent = threshold.toFixed(1);
+
+            // Move SVG line
+            thresholdLineSvg.setAttribute("y1", toSvgY(threshold));
+            thresholdLineSvg.setAttribute("y2", toSvgY(threshold));
+
+            // Clear previous intersection markers
+            intersectionsGroup.innerHTML = "";
+
+            // Numerical root finding for intersections f(x) = threshold
+            const intersections = [];
+            const steps = 1200; // High resolution scanning
+            const tolerance = 0.02; // Close approximation tolerance
+
+            for (let i = 0; i < steps; i++) {
+                const x1 = (i / steps) * 12;
+                const x2 = ((i + 1) / steps) * 12;
+                const y1 = f(x1) - threshold;
+                const y2 = f(x2) - threshold;
+
+                if (y1 * y2 < 0) { // Sign change indicates a root
+                    // Simple linear interpolation for the root
+                    const rootX = x1 - (y1 * (x2 - x1)) / (y2 - y1);
+                    intersections.push(rootX);
+                }
+            }
+
+            // Draw dots on intersection points
+            if (intersections.length > 0) {
+                solutionsOutput.innerHTML = "";
+                let solHtml = "Solutions de l'équation :<br>";
+                
+                intersections.forEach((rootX, idx) => {
+                    const svgX = toSvgX(rootX);
+                    const svgY = toSvgY(threshold);
+
+                    // Add SVG marker
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", svgX);
+                    circle.setAttribute("cy", svgY);
+                    circle.setAttribute("class", "intersection-point");
+                    intersectionsGroup.appendChild(circle);
+
+                    // Label the root
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", svgX);
+                    text.setAttribute("y", svgY - 10);
+                    text.setAttribute("class", "axis-label");
+                    text.setAttribute("style", "fill: var(--danger); font-weight: bold; font-size: 10px;");
+                    text.textContent = `S${idx + 1} (${rootX.toFixed(1)}h)`;
+                    intersectionsGroup.appendChild(text);
+
+                    // Display text solution
+                    solHtml += `• <strong>x<sub>${idx + 1}</sub> &approx; ${rootX.toFixed(1)} h</strong> (soit à environ ${formatTime(rootX)})<br>`;
+                });
+                solutionsOutput.innerHTML = solHtml;
+            } else {
+                solutionsOutput.innerHTML = "Aucune alerte : l'équation f(x) = " + threshold.toFixed(1) + " n'a pas de solution sur cette période.";
+            }
+
+            // Refresh tracker alert banner
+            updateTracker();
+        }
+
+        // Helper to format decimal hours into hours:minutes
+        function formatTime(decimalHours) {
+            const hours = Math.floor(decimalHours);
+            const minutes = Math.round((decimalHours - hours) * 60);
+            return `${hours}h${minutes < 10 ? '0' : ''}${minutes}`;
+        }
+
+        // Event listeners
+        timeSlider.addEventListener('input', updateTracker);
+        thresholdSlider.addEventListener('input', updateIntersections);
+
+        // Initial setup
+        setupGrid();
+        drawCurve();
+        generateTable();
+        updateIntersections();
+        updateTracker();
+
+    </script>
+</body>
+</html>

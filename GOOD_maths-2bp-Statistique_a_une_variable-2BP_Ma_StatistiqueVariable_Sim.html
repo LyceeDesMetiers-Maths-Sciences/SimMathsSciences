@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistiques · 2nde Pro — position, dispersion, boîtes à moustaches & tri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f3ea;--card:#fffdf6;--ink:#1c2333;--ink2:#4d5468;
+  --blue:#1450b4;--red:#cf2233;--green:#0f7b4f;--amber:#d98e04;--orange:#e2571b;--purple:#6f42c1;--teal:#0e7490;
+  --grid:rgba(23,86,170,.075);--grid2:rgba(23,86,170,.13);
+  --disp:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);color:var(--ink);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px),
+  linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:60px 60px,60px 60px,12px 12px,12px 12px;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 18px 40px;position:relative;z-index:1}
+header{padding-bottom:16px;border-bottom:3px solid var(--ink);margin-bottom:16px;animation:rise .5s both}
+.tag{display:inline-block;font:700 11px var(--mono);letter-spacing:1.4px;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:5px;padding:5px 10px;background:var(--card);margin-bottom:10px}
+h1{font:800 clamp(24px,3.4vw,38px)/1.05 var(--disp);letter-spacing:-.5px}
+h1 .hl{background:linear-gradient(transparent 62%,rgba(217,142,4,.45) 62%)}
+.sub{margin-top:8px;font-size:14px;color:var(--ink2);max-width:760px;line-height:1.5}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+
+.topTabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.topTabs button{font:800 14px var(--disp);padding:11px 20px;border:2.5px solid var(--ink);border-radius:10px;
+  background:var(--card);cursor:pointer;transition:.2s;box-shadow:4px 4px 0 rgba(28,35,51,.10)}
+.topTabs button:hover{transform:translateY(-2px)}
+.topTabs button.on{background:var(--ink);color:#fdf9ec}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;
+  border:2.5px solid var(--ink);border-radius:11px;background:var(--card);box-shadow:6px 6px 0 rgba(28,35,51,.10)}
+.ctrl-grp{display:flex;flex-direction:column;gap:5px}
+.ctrl-grp .lbl{font:700 10px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--ink2)}
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden;background:#fff;flex-wrap:wrap}
+.seg button{font:700 12px var(--body);padding:7px 12px;border:none;background:transparent;cursor:pointer;color:var(--ink2);transition:.15s;white-space:nowrap}
+.seg button:hover{background:rgba(28,35,51,.06)}
+.seg button.on{background:var(--ink);color:#fdf9ec}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.seg.small button{font:600 11px var(--mono);padding:6px 10px}
+.seg.serieA button.on{background:var(--blue)}
+.seg.serieB button.on{background:var(--teal)}
+.spacer{flex:1}
+.btn{font:700 13px var(--body);border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:8px 14px;border-radius:8px;box-shadow:3px 3px 0 rgba(28,35,51,.25);cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(28,35,51,.25)}
+.btn:active{transform:translate(2px,2px);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:3px 3px 0 rgba(20,80,180,.4)}
+.btn.primary:hover{background:#0f47a0}
+.btn.algo{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:3px 3px 0 rgba(111,66,193,.4)}
+.btn.algo:hover{background:#5c35a8}
+
+.stepper{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.stp{flex:1;min-width:150px;display:flex;align-items:center;gap:9px;padding:10px 12px;border:2.5px solid var(--ink);
+  border-radius:10px;background:var(--card);cursor:pointer;transition:.2s;box-shadow:4px 4px 0 rgba(28,35,51,.08)}
+.stp .num{font:700 13px var(--mono);background:var(--ink);color:#fdf9ec;width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stp .t{font:700 12px var(--body);line-height:1.2}
+.stp.active{background:var(--ink);color:#fdf9ec}
+.stp.active .num{background:var(--amber);color:var(--ink)}
+.stp.done{border-color:var(--green)}.stp.done .num{background:var(--green)}
+.stp.locked{opacity:.45;cursor:not-allowed;filter:grayscale(.4)}
+.stp:not(.locked):hover{transform:translateY(-2px)}
+
+.panel{background:var(--card);border:2.5px solid var(--ink);border-radius:11px;padding:16px 18px;
+  box-shadow:8px 8px 0 rgba(28,35,51,.10);animation:rise .4s both;display:none}
+.panel.show{display:block}
+.phead{display:flex;align-items:center;gap:10px;border-bottom:2px dashed rgba(28,35,51,.3);padding-bottom:9px;margin-bottom:14px;flex-wrap:wrap}
+.phead h2{font:800 15px/1.2 var(--disp);text-transform:uppercase;letter-spacing:.6px}
+.phead .num{font:700 12px var(--mono);background:var(--ink);color:#fdf9ec;padding:3px 8px;border-radius:4px}
+
+.info{font:500 12.5px var(--mono);color:var(--ink2);line-height:1.55;padding:9px 11px;background:rgba(20,80,180,.06);
+  border-left:3px solid var(--blue);border-radius:4px;margin-bottom:12px}
+.info b{color:var(--ink)}
+.info.ok{background:rgba(15,123,79,.08);border-color:var(--green)}
+.info.warn{background:rgba(217,142,4,.08);border-color:var(--amber)}
+.info.err{background:rgba(207,34,51,.08);border-color:var(--red)}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0}
+.chip{font:700 12px var(--mono);padding:4px 8px;border-radius:5px;background:var(--card);border:1.5px solid var(--ink);min-width:28px;text-align:center;transition:.3s}
+.chip.sorted{background:rgba(15,123,79,.1);border-color:var(--green);color:var(--green)}
+canvas{width:100%;background:#fff;border:2px solid var(--ink);border-radius:8px;display:block}
+
+.paramGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.paramCard{border:2px solid rgba(28,35,51,.2);border-radius:8px;padding:10px;background:#fff}
+.paramCard .pl{font:700 11px var(--body);text-transform:uppercase;letter-spacing:.5px;color:var(--ink2);margin-bottom:6px}
+.paramCard .hint{font:500 10.5px var(--mono);color:var(--ink2);opacity:.75;margin-top:4px}
+.paramCard input{width:100%;font:700 15px var(--mono);padding:6px 9px;border:2px solid var(--ink);border-radius:6px;text-align:center;background:#fff}
+.paramCard input.ok{border-color:var(--green);color:var(--green);background:rgba(15,123,79,.06)}
+.paramCard input.ko{border-color:var(--red);color:var(--red);background:rgba(207,34,51,.06)}
+.paramCard .unit{font:600 12px var(--mono);color:var(--ink2)}
+.groupTitle{font:800 12px var(--disp);text-transform:uppercase;letter-spacing:1px;color:var(--ink2);margin:14px 0 8px;display:flex;align-items:center;gap:8px}
+.groupTitle::after{content:"";flex:1;height:2px;background:rgba(28,35,51,.15)}
+.dataLabel{font:700 11px var(--body);color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 3px}
+
+.sortTools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.counters{font:600 13px var(--mono);background:#fff;border:2px solid var(--ink);border-radius:8px;padding:8px 14px}
+.counters b{color:var(--blue)}
+.slots{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+.slot{width:66px;height:66px;display:flex;align-items:center;justify-content:center;
+  font:700 19px var(--mono);border:2.5px solid var(--ink);border-radius:10px;background:#fff;cursor:pointer;
+  transition:.15s;position:relative;box-shadow:3px 3px 0 rgba(28,35,51,.12)}
+.slot:hover{transform:translateY(-3px)}
+.slot .idx{position:absolute;top:2px;left:6px;font-size:9px;color:var(--ink2)}
+.slot.sel{border-color:var(--amber);background:rgba(217,142,4,.18);box-shadow:0 0 0 3px rgba(217,142,4,.35)}
+.slot.correct{border-color:var(--green);background:rgba(15,123,79,.12);color:var(--green)}
+.slot.flash-cmp{animation:flashCmp .65s}
+.slot.flash-swp{animation:flashSwp .65s}
+@keyframes flashCmp{0%{background:rgba(20,80,180,.35)}100%{background:#fff}}
+@keyframes flashSwp{0%{background:rgba(226,87,27,.4);transform:scale(1.12)}100%{background:#fff;transform:scale(1)}}
+.hint{font:500 12px var(--mono);color:var(--ink2);background:rgba(217,142,4,.08);border-left:3px solid var(--amber);
+  border-radius:4px;padding:9px 11px;margin-top:12px;line-height:1.5}
+
+.qStep{border:2px solid rgba(28,35,51,.2);border-radius:8px;padding:12px;margin-bottom:10px;background:#fff}
+.qStep.active{border-color:var(--purple);background:rgba(111,66,193,.05)}
+.qStep .qt{font:700 13px var(--body);margin-bottom:6px}
+.rankRow{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.rankChip{font:600 11px var(--mono);padding:3px 5px;border:1.5px solid var(--ink);border-radius:4px;text-align:center;min-width:36px;background:#fff}
+.rankChip .rk{display:block;font-size:8px;color:var(--ink2)}
+.rankChip.hl-med{background:rgba(207,34,51,.15);border-color:var(--red)}
+.rankChip.hl-q1{background:rgba(20,80,180,.15);border-color:var(--blue)}
+.rankChip.hl-q3{background:rgba(15,123,79,.15);border-color:var(--green)}
+
+.mcq{border:2px solid rgba(28,35,51,.2);border-radius:8px;padding:12px;margin-bottom:10px;background:#fff}
+.mcq .q{font:600 13.5px var(--body);margin-bottom:8px}
+.mcq .opts{display:flex;flex-direction:column;gap:6px}
+.mcq label{display:flex;align-items:center;gap:8px;font:500 13px var(--body);padding:7px 10px;border:1.5px solid rgba(28,35,51,.25);border-radius:6px;cursor:pointer;transition:.15s}
+.mcq label:hover{background:rgba(20,80,180,.05)}
+.mcq label.correct{background:rgba(15,123,79,.12);border-color:var(--green)}
+.mcq label.wrong{background:rgba(207,34,51,.1);border-color:var(--red)}
+footer{margin-top:26px;text-align:center;font:500 12px var(--mono);color:var(--ink2);opacity:.8}
+@media(max-width:700px){.stp{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="tag">2<sup>nde</sup> Pro · Mathématiques · Statistiques</span>
+  <h1>Étude statistique : <span class="hl">position, dispersion, boîtes à moustaches & tri</span></h1>
+  <p class="sub">Moyenne, médiane, mode, quartiles, étendue, écart interquartile, écart-type. Construction et lecture de
+  boîtes à moustaches, comparaison de deux séries. Et un espace dédié pour <b>trier des données</b> pas à pas.</p>
+</header>
+
+<div class="topTabs">
+  <button data-tab="stats" class="on">📊 Étude statistique</button>
+  <button data-tab="sort">🔀 Tri des données</button>
+  <button data-tab="quart">📐 Méthode des quartiles</button>
+</div>
+
+<div class="controls" id="dataControls">
+  <div class="ctrl-grp"><span class="lbl">Contexte</span><div class="seg" id="ctxSeg"></div></div>
+  <div class="ctrl-grp"><span class="lbl">Série étudiée (étapes 1→3)</span>
+    <div class="seg" id="serieSeg">
+      <button data-s="A" class="on serieA">Série A</button>
+      <button data-s="B" class="serieB">Série B</button>
+    </div>
+  </div>
+  <span class="spacer"></span>
+  <button class="btn" id="btnReset">↺ Recommencer l'étude</button>
+</div>
+
+<!-- ========== VUE ÉTUDE STATISTIQUE ========== -->
+<section id="viewStats">
+  <div class="stepper" id="stepper">
+    <div class="stp" data-step="1"><span class="num">1</span><span class="t">Données<br>& tri</span></div>
+    <div class="stp" data-step="2"><span class="num">2</span><span class="t">Paramètres<br>statistiques</span></div>
+    <div class="stp" data-step="3"><span class="num">3</span><span class="t">Boîte à<br>moustaches</span></div>
+    <div class="stp" data-step="4"><span class="num">4</span><span class="t">Comparaison<br>A / B</span></div>
+  </div>
+
+  <section class="panel" id="panel1">
+    <div class="phead"><span class="num">1</span><h2>Données brutes & tri</h2></div>
+    <div class="info" id="story1"></div>
+    <div class="info warn">Pour étudier une série (médiane, quartiles…), il faut d'abord la <b>trier par ordre croissant</b>.
+    Lance le tri et observe. (Pour comprendre comment un algorithme trie, va dans l'onglet « Tri des données ».)</div>
+    <div class="chips" id="rawChips"></div>
+    <canvas id="sortCv" height="220"></canvas>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn primary" id="btnSort">▶ Trier la série</button>
+      <span class="info" id="sortMsg" style="margin:0;display:none"></span>
+    </div>
+    <div class="info" id="sortedInfo" style="display:none;margin-top:12px"></div>
+  </section>
+
+  <section class="panel" id="panel2">
+    <div class="phead"><span class="num">2</span><h2>Paramètres statistiques</h2></div>
+    <div class="info" id="story2"></div>
+    <div id="dataRecall2"></div>
+    <div class="groupTitle">Tendance centrale</div>
+    <div class="paramGrid" id="grpCentral"></div>
+    <div class="groupTitle">Position (quartiles)</div>
+    <div class="paramGrid" id="grpQuart"></div>
+    <div class="groupTitle">Dispersion</div>
+    <div class="paramGrid" id="grpDisp"></div>
+    <button class="btn primary" id="btnCheckParam">Vérifier les paramètres</button>
+    <div class="info" id="paramMsg" style="display:none;margin-top:12px"></div>
+  </section>
+
+  <section class="panel" id="panel3">
+    <div class="phead"><span class="num">3</span><h2>Construction de la boîte à moustaches</h2></div>
+    <div class="info">La boîte à moustaches résume la série avec 5 valeurs : <b>min, Q1, médiane, Q3, max</b>.
+    La boîte va de Q1 à Q3 (elle contient 50 % des valeurs), le trait rouge est la médiane.</div>
+    <div id="dataRecall3"></div>
+    <div class="paramGrid" id="boxInputs"></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn primary" id="btnBuildBox">Construire la boîte</button>
+      <label style="font:600 12px var(--body);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="chkTukey"> Moustaches de Tukey (1,5 × écart interquartile)
+      </label>
+    </div>
+    <canvas id="boxCv" height="240"></canvas>
+    <div class="info" id="boxMsg" style="display:none;margin-top:12px"></div>
+  </section>
+
+  <section class="panel" id="panel4">
+    <div class="phead"><span class="num">4</span><h2>Comparaison des séries A et B</h2></div>
+    <div class="info">Les deux boîtes sont dessinées sur la <b>même échelle</b>. Compare leur position (médiane) et leur dispersion.</div>
+    <canvas id="cmpCv" height="300"></canvas>
+    <div class="groupTitle" style="margin-top:16px">Lecture & interprétation</div>
+    <div id="mcqZone"></div>
+    <button class="btn primary" id="btnCheckMCQ">Vérifier mes réponses</button>
+    <div class="info" id="mcqMsg" style="display:none;margin-top:12px"></div>
+  </section>
+</section>
+
+<!-- ========== VUE TRI DES DONNÉES ========== -->
+<section id="viewSort" style="display:none">
+  <div class="panel show">
+    <div class="phead"><span class="num">🔀</span><h2>Trier des données</h2></div>
+    <div class="info">Voici une dizaine de valeurs en désordre. Trie-les par ordre <b>croissant</b> en utilisant uniquement deux actions :
+    <b>comparer</b> deux valeurs, et <b>échanger</b> (déplacer) deux valeurs. Chaque action est comptée — essaie de trier avec le
+    moins d'opérations possible !</div>
+    <div class="sortTools">
+      <div class="seg small" id="sortToolSeg">
+        <button data-tool="compare" class="on">🔍 Comparer</button>
+        <button data-tool="swap">⇄ Échanger / déplacer</button>
+      </div>
+      <div class="counters">Comparaisons : <b id="cmpCount">0</b> &nbsp;·&nbsp; Échanges : <b id="swpCount">0</b></div>
+      <button class="btn" id="btnSortTabReset">↺ Mélanger</button>
+      <button class="btn algo" id="btnSortDemo">▶ Voir le tri par sélection</button>
+    </div>
+    <div class="info warn" style="margin-bottom:8px">1. Choisis une action (Comparer ou Échanger). 2. Clique sur une première case, puis sur une deuxième case. L'action s'applique aux deux.</div>
+    <div class="slots" id="slots"></div>
+    <div class="info" id="sortFeedback" style="display:none"></div>
+    <div class="info ok" id="sortSuccess" style="display:none"></div>
+    <div class="hint">💡 <b>Une méthode possible :</b> cherche la plus petite valeur de la liste, échange-la avec la première case.
+    Puis cherche la plus petite valeur parmi celles qui restent, échange-la avec la deuxième case. Et ainsi de suite…
+    (C'est le <b>tri par sélection</b>.)</div>
+    <div id="demoWrap" style="display:none;margin-top:16px">
+      <div class="groupTitle">Le tri par sélection en action</div>
+      <canvas id="demoCv" height="200"></canvas>
+      <div class="info" id="demoMsg" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== VUE MÉTHODE DES QUARTILES ========== -->
+<section id="viewQuart" style="display:none">
+  <div class="panel show">
+    <div class="phead"><span class="num">📐</span><h2>Méthode des quartiles</h2></div>
+    <div class="info" id="quartIntro"></div>
+    <div id="quartSteps"></div>
+    <button class="btn primary" id="btnQuartNext">Étape suivante →</button>
+  </div>
+</section>
+
+<footer>Statistiques · 2<sup>nde</sup> Pro · position, dispersion, boîtes à moustaches, tri des données.</footer>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const INK='#1c2333',BLUE='#1450b4',RED='#cf2233',GREEN='#0f7b4f',AMBER='#d98e04',ORANGE='#e2571b',PURPLE='#6f42c1',TEAL='#0e7490';
+const fmt=x=>(Math.round(x*100)/100).toLocaleString('fr-FR',{maximumFractionDigits:2}).replace('-','−');
+
+/* ============ DATASETS (n = 20 par série) ============ */
+const DATASETS={
+  'ind-machines':{label:'⚙️ Industrie · Machines',unit:'min',varLbl:'Temps de fabrication d\u2019une pièce',
+    storyA:'Machine A : temps (min) relevés sur 20 pièces.',storyB:'Machine B : temps (min) relevés sur 20 pièces.',
+    A:[9,10,10,11,9,10,12,10,11,9,10,10,11,10,9,10,11,12,10,8],
+    B:[6,10,14,8,12,7,11,13,9,15,6,10,12,8,14,9,11,7,13,10]},
+  'ter-ventes':{label:'🛒 Tertiaire · Ventes',unit:'ventes',varLbl:'Nombre de ventes par jour',
+    storyA:'Magasin A (centre-ville) : ventes/jour sur 20 jours.',storyB:'Magasin B (périphérie) : ventes/jour sur 20 jours.',
+    A:[38,40,42,39,41,40,38,40,42,41,39,40,43,38,40,41,39,40,42,40],
+    B:[28,30,32,29,31,30,28,30,32,31,29,30,33,28,30,31,29,30,32,30]},
+  'san-attente':{label:'🏥 Santé · Attente',unit:'min',varLbl:'Temps d\u2019attente aux urgences',
+    storyA:'Service A (avec protocole) : attente (min) de 20 patients.',storyB:'Service B (sans protocole) : attente (min) de 20 patients.',
+    A:[12,14,15,16,13,15,14,16,15,13,15,14,15,16,13,15,14,15,13,16],
+    B:[18,45,25,35,20,40,30,28,22,38,30,50,25,33,15,42,30,27,20,36]},
+  'sec-incendie':{label:'🔥 Sécurité incendie · Évacuation',unit:'s',varLbl:'Temps d\u2019évacuation lors d\u2019un exercice',
+    storyA:'Site A : temps d\u2019évacuation (s) de 20 exercices, personnel formé.',storyB:'Site B : temps d\u2019évacuation (s) de 20 exercices, personnel non formé.',
+    A:[48,52,55,50,58,53,49,56,51,54,47,57,52,55,50,53,56,49,54,51],
+    B:[72,95,68,88,75,102,64,91,78,85,70,98,66,89,74,105,62,93,80,58]},
+  'sec-leveedoute':{label:'🛡️ Sécurité des biens · Levée de doute',unit:'min',varLbl:'Temps de levée de doute après alarme',
+    storyA:'Site A : levée de doute (min) sur 20 alarmes, matériel récent.',storyB:'Site B : levée de doute (min) sur 20 alarmes, matériel ancien.',
+    A:[3,4,4,5,3,4,5,4,3,4,4,5,3,4,4,5,3,4,4,3],
+    B:[5,8,6,10,7,12,5,9,6,11,7,8,5,10,6,13,7,9,6,14]}
+};
+
+/* ============ outils statistiques ============ */
+const sortAsc=a=>[...a].sort((x,y)=>x-y);
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function median(sorted){const n=sorted.length;return n%2?sorted[(n-1)/2]:(sorted[n/2-1]+sorted[n/2])/2;}
+const q1=sorted=>sorted[Math.ceil(sorted.length/4)-1];
+const q3=sorted=>sorted[Math.ceil(3*sorted.length/4)-1];
+function modeOf(a){const c={};a.forEach(v=>c[v]=(c[v]||0)+1);const mx=Math.max(...Object.values(c));
+  if(mx===1)return null;return Object.keys(c).filter(k=>c[k]===mx).map(Number);}
+const rangeOf=a=>Math.max(...a)-Math.min(...a);
+function stddev(a){const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/a.length);}
+function tukey(sorted){const Q1=q1(sorted),Q3=q3(sorted),iq=Q3-Q1;
+  const lf=Q1-1.5*iq,uf=Q3+1.5*iq;
+  return {lw:sorted.find(v=>v>=lf),uw:[...sorted].reverse().find(v=>v<=uf),
+    out:sorted.filter(v=>v<lf||v>uf)};}
+function computeStats(arr){const sorted=sortAsc(arr);const Q1=q1(sorted),Q3=q3(sorted);
+  return {sorted,n:sorted.length,mean:mean(arr),median:median(sorted),q1:Q1,q3:Q3,
+    mode:modeOf(arr),range:rangeOf(arr),iqr:Q3-Q1,stddev:stddev(arr),
+    min:sorted[0],max:sorted[sorted.length-1],tukey:tukey(sorted)};}
+
+/* ============ état global ============ */
+const S={ctx:'ind-machines',serie:'A',step:1,unlocked:1,done:{},stats:{},topTab:'stats',quartStep:0,
+  sort:{running:false,steps:[],idx:0,timer:null}};
+const dataOf=s=>DATASETS[S.ctx][s==='A'?'A':'B'];
+function ensureStats(){['A','B'].forEach(s=>{if(!S.stats[S.ctx+s])S.stats[S.ctx+s]=computeStats(dataOf(s));});}
+const isDone=(s,st)=>!!(S.done[s]&&S.done[s][st]);
+function markDone(s,st){S.done[s]=S.done[s]||{};S.done[s][st]=true;}
+
+/* ============ onglets principaux ============ */
+$$('.topTabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function switchTab(tab){
+  S.topTab=tab;
+  $$('.topTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  $('#viewStats').style.display=tab==='stats'?'block':'none';
+  $('#viewSort').style.display=tab==='sort'?'block':'none';
+  $('#viewQuart').style.display=tab==='quart'?'block':'none';
+  $('#dataControls').style.display=tab==='sort'?'none':'flex';
+  if(tab==='sort'&&SORTTAB.arr.length===0)initSortTab();
+  if(tab==='quart'){S.quartStep=0;renderQuartView();}
+}
+
+/* ============ contrôles contexte / série ============ */
+function buildCtx(){const el=$('#ctxSeg');el.innerHTML='';
+  Object.keys(DATASETS).forEach(k=>{const b=document.createElement('button');
+    b.textContent=DATASETS[k].label;if(k===S.ctx)b.classList.add('on');
+    b.onclick=()=>{S.ctx=k;S.step=1;S.unlocked=1;S.done={};S.stats={};buildCtx();renderStep();if(S.topTab==='quart')renderQuartView();};
+    el.appendChild(b);});}
+$('#serieSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  if(S.step===4)return;
+  S.serie=b.dataset.s;
+  $('#serieSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  S.step=Math.min(S.step,3);renderStep();if(S.topTab==='quart')renderQuartView();});
+$('#btnReset').onclick=()=>{S.step=1;S.unlocked=1;S.done={};S.stats={};stopSort();renderStep();};
+
+/* ============ stepper ============ */
+$('#stepper').querySelectorAll('.stp').forEach(el=>el.onclick=()=>{
+  const st=+el.dataset.step;if(st<=S.unlocked){S.step=st;renderStep();}});
+function updateStepper(){
+  $('#stepper').querySelectorAll('.stp').forEach(el=>{
+    const st=+el.dataset.step;
+    el.classList.toggle('active',st===S.step);
+    el.classList.toggle('locked',st>S.unlocked);
+    el.classList.toggle('done',isDone(S.serie,st)||(st===4&&isDone('A',3)));});
+}
+function unlockNext(){
+  if(S.step===1&&isDone(S.serie,1))S.unlocked=Math.max(S.unlocked,2);
+  if(S.step===2&&isDone(S.serie,2))S.unlocked=Math.max(S.unlocked,3);
+  if(S.step===3&&isDone(S.serie,3))S.unlocked=Math.max(S.unlocked,4);
+}
+function renderStep(){
+  ensureStats();
+  $$('#viewStats .panel').forEach(p=>p.classList.remove('show'));
+  $('#panel'+S.step).classList.add('show');
+  updateStepper();
+  if(S.step===1)renderStep1();
+  if(S.step===2)renderStep2();
+  if(S.step===3)renderStep3();
+  if(S.step===4)renderStep4();
+}
+
+/* ============ rappel des données (visible étapes 2 & 3) ============ */
+function seriesChips(){
+  const data=dataOf(S.serie);
+  const sorted=sortAsc(data);
+  return `
+    <div class="dataLabel">Série brute</div>
+    <div class="chips">${data.map(v=>`<span class="chip">${v}</span>`).join('')}</div>
+    <div class="dataLabel">Série triée <span style="color:var(--green)">(utile pour médiane & quartiles)</span></div>
+    <div class="chips">${sorted.map(v=>`<span class="chip sorted">${v}</span>`).join('')}</div>`;
+}
+
+/* ============ ÉTAPE 1 : données & tri ============ */
+function renderStep1(){
+  const d=DATASETS[S.ctx];
+  $('#story1').innerHTML=`<b>${S.serie==='A'?d.storyA:d.storyB}</b><br>Variable : ${d.varLbl} (${d.unit}). Effectif n = ${dataOf(S.serie).length}.`;
+  $('#rawChips').innerHTML=dataOf(S.serie).map(v=>`<span class="chip">${v}</span>`).join('');
+  $('#sortedInfo').style.display='none';$('#sortMsg').style.display='none';$('#btnSort').disabled=false;
+  if(isDone(S.serie,1))showSorted();else drawSortBars(dataOf(S.serie),-1,-1,0);
+}
+function showSorted(){
+  const sorted=sortAsc(dataOf(S.serie));
+  $('#rawChips').innerHTML=sorted.map(v=>`<span class="chip sorted">${v}</span>`).join('');
+  $('#sortedInfo').style.display='block';
+  $('#sortedInfo').innerHTML=`✅ Série triée : <b>${sorted.join(' · ')}</b>`;
+  drawSortBars(sorted,-1,-1,sorted.length);
+}
+function drawSortBars(arr,i,minIdx,placed){
+  const cv=$('#sortCv');const r=cv.getBoundingClientRect();const dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=220*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  const W=r.width,H=220;c.clearRect(0,0,W,H);
+  const n=arr.length,mx=Math.max(...arr),bw=W/n*0.7,gap=W/n*0.3;
+  arr.forEach((v,k)=>{const x=k*(bw+gap)+gap/2,h=v/mx*(H-46),y=H-30-h;
+    let col=BLUE;if(k<placed)col=GREEN;if(k===i)col=AMBER;if(k===minIdx)col=RED;
+    c.fillStyle=col;c.fillRect(x,y,bw,h);c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(x,y,bw,h);
+    c.fillStyle=INK;c.font='9px "IBM Plex Mono"';c.textAlign='center';c.fillText(v,x+bw/2,H-16);});
+}
+function coarseSelectionSort(arr){
+  const a=[...arr],steps=[],n=a.length;
+  steps.push({arr:[...a],type:'start',i:-1,minIdx:-1,placed:0});
+  for(let i=0;i<n-1;i++){
+    let minIdx=i;for(let j=i+1;j<n;j++){if(a[j]<a[minIdx])minIdx=j;}
+    steps.push({arr:[...a],type:'found',i,minIdx,placed:i});
+    if(minIdx!==i){[a[i],a[minIdx]]=[a[minIdx],a[i]];
+      steps.push({arr:[...a],type:'swap',i,minIdx,placed:i});}
+    steps.push({arr:[...a],type:'placed',i,minIdx:-1,placed:i+1});}
+  steps.push({arr:[...a],type:'done',i:-1,minIdx:-1,placed:n});
+  return steps;
+}
+$('#btnSort').onclick=()=>{
+  if(S.sort.running)return;
+  S.sort.running=true;$('#btnSort').disabled=true;
+  S.sort.steps=coarseSelectionSort(dataOf(S.serie));S.sort.idx=0;
+  $('#sortMsg').style.display='inline-block';$('#sortMsg').className='info warn';
+  $('#sortMsg').innerHTML='Tri en cours…';
+  S.sort.timer=setInterval(()=>{
+    S.sort.idx++;
+    if(S.sort.idx>=S.sort.steps.length){
+      clearInterval(S.sort.timer);S.sort.running=false;
+      markDone(S.serie,1);unlockNext();showSorted();
+      $('#sortMsg').className='info ok';$('#sortMsg').innerHTML='✅ Série triée ! Passe à l\u2019étape 2.';
+      updateStepper();return;}
+    const st=S.sort.steps[S.sort.idx];drawSortBars(st.arr,st.i,st.minIdx,st.placed);
+    if(st.type==='found')$('#sortMsg').innerHTML=`On cherche le minimum à partir de la position ${st.i+1}…`;
+    if(st.type==='swap')$('#sortMsg').innerHTML=`On place le minimum (${st.arr[st.i]}) en position ${st.i+1}.`;
+  },90);
+};
+function stopSort(){if(S.sort.timer)clearInterval(S.sort.timer);S.sort.running=false;}
+
+/* ============ ÉTAPE 2 : paramètres ============ */
+function renderStep2(){
+  const d=DATASETS[S.ctx];const st=S.stats[S.ctx+S.serie];
+  $('#story2').innerHTML=`<b>Série ${S.serie}</b> — ${S.serie==='A'?d.storyA:d.storyB}<br>
+  Calcule les paramètres ci-dessous (arrondis à 0,01). n = ${st.n}.`;
+  $('#dataRecall2').innerHTML=seriesChips();
+  $('#grpCentral').innerHTML=pc('inMean','Moyenne x̄','somme des valeurs ÷ n')+
+    pc('inMedian','Médiane','coupe la série triée en deux')+
+    pc('inMode','Mode (facultatif)','valeur la plus fréquente — « aucun » si aucune');
+  $('#grpQuart').innerHTML=pc('inQ1','Premier quartile Q1','rang ⌈n/4⌉ dans la série triée')+
+    pc('inQ3','Troisième quartile Q3','rang ⌈3n/4⌉ dans la série triée');
+  $('#grpDisp').innerHTML=pc('inRange','Étendue','max − min')+
+    pc('inIQR','Écart interquartile','Q3 − Q1')+
+    pc('inSD','Écart-type σ','calculatrice');
+  $('#paramMsg').style.display='none';
+  function pc(id,label,hint){return `<div class="paramCard"><div class="pl">${label}</div>
+    <input id="${id}" placeholder="?"> <span class="unit">${d.unit}</span><div class="hint">${hint}</div></div>`;}
+}
+const approx=(a,b,tol)=>Math.abs(a-b)<=tol;
+$('#btnCheckParam').onclick=()=>{
+  const st=S.stats[S.ctx+S.serie];let ok=0,total=7;
+  [['inMean',st.mean,0.05],['inMedian',st.median,0.05],['inQ1',st.q1,0.05],['inQ3',st.q3,0.05],
+   ['inRange',st.range,0.05],['inIQR',st.iqr,0.05],['inSD',st.stddev,0.15]].forEach(([id,val,tol])=>{
+    const inp=$('#'+id),u=parseFloat(String(inp.value).replace(',','.'));
+    if(!isNaN(u)&&approx(u,val,tol)){inp.classList.add('ok');inp.classList.remove('ko');ok++;}
+    else{inp.classList.add('ko');inp.classList.remove('ok');}});
+  const inMode=$('#inMode'),um=String(inMode.value).trim().toLowerCase();
+  if(um){
+    if(st.mode===null&&um==='aucun'){inMode.classList.add('ok');inMode.classList.remove('ko');}
+    else if(st.mode&&st.mode.some(m=>parseFloat(um.replace(',','.'))===m)){inMode.classList.add('ok');inMode.classList.remove('ko');}
+    else{inMode.classList.add('ko');inMode.classList.remove('ok');}}
+  const msg=$('#paramMsg');msg.style.display='block';
+  if(ok===total){msg.className='info ok';msg.innerHTML=`<b>Bravo, les ${total} paramètres sont corrects !</b> Passe à la boîte à moustaches.`;
+    markDone(S.serie,2);unlockNext();updateStepper();}
+  else{msg.className='info err';msg.innerHTML=`<b>${ok}/${total} corrects.</b> Reprends tes calculs.`;}
+};
+
+/* ============ ÉTAPE 3 : boîte à moustaches ============ */
+function renderStep3(){
+  const d=DATASETS[S.ctx];
+  const fields=[['inBMin','Minimum'],['inBQ1','Q1'],['inBMed','Médiane'],['inBQ3','Q3'],['inBMax','Maximum']];
+  $('#boxInputs').innerHTML=fields.map(([id,lab])=>`<div class="paramCard"><div class="pl">${lab}</div>
+    <input id="${id}" placeholder="?"> <span class="unit">${d.unit}</span></div>`).join('');
+  $('#dataRecall3').innerHTML=seriesChips();
+  $('#boxMsg').style.display='none';
+  if(isDone(S.serie,3))drawFullBox($('#chkTukey').checked);else drawBoxEmpty();
+}
+function drawBoxEmpty(){
+  const cv=$('#boxCv'),r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=240*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,r.width,240);
+  c.fillStyle='rgba(28,35,51,.4)';c.font='13px "IBM Plex Mono"';c.textAlign='center';
+  c.fillText('La boîte se dessinera ici une fois les 5 valeurs correctes.',r.width/2,120);
+}
+$('#btnBuildBox').onclick=()=>{
+  const st=S.stats[S.ctx+S.serie];
+  const inp={min:$('#inBMin'),q1:$('#inBQ1'),med:$('#inBMed'),q3:$('#inBQ3'),max:$('#inBMax')};
+  let ok=0;
+  [[inp.min,st.min],[inp.q1,st.q1],[inp.med,st.median],[inp.q3,st.q3],[inp.max,st.max]].forEach(([el,val])=>{
+    const u=parseFloat(String(el.value).replace(',','.'));
+    if(!isNaN(u)&&approx(u,val,0.05)){el.classList.add('ok');el.classList.remove('ko');ok++;}
+    else{el.classList.add('ko');el.classList.remove('ok');}});
+  const msg=$('#boxMsg');msg.style.display='block';
+  if(ok===5){
+    const useT=$('#chkTukey').checked;
+    msg.className='info ok';
+    msg.innerHTML=`<b>Boîte construite !</b> min=${fmt(st.min)}, Q1=${fmt(st.q1)}, médiane=${fmt(st.median)}, Q3=${fmt(st.q3)}, max=${fmt(st.max)}.`+
+      (useT?` Moustaches de Tukey : [${fmt(st.tukey.lw)} ; ${fmt(st.tukey.uw)}], valeurs aberrantes : ${st.tukey.out.length?st.tukey.out.join(', '):'aucune'}.`:'');
+    drawFullBox(useT);markDone(S.serie,3);unlockNext();updateStepper();
+  }else{msg.className='info err';msg.innerHTML=`<b>${ok}/5 valeurs correctes.</b> Retrouve min, Q1, médiane, Q3, max dans la série triée.`;}
+};
+$('#chkTukey').onchange=()=>{if(isDone(S.serie,3))drawFullBox($('#chkTukey').checked);};
+function drawFullBox(useTukey){
+  const st=S.stats[S.ctx+S.serie];
+  const cv=$('#boxCv'),r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=240*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,r.width,240);
+  drawBoxPlot(c,30,40,r.width-60,140,st,{tukey:useTukey,color:BLUE,medColor:RED,label:`Série ${S.serie}`});
+}
+
+/* ============ ÉTAPE 4 : comparaison ============ */
+function renderStep4(){
+  ensureStats();
+  const stA=S.stats[S.ctx+'A'],stB=S.stats[S.ctx+'B'];
+  const cv=$('#cmpCv'),r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=300*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,r.width,300);
+  const lo=Math.min(stA.min,stB.min),hi=Math.max(stA.max,stB.max);
+  drawBoxPlot(c,40,40,r.width-80,100,stA,{scaleMin:lo,scaleMax:hi,color:BLUE,medColor:RED,label:'Série A'});
+  drawBoxPlot(c,40,180,r.width-80,100,stB,{scaleMin:lo,scaleMax:hi,color:TEAL,medColor:ORANGE,label:'Série B'});
+  buildMCQ(stA,stB);
+}
+function buildMCQ(stA,stB){
+  const qs=[
+    {q:'Quelle série a la médiane la plus élevée ?',opts:['Série A','Série B','Les deux ont la même médiane'],
+      ans:stA.median>stB.median?0:stB.median>stA.median?1:2},
+    {q:'Quelle série est la plus dispersée (plus grand écart interquartile) ?',opts:['Série A','Série B','Même écart interquartile'],
+      ans:stA.iqr>stB.iqr?0:stB.iqr>stA.iqr?1:2},
+    {q:'Quelle série a la plus grande étendue ?',opts:['Série A','Série B','Même étendue'],
+      ans:stA.range>stB.range?0:stB.range>stA.range?1:2}];
+  $('#mcqZone').innerHTML=qs.map((item,i)=>`<div class="mcq" data-ans="${item.ans}">
+    <div class="q">${i+1}. ${item.q}</div>
+    <div class="opts">${item.opts.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join('')}</div>
+  </div>`).join('');
+}
+$('#btnCheckMCQ').onclick=()=>{
+  let ok=0,total=$$('#mcqZone .mcq').length;
+  $$('#mcqZone .mcq').forEach(box=>{
+    const ans=+box.dataset.ans,sel=box.querySelector('input:checked');
+    box.querySelectorAll('label').forEach(l=>l.classList.remove('correct','wrong'));
+    if(sel){const v=+sel.value;
+      if(v===ans){sel.closest('label').classList.add('correct');ok++;}
+      else{sel.closest('label').classList.add('wrong');box.querySelectorAll('label')[ans].classList.add('correct');}}
+    else{box.querySelectorAll('label')[ans].classList.add('correct');}});
+  const msg=$('#mcqMsg');msg.style.display='block';
+  if(ok===total){msg.className='info ok';msg.innerHTML=`<b>Parfait, ${total}/${total} !</b>`;}
+  else{msg.className='info warn';msg.innerHTML=`<b>${ok}/${total}.</b> Regarde la position de la médiane (trait) et la largeur de la boîte (dispersion).`;}
+};
+
+/* ============ dessin boîte à moustaches ============ */
+function niceStep(range){const raw=range/8,pow=Math.pow(10,Math.floor(Math.log10(raw)));
+  for(const m of[1,2,5,10])if(raw<=m*pow)return m*pow;return 10*pow;}
+function drawBoxPlot(c,x0,y0,w,h,st,opts={}){
+  const pad=(st.max-st.min)*0.06||1;
+  const lo=opts.scaleMin??(st.min-pad),hi=opts.scaleMax??(st.max+pad);
+  const X=v=>x0+(v-lo)/(hi-lo)*w;
+  const cy=y0+h/2,boxH=h*0.5,axY=y0+h-8;
+  c.strokeStyle='rgba(28,35,51,.4)';c.lineWidth=1;
+  c.beginPath();c.moveTo(x0,axY);c.lineTo(x0+w,axY);c.stroke();
+  c.fillStyle='rgba(28,35,51,.6)';c.font='10px "IBM Plex Mono"';c.textAlign='center';c.textBaseline='top';
+  const step=niceStep(hi-lo);
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){
+    c.beginPath();c.moveTo(X(v),axY-3);c.lineTo(X(v),axY+3);c.stroke();
+    c.fillText(fmt(v),X(v),axY+6);}
+  let wLo=st.min,wHi=st.max,out=[];
+  if(opts.tukey){wLo=st.tukey.lw;wHi=st.tukey.uw;out=st.tukey.out;}
+  c.strokeStyle=opts.color||INK;c.lineWidth=2;
+  c.beginPath();c.moveTo(X(wLo),cy);c.lineTo(X(st.q1),cy);c.stroke();
+  c.beginPath();c.moveTo(X(wLo),cy-boxH/3);c.lineTo(X(wLo),cy+boxH/3);c.stroke();
+  c.beginPath();c.moveTo(X(st.q3),cy);c.lineTo(X(wHi),cy);c.stroke();
+  c.beginPath();c.moveTo(X(wHi),cy-boxH/3);c.lineTo(X(wHi),cy+boxH/3);c.stroke();
+  c.fillStyle=(opts.color||BLUE)+'22';
+  c.fillRect(X(st.q1),cy-boxH/2,X(st.q3)-X(st.q1),boxH);
+  c.strokeRect(X(st.q1),cy-boxH/2,X(st.q3)-X(st.q1),boxH);
+  c.strokeStyle=opts.medColor||RED;c.lineWidth=3;
+  c.beginPath();c.moveTo(X(st.median),cy-boxH/2);c.lineTo(X(st.median),cy+boxH/2);c.stroke();
+  if(opts.tukey&&out.length){c.fillStyle=RED;
+    out.forEach(v=>{c.beginPath();c.arc(X(v),cy,4,0,7);c.fill();c.strokeStyle=INK;c.lineWidth=1;c.stroke();});}
+  if(opts.label){c.fillStyle=opts.color||INK;c.font='700 13px "IBM Plex Mono"';c.textAlign='left';c.textBaseline='alphabetic';
+    c.fillText(opts.label,x0,y0-2);}
+}
+
+/* ============ ONGLET TRI INTERACTIF ============ */
+const SORTTAB={arr:[],selected:null,tool:'compare',compares:0,swaps:0,done:false,flash:null};
+const SORTDEMO={steps:[],idx:0,timer:null};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function initSortTab(){
+  SORTTAB.arr=shuffle([42,17,88,5,63,29,71,12,50,36]);
+  SORTTAB.selected=null;SORTTAB.compares=0;SORTTAB.swaps=0;SORTTAB.done=false;SORTTAB.flash=null;
+  $('#sortSuccess').style.display='none';$('#sortFeedback').style.display='none';
+  renderSortTab();
+}
+$('#sortToolSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  SORTTAB.tool=b.dataset.tool;
+  $('#sortToolSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+$('#btnSortTabReset').onclick=()=>{if(SORTDEMO.timer)clearInterval(SORTDEMO.timer);initSortTab();};
+function renderSortTab(){
+  $('#cmpCount').textContent=SORTTAB.compares;
+  $('#swpCount').textContent=SORTTAB.swaps;
+  const fl=SORTTAB.flash;
+  $('#slots').innerHTML=SORTTAB.arr.map((v,i)=>{
+    let cls='slot';
+    if(SORTTAB.selected===i)cls+=' sel';
+    if(SORTTAB.done)cls+=' correct';
+    if(fl&&(fl.a===i||fl.b===i))cls+=fl.type==='compare'?' flash-cmp':' flash-swp';
+    return `<div class="${cls}" data-i="${i}"><span class="idx">${i+1}</span>${v}</div>`;}).join('');
+  $('#slots').querySelectorAll('.slot').forEach(el=>el.onclick=()=>onSlotClick(+el.dataset.i));
+}
+function onSlotClick(i){
+  if(SORTTAB.done)return;
+  if(SORTTAB.selected===null){SORTTAB.selected=i;renderSortTab();return;}
+  if(SORTTAB.selected===i){SORTTAB.selected=null;renderSortTab();return;}
+  const a=SORTTAB.selected,b=i;
+  const va=SORTTAB.arr[a],vb=SORTTAB.arr[b];
+  if(SORTTAB.tool==='compare'){
+    SORTTAB.compares++;
+    const msg=va<vb?`${va} < ${vb}`:va>vb?`${va} > ${vb}`:`${va} = ${vb}`;
+    SORTTAB.flash={type:'compare',a,b};
+    showFB(`🔍 Comparaison : <b>${msg}</b>`,'');
+  }else{
+    SORTTAB.swaps++;
+    [SORTTAB.arr[a],SORTTAB.arr[b]]=[SORTTAB.arr[b],SORTTAB.arr[a]];
+    SORTTAB.flash={type:'swap',a,b};
+    showFB(`⇄ Échange des cases ${a+1} et ${b+1}.`,'');
+  }
+  SORTTAB.selected=null;
+  renderSortTab();
+  if(checkSortDone()){
+    SORTTAB.done=true;
+    $('#sortSuccess').style.display='block';
+    $('#sortSuccess').innerHTML=`✅ La liste est triée ! Il t'a fallu <b>${SORTTAB.compares}</b> comparaisons et <b>${SORTTAB.swaps}</b> échanges. Essaie de battre ton score en mélangeant !`;
+    renderSortTab();
+  }
+  setTimeout(()=>{SORTTAB.flash=null;renderSortTab();},700);
+}
+function showFB(html,cls){const el=$('#sortFeedback');el.style.display='block';el.className='info '+cls;el.innerHTML=html;}
+function checkSortDone(){const a=SORTTAB.arr;for(let i=1;i<a.length;i++)if(a[i-1]>a[i])return false;return true;}
+
+$('#btnSortDemo').onclick=()=>{
+  $('#demoWrap').style.display='block';
+  if(SORTDEMO.timer)clearInterval(SORTDEMO.timer);
+  SORTDEMO.steps=coarseSelectionSort(shuffle([42,17,88,5,63,29,71,12,50,36]));
+  SORTDEMO.idx=0;drawDemo();
+  $('#demoMsg').innerHTML='Le tri par sélection cherche le minimum, le place, puis recommence.';
+  SORTDEMO.timer=setInterval(()=>{
+    SORTDEMO.idx++;
+    if(SORTDEMO.idx>=SORTDEMO.steps.length){clearInterval(SORTDEMO.timer);
+      $('#demoMsg').innerHTML='✅ Tri terminé.';return;}
+    const st=SORTDEMO.steps[SORTDEMO.idx];drawDemo();
+    if(st.type==='found')$('#demoMsg').innerHTML=`Minimum trouvé : <b>${st.arr[st.minIdx]}</b> (case ${st.minIdx+1}).`;
+    if(st.type==='swap')$('#demoMsg').innerHTML=`On l'échange avec la case ${st.i+1}.`;
+    if(st.type==='placed')$('#demoMsg').innerHTML=`La case ${st.i+1} est définitivement triée (en vert).`;
+  },150);
+};
+function drawDemo(){
+  const st=SORTDEMO.steps[SORTDEMO.idx];
+  const cv=$('#demoCv'),r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=200*dpr;const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  const W=r.width,H=200;c.clearRect(0,0,W,H);
+  const arr=st.arr,n=arr.length,mx=Math.max(...arr),bw=W/n*0.7,gap=W/n*0.3;
+  arr.forEach((v,k)=>{const x=k*(bw+gap)+gap/2,h=v/mx*(H-46),y=H-30-h;
+    let col=BLUE;if(k<st.placed)col=GREEN;if(k===st.i)col=AMBER;if(k===st.minIdx)col=RED;
+    c.fillStyle=col;c.fillRect(x,y,bw,h);c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(x,y,bw,h);
+    c.fillStyle=INK;c.font='10px "IBM Plex Mono"';c.textAlign='center';c.fillText(v,x+bw/2,H-16);});
+}
+
+/* ============ ONGLET MÉTHODE DES QUARTILES ============ */
+function rankChips(sorted,hl){
+  return sorted.map((v,i)=>{const rk=i+1;let cls='';
+    if(hl.med&&hl.med.includes(rk))cls='hl-med';
+    if(hl.q1&&hl.q1.includes(rk))cls='hl-q1';
+    if(hl.q3&&hl.q3.includes(rk))cls='hl-q3';
+    return `<span class="rankChip ${cls}">${v}<span class="rk">r${rk}</span></span>`;}).join('');
+}
+function renderQuartView(){
+  ensureStats();
+  const st=S.stats[S.ctx+S.serie];
+  $('#quartIntro').innerHTML=`Voici la méthode pas à pas pour trouver <b>médiane, Q1, Q3</b> de la <b>série ${S.serie}</b>
+  (n = ${st.n}), déjà triée. Clique sur « Étape suivante » pour avancer.`;
+  S.quartStep=0;drawQuartStep();
+}
+function drawQuartStep(){
+  const st=S.stats[S.ctx+S.serie];const n=st.n,sorted=st.sorted;
+  const medRanks=n%2?[(n+1)/2]:[n/2,n/2+1];
+  const q1Rank=Math.ceil(n/4),q3Rank=Math.ceil(3*n/4);
+  const steps=[
+    {t:'Série triée (n = '+n+')',body:rankChips(sorted,{})},
+    {t:'Médiane',body:rankChips(sorted,{med:medRanks})+
+      `<div class="info" style="margin-top:8px">n = ${n} est ${n%2?'impair':'pair'}. ${n%2?
+        `La médiane est la valeur du rang ${(n+1)/2} = <b>${fmt(st.median)}</b>.`:
+        `La médiane est la moyenne des valeurs des rangs ${n/2} et ${n/2+1} = (${sorted[n/2-1]} + ${sorted[n/2]})/2 = <b>${fmt(st.median)}</b>.`}</div>`},
+    {t:'Premier quartile Q1',body:rankChips(sorted,{q1:[q1Rank]})+
+      `<div class="info" style="margin-top:8px">Q1 = valeur du rang ⌈n/4⌉ = ⌈${n}/4⌉ = <b>rang ${q1Rank}</b>, donc Q1 = <b>${fmt(st.q1)}</b>.<br>Au moins 25 % des valeurs sont ≤ Q1.</div>`},
+    {t:'Troisième quartile Q3',body:rankChips(sorted,{q3:[q3Rank]})+
+      `<div class="info" style="margin-top:8px">Q3 = valeur du rang ⌈3n/4⌉ = ⌈${3*n/4}⌉ = <b>rang ${q3Rank}</b>, donc Q3 = <b>${fmt(st.q3)}</b>.<br>Au moins 75 % des valeurs sont ≤ Q3. Écart interquartile = Q3 − Q1 = <b>${fmt(st.iqr)}</b>.</div>`}];
+  $('#quartSteps').innerHTML=steps.slice(0,S.quartStep+1).map((s,i)=>
+    `<div class="qStep ${i===S.quartStep?'active':''}"><div class="qt">${i+1}. ${s.t}</div><div class="rankRow">${s.body}</div></div>`).join('');
+  $('#btnQuartNext').disabled=S.quartStep>=3;
+  $('#btnQuartNext').textContent=S.quartStep>=3?'Terminé ✓':'Étape suivante →';
+}
+$('#btnQuartNext').onclick=()=>{S.quartStep=Math.min(S.quartStep+1,3);drawQuartStep();};
+
+/* ============ init ============ */
+buildCtx();renderStep();
+window.addEventListener('resize',()=>{
+  if(S.topTab==='stats')renderStep();
+  if(S.topTab==='sort'&&SORTDEMO.steps.length)drawDemo();
+});
+</script>
+</body>
+</html>

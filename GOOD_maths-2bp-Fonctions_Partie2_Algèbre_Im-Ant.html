@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Images & antécédents — Fonctions · 2nde Bac Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f3ea; --card:#fffdf6; --ink:#1c2333; --ink2:#4d5468;
+  --blue:#1450b4; --red:#cf2233; --green:#0f7b4f; --amber:#d98e04; --orange:#e2571b;
+  --grid:rgba(23,86,170,.075); --grid2:rgba(23,86,170,.13);
+  --board:#0d1b2a; --bt:#dfe7f3; --bb:#7cc4ff; --ba:#ffd166; --bg:#7ee787; --br:#ff7b72;
+  --disp:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --math:"STIX Two Text",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--body);color:var(--ink);background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid2) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid2) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:60px 60px,60px 60px,12px 12px,12px 12px;
+  min-height:100vh;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 22px 40px;position:relative;z-index:1}
+
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:3px solid var(--ink);margin-bottom:18px;animation:rise .5s both}
+.tag{display:inline-block;font:700 11px var(--mono);letter-spacing:1.4px;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:5px;padding:5px 10px;background:var(--card);margin-bottom:11px}
+h1{font:800 clamp(30px,4.4vw,46px)/1 var(--disp);letter-spacing:-.5px}
+h1 .hl{background:linear-gradient(transparent 62%,rgba(217,142,4,.45) 62%)}
+.sub{margin-top:8px;font-size:14px;color:var(--ink2);max-width:640px;line-height:1.5}
+.formule-chip{font:italic 600 19px var(--math);background:var(--ink);color:#fdf9ec;padding:11px 18px;border-radius:9px;
+  box-shadow:5px 5px 0 rgba(28,35,51,.18)}
+.formule-chip.swap{animation:chipIn .45s both}
+@keyframes chipIn{from{transform:translateY(10px);opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+
+.panel{background:var(--card);border:2.5px solid var(--ink);border-radius:11px;padding:16px 18px;
+  box-shadow:8px 8px 0 rgba(28,35,51,.10);animation:rise .5s both}
+.phead{display:flex;align-items:center;gap:10px;border-bottom:2px dashed rgba(28,35,51,.3);padding-bottom:9px;margin-bottom:12px;flex-wrap:wrap}
+.phead h2{font:800 14px/1.2 var(--disp);text-transform:uppercase;letter-spacing:.6px}
+.num{font:700 12px var(--mono);background:var(--ink);color:#fdf9ec;padding:3px 8px;border-radius:4px}
+.spacer{flex:1}
+
+.p-ctrl{margin-bottom:18px;animation-delay:.05s}
+.ctrlRow{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp .gLabel{font:700 10.5px var(--body);text-transform:uppercase;letter-spacing:1px;color:var(--ink2)}
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden;background:#fff}
+.seg button{font:700 13.5px var(--body);padding:9px 16px;border:none;background:transparent;cursor:pointer;color:var(--ink2);transition:.15s}
+.seg button:hover{background:rgba(28,35,51,.06)}
+.seg button.on{background:var(--ink);color:#fdf9ec}
+.seg.small button{font:600 12px var(--mono);padding:6px 12px}
+.paramBox{display:flex;gap:16px;flex-wrap:wrap;align-items:center;border:2px dashed rgba(28,35,51,.35);border-radius:9px;padding:9px 14px}
+.slider{display:flex;align-items:center;gap:8px;font:600 13px var(--mono)}
+.slider input{accent-color:var(--blue);width:110px}
+.slider .val{color:var(--blue);min-width:56px}
+.ctx{font-size:12.5px;color:var(--ink2);max-width:330px;line-height:1.45}
+.ctx b{color:var(--ink)}
+input[type=number]{font:700 15px var(--mono);width:96px;border:2.5px solid var(--ink);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink)}
+.suggs{display:flex;gap:7px;flex-wrap:wrap}
+.sugg{font:600 12px var(--mono);border:2px solid var(--ink);border-radius:999px;background:#fff;padding:4px 11px;cursor:pointer;transition:.15s;box-shadow:2px 2px 0 rgba(28,35,51,.18)}
+.sugg:hover{transform:translateY(-2px);background:rgba(217,142,4,.15)}
+.btn{font:700 14px var(--body);border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:10px 16px;border-radius:8px;box-shadow:3px 3px 0 rgba(28,35,51,.25);cursor:pointer;transition:.15s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(28,35,51,.25)}
+.btn:active{transform:translate(2px,2px);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:3px 3px 0 rgba(20,80,180,.4)}
+.btn.primary:hover{background:#0f47a0}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.mainGrid{display:grid;grid-template-columns:minmax(330px,5fr) 7fr;gap:18px;margin-bottom:18px}
+@media(max-width:960px){.mainGrid{grid-template-columns:1fr}}
+
+.p-calc{background:var(--board);border-color:#081321;animation-delay:.1s;display:flex;flex-direction:column}
+.p-calc .phead{border-bottom-color:rgba(223,231,243,.25)}
+.p-calc .phead h2{color:var(--bt)}
+.p-calc .num{background:var(--ba);color:var(--ink)}
+.obj{font:600 12px var(--mono);color:var(--ba);border:1.5px dashed rgba(255,209,102,.55);border-radius:6px;
+  padding:6px 10px;margin-bottom:10px;min-height:30px}
+.calcBox{flex:1;min-height:250px;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 2px}
+.cline{font:italic 400 21px/1.5 var(--math);color:var(--bt);opacity:0;transform:translateY(12px);
+  padding:6px 12px;border-left:3px solid transparent;border-radius:4px;white-space:nowrap}
+.cline.show{animation:lineIn .45s forwards}
+.cline.past{opacity:.5}
+.cline.active{border-left-color:var(--ba);background:rgba(255,255,255,.05)}
+.cline .note{font:500 12px var(--mono);font-style:normal;color:rgba(223,231,243,.55);margin-left:10px}
+@keyframes lineIn{to{opacity:1;transform:none}}
+.cline.past.show{animation:none;opacity:.5;transform:none}
+.hl-b,.hl-a,.hl-r,.hl-n{display:inline-block;font-style:italic;padding:0 6px;border-radius:6px;animation:hpop .5s}
+.hl-b{color:var(--bb);border:1.5px solid rgba(124,196,255,.7)}
+.hl-a{color:var(--ba);border:1.5px solid rgba(255,209,102,.7)}
+.hl-r{color:var(--bg);border:1.5px solid rgba(126,231,135,.7)}
+.hl-n{color:var(--br);border:1.5px solid rgba(255,123,114,.7)}
+@keyframes hpop{0%{transform:scale(.4)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.cap{font:500 12.5px var(--mono);color:rgba(223,231,243,.75);border-top:1.5px dashed rgba(223,231,243,.25);
+  padding-top:10px;margin-top:12px;min-height:32px}
+.placeholder{font:italic 400 16px var(--math);color:rgba(223,231,243,.45);text-align:center}
+
+.p-graph{animation-delay:.15s}
+#graph{height:430px;width:100%;display:block}
+@media(max-width:640px){#graph{height:340px}}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font:500 12px var(--body);color:var(--ink2)}
+.legend .sw{display:inline-block;width:22px;margin-right:6px;vertical-align:middle;border-top:3px solid}
+.sw.cGreen{border-color:var(--green)}
+.sw.cBlue{border-color:var(--blue)}
+.sw.cRed{border-color:var(--red)}
+
+.p-table{animation-delay:.2s}
+.tblWrap{overflow-x:auto;padding:4px}
+.vt{border-collapse:separate;border-spacing:0;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden;background:#fff;width:100%}
+.vt th{font:700 12.5px var(--mono);background:#f0ecdf;padding:9px 12px;border-right:2.5px solid var(--ink);white-space:nowrap}
+.vt th.xh{color:var(--blue)}.vt th.fh{color:var(--red)}
+.vt td{font:600 14px var(--mono);text-align:center;padding:9px 8px;position:relative;
+  border-left:1.5px solid rgba(28,35,51,.16);min-width:52px;transition:background .2s}
+.vt .xRow td{color:var(--blue);background:rgba(20,80,180,.055)}
+.vt .fRow td{color:var(--red);background:rgba(207,34,51,.055);border-top:2.5px solid var(--ink)}
+.vt td.pending{color:rgba(28,35,51,.32)!important;font-weight:500;background:transparent!important}
+.vt td.revealed{animation:pop .5s}
+.vt td.target{outline:3px solid var(--amber);outline-offset:-3px}
+@keyframes pop{0%{transform:scale(.3)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.vt td.done::after{content:'✓';position:absolute;top:2px;right:5px;font-size:9px;color:var(--green);opacity:.8}
+
+footer{margin-top:30px;text-align:center;font:500 12px var(--mono);color:var(--ink2);opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <span class="tag">2<sup>nde</sup> Bac Pro · Mathématiques · Fonctions</span>
+    <h1>Images <span class="hl">&</span> antécédents</h1>
+    <p class="sub">Calculer l'image d'un nombre par une fonction, chercher un antécédent :
+      par le calcul animé, le tableau de valeurs ou la lecture graphique sur la courbe.</p>
+  </div>
+  <div class="formule-chip" id="formuleChip">f(x) = 3x + 20</div>
+</header>
+
+<section class="panel p-ctrl">
+  <div class="ctrlRow">
+    <div class="grp">
+      <span class="gLabel">Fonction</span>
+      <div class="seg" id="fnSeg">
+        <button data-fn="affine" class="on">Affine · coût d'un service</button>
+        <button data-fn="carree">Carrée · f(x) = kx²</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="gLabel">Mode</span>
+      <div class="seg" id="modeSeg">
+        <button data-mode="img" class="on">Calculer une image f(a)</button>
+        <button data-mode="ante">Trouver un antécédent</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="gLabel">Visualisation en parallèle</span>
+      <div class="seg small" id="visSeg">
+        <button data-vis="table">Tableau</button>
+        <button data-vis="graph">Courbe</button>
+        <button data-vis="both" class="on">Les deux</button>
+      </div>
+    </div>
+  </div>
+  <div class="ctrlRow" style="margin-top:14px">
+    <div class="paramBox" id="paramBox"></div>
+    <div class="grp">
+      <span class="gLabel" id="valLabel">Valeur de x</span>
+      <input type="number" id="valInput" step="0.5" value="4">
+    </div>
+    <div class="grp">
+      <span class="gLabel">Exemples</span>
+      <div class="suggs" id="suggs"></div>
+    </div>
+    <button class="btn primary" id="btnGo">▶ Lancer l'animation</button>
+    <button class="btn" id="btnReset">↺ Réinitialiser</button>
+  </div>
+</section>
+
+<div class="mainGrid">
+  <section class="panel p-calc">
+    <div class="phead"><span class="num">01</span><h2>Le calcul, pas à pas</h2></div>
+    <div class="obj" id="objChip">Choisis une valeur, puis lance l'animation.</div>
+    <div class="calcBox" id="calcBox"><p class="placeholder">La substitution et les réductions s'afficheront ici…</p></div>
+    <p class="cap" id="cap" aria-live="polite"></p>
+  </section>
+
+  <section class="panel p-graph">
+    <div class="phead"><span class="num">02</span><h2>Lecture graphique</h2></div>
+    <canvas id="graph"></canvas>
+    <div class="legend">
+      <span><i class="sw cGreen"></i>courbe de f</span>
+      <span><i class="sw cBlue"></i>entrée : abscisse x</span>
+      <span><i class="sw cRed"></i>sortie : ordonnée f(x)</span>
+    </div>
+  </section>
+</div>
+
+<section class="panel p-table">
+  <div class="phead"><span class="num">03</span><h2>Tableau de valeurs</h2></div>
+  <div class="tblWrap" id="tblWrap"></div>
+</section>
+
+<footer>Images et antécédents · fonction affine ou carrée · 2<sup>nde</sup> Bac Pro.</footer>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const INK='#1c2333',BLUE='#1450b4',RED='#cf2233',GREEN='#0f7b4f',AMBER='#d98e04',ORANGE='#e2571b';
+const fmt=x=>(Math.round(x*100)/100).toLocaleString('fr-FR',{maximumFractionDigits:2}).replace('-','−');
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const prog=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+const easeOut=p=>1-Math.pow(1-p,3);
+
+/* ---------- état ---------- */
+const S={fn:'affine',mode:'img',vis:'both',a:3,b:20,k:2,
+  anim:null,dots:[],revealed:new Map(),targetXs:[]};
+
+const graphCv=$('#graph'),gctx=graphCv.getContext('2d');
+let gw=0,gh=0;
+function fit(){
+  const r=graphCv.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  graphCv.width=Math.round(r.width*d);graphCv.height=Math.round(r.height*d);
+  gctx.setTransform(d,0,0,d,0,0);gw=r.width;gh=r.height;
+}
+new ResizeObserver(fit).observe(graphCv.parentElement);
+
+/* ---------- fonctions ---------- */
+const F=x=>S.fn==='affine'?S.a*x+S.b:S.k*x*x;
+function formule(){
+  if(S.fn==='affine'){
+    return S.b===0?`f(x) = ${fmt(S.a)}x`:`f(x) = ${fmt(S.a)}x + ${fmt(S.b)}`;
+  }
+  return `f(x) = ${fmt(S.k)}x²`;
+}
+
+/* ---------- fenêtres du graphe ---------- */
+function win(){
+  if(S.fn==='affine'){
+    const lo=Math.min(0,F(-10)),hi=Math.max(0,F(10));
+    const m=(hi-lo)*0.09+2;
+    return {x0:-10,x1:10,y0:lo-m,y1:hi+m};
+  }
+  return {x0:-6,x1:6,y0:-12,y1:S.k*36*1.06+4};
+}
+function niceStep(range){
+  const raw=range/8,pow=Math.pow(10,Math.floor(Math.log10(raw)));
+  for(const m of[1,2,5,10])if(raw<=m*pow)return m*pow;
+  return 10*pow;
+}
+
+/* ---------- tableau de valeurs ---------- */
+function baseXs(){return S.fn==='affine'?[0,2,4,6,8,10]:[-4,-3,-2,-1,0,1,2,3,4];}
+function renderTable(extra){
+  const xs=[...new Set([...baseXs(),...(extra||[])])].sort((p,q)=>p-q);
+  let r1='<tr class="xRow"><th class="xh">x</th>',r2='<tr class="fRow"><th class="fh">f(x)</th>';
+  xs.forEach(x=>{
+    const key=+x.toFixed(2);
+    const tCls=S.targetXs.includes(key)?' target':'';
+    r1+=`<td class="xv${tCls}">${fmt(key)}</td>`;
+    if(S.revealed.has(key))r2+=`<td class="fv revealed done${tCls}">${fmt(S.revealed.get(key))}</td>`;
+    else r2+=`<td class="fv pending${tCls}" data-x="${key}">?</td>`;
+  });
+  $('#tblWrap').innerHTML=`<table class="vt"><tbody>${r1}</tr>${r2}</tr></tbody></table>`;
+}
+function revealXs(xs){
+  xs.forEach(x=>{
+    const key=+x.toFixed(2);
+    S.revealed.set(key,F(key));
+    const td=document.querySelector(`td.fv[data-x="${key}"]`);
+    if(td){td.textContent=fmt(F(key));td.classList.remove('pending');td.classList.add('revealed','done');}
+  });
+}
+
+/* ---------- paramètres & entrées ---------- */
+function renderParams(){
+  const box=$('#paramBox');
+  if(S.fn==='affine'){
+    box.innerHTML=`
+      <label class="slider">a = <input type="range" id="sA" min="0.5" max="6" step="0.5" value="${S.a}"><span class="val">${fmt(S.a)}</span></label>
+      <label class="slider">b = <input type="range" id="sB" min="0" max="50" step="5" value="${S.b}"><span class="val">${fmt(S.b)}</span></label>
+      <p class="ctx"><b>Location de vélo :</b> forfait de <b>${fmt(S.b)} €</b> puis <b>${fmt(S.a)} € par heure</b>.
+      f(x) est le prix total pour x heures. · a = pente · b = ordonnée à l'origine.</p>`;
+    $('#sA').addEventListener('input',e=>{S.a=+e.target.value;e.target.nextElementSibling.textContent=fmt(S.a);paramChanged();});
+    $('#sB').addEventListener('input',e=>{S.b=+e.target.value;e.target.nextElementSibling.textContent=fmt(S.b);paramChanged();});
+  }else{
+    box.innerHTML=`
+      <label class="slider">k = <input type="range" id="sK" min="0.5" max="3" step="0.5" value="${S.k}"><span class="val">${fmt(S.k)}</span></label>
+      <p class="ctx"><b>Fonction carrée :</b> f(x) = kx². Le coefficient k règle l'ouverture de la parabole.</p>`;
+    $('#sK').addEventListener('input',e=>{S.k=+e.target.value;e.target.nextElementSibling.textContent=fmt(S.k);paramChanged();});
+  }
+}
+function inputBounds(){
+  const inp=$('#valInput');
+  if(S.mode==='img'){
+    inp.min=S.fn==='affine'?-10:-6;inp.max=S.fn==='affine'?10:6;inp.step=0.5;
+  }else{
+    if(S.fn==='affine'){inp.min=F(-10);inp.max=F(10);inp.step=0.5;}
+    else{inp.min=-10;inp.max=+(S.k*36).toFixed(1);inp.step=0.5;}
+  }
+}
+function renderSuggs(){
+  const map={
+    'affine-img':[2,4,7],'affine-ante':[32,50,11],
+    'carree-img':[-3,2,5],'carree-ante':[18,8,-6]
+  };
+  const arr=map[S.fn+'-'+S.mode];
+  $('#suggs').innerHTML=arr.map(v=>`<button class="sugg" data-v="${v}">${fmt(v)}</button>`).join('');
+  $('#suggs').querySelectorAll('.sugg').forEach(b=>b.addEventListener('click',()=>{
+    $('#valInput').value=b.dataset.v;
+  }));
+}
+function setValLabel(){
+  $('#valLabel').textContent=S.mode==='img'?'Valeur de x':'Valeur de f(x) recherchée';
+}
+function updateChip(){
+  const c=$('#formuleChip');c.textContent=formule();
+  c.classList.remove('swap');void c.offsetWidth;c.classList.add('swap');
+}
+function paramChanged(){
+  updateChip();inputBounds();resetAll();
+}
+function resetAll(){
+  S.anim=null;S.dots=[];S.revealed.clear();S.targetXs=[];
+  renderTable();
+  $('#calcBox').innerHTML='<p class="placeholder">La substitution et les réductions s\'afficheront ici…</p>';
+  $('#objChip').textContent='Choisis une valeur, puis lance l\'animation.';
+  $('#cap').textContent='';
+  $('#btnGo').disabled=false;$('#btnGo').innerHTML='▶ Lancer l\u2019animation';
+}
+
+/* ---------- segments ---------- */
+$('#fnSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  S.fn=b.dataset.fn;
+  $('#fnSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  renderParams();renderSuggs();inputBounds();
+  const inp=$('#valInput');
+  if(S.fn==='affine')inp.value=S.mode==='img'?4:50;else inp.value=S.mode==='img'?3:18;
+  resetAll();
+}));
+$('#modeSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  S.mode=b.dataset.mode;
+  $('#modeSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  setValLabel();renderSuggs();inputBounds();
+  const inp=$('#valInput');
+  if(S.fn==='affine')inp.value=S.mode==='img'?4:50;else inp.value=S.mode==='img'?3:18;
+  resetAll();
+}));
+$('#visSeg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  S.vis=b.dataset.vis;
+  $('#visSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+}));
+$('#btnReset').addEventListener('click',resetAll);
+$('#valInput').addEventListener('keydown',e=>{if(e.key==='Enter')launch();});
+$('#btnGo').addEventListener('click',launch);
+
+/* ---------- construction des lignes de calcul ---------- */
+function calcLine(html,note){return {html:html+(note?`<span class="note">${note}</span>`:'')};}
+function buildLines(v){
+  const L=[];
+  const vdisp=v<0?`(${fmt(v)})`:fmt(v);
+  if(S.mode==='img'){
+    if(S.fn==='affine'){
+      L.push(calcLine(formule(),'expression de f'));
+      L.push(calcLine(`f(${fmt(v)}) = ${fmt(S.a)} × <b class="hl-b">${vdisp}</b> + ${fmt(S.b)}`,'substitution'));
+      L.push(calcLine(`f(${fmt(v)}) = <b class="hl-a">${fmt(S.a*v)}</b> + ${fmt(S.b)}`));
+      L.push(calcLine(`f(${fmt(v)}) = <b class="hl-r">${fmt(F(v))}</b>`,'image'));
+    }else{
+      L.push(calcLine(formule(),'expression de f'));
+      L.push(calcLine(`f(${fmt(v)}) = ${fmt(S.k)} × <b class="hl-b">${vdisp}</b>²`,'substitution'));
+      L.push(calcLine(`f(${fmt(v)}) = ${fmt(S.k)} × <b class="hl-a">${fmt(v*v)}</b>`,'le carré d\u2019abord'));
+      L.push(calcLine(`f(${fmt(v)}) = <b class="hl-r">${fmt(F(v))}</b>`,'image'));
+    }
+    return {kind:'img',lines:L,xs:[v],y:F(v),
+      tl:{lines:[0,.8,1.7,2.6],dur:5.2,reveal:4.5,
+        caps:[[0,'On écrit l\u2019expression de f.'],[.8,'Substitution : on remplace x par la valeur choisie.'],
+        [1.7,'On effectue les calculs.'],[2.6,'On réduit.'],[3.0,'Sur la courbe : on part de l\u2019abscisse…'],
+        [3.4,'…on monte jusqu\u2019à la courbe, puis on revient vers l\u2019axe des ordonnées.'],
+        [4.5,'Le tableau de valeurs se complète.']]}
+    };
+  }
+  /* antécédent */
+  if(S.fn==='affine'){
+    const x=(v-S.b)/S.a;
+    L.push(calcLine(`On cherche x tel que f(x) = ${fmt(v)}`,'objectif'));
+    L.push(calcLine(`${fmt(S.a)}x + ${fmt(S.b)} = ${fmt(v)}`));
+    L.push(calcLine(`${fmt(S.a)}x = ${fmt(v)} − ${fmt(S.b)}`));
+    L.push(calcLine(`${fmt(S.a)}x = <b class="hl-a">${fmt(v-S.b)}</b>`));
+    L.push(calcLine(`x = ${fmt(v-S.b)} ÷ ${fmt(S.a)}`));
+    L.push(calcLine(`x = <b class="hl-r">${fmt(x)}</b>`,'antécédent'));
+    return {kind:'ante1',lines:L,xs:[x],y:v,
+      tl:{lines:[0,.55,1.2,1.85,2.5,3.15],dur:4.9,reveal:4.2,
+        caps:[[0,'On cherche le nombre x dont l\u2019image est '+fmt(v)+'.'],
+        [.55,'On résout l\u2019équation, étape par étape.'],
+        [2.5,'On isole x.'],
+        [3.1,'Sur la courbe : on part de l\u2019ordonnée…'],
+        [3.4,'…on rejoint la courbe, puis on redescend vers l\u2019axe des abscisses.'],
+        [4.2,'Le tableau de valeurs se complète.']]}
+    };
+  }
+  /* carrée : antécédent */
+  const r=v/S.k;
+  if(v>0){
+    const s=Math.sqrt(r),exact=Math.abs(s-Math.round(s))<1e-9;
+    const sv=exact?Math.round(s):s;
+    L.push(calcLine(`On cherche x tel que f(x) = ${fmt(v)}`,'objectif'));
+    L.push(calcLine(`${fmt(S.k)}x² = ${fmt(v)}`));
+    L.push(calcLine(`x² = <b class="hl-a">${fmt(r)}</b>`));
+    L.push(calcLine(`x = √${fmt(r)} &nbsp;ou&nbsp; x = −√${fmt(r)}`));
+    L.push(calcLine(`x = <b class="hl-r">${fmt(sv)}</b> &nbsp;ou&nbsp; x = <b class="hl-r">${fmt(-sv)}</b>`,exact?'deux antécédents':'deux antécédents (≈)'));
+    return {kind:'ante2',lines:L,xs:[sv,-sv],y:v,
+      tl:{lines:[0,.6,1.3,2.0,2.8],dur:5.0,reveal:4.3,
+        caps:[[0,'On cherche les nombres x dont l\u2019image est '+fmt(v)+'.'],
+        [.6,'On résout l\u2019équation.'],
+        [1.3,'On isole x².'],
+        [2.0,'Deux solutions opposées : la parabole est symétrique.'],
+        [3.2,'Sur la courbe : la droite horizontale coupe la parabole en deux points.'],
+        [4.3,'Le tableau de valeurs se complète.']]}
+    };
+  }
+  if(v===0){
+    L.push(calcLine(`On cherche x tel que f(x) = 0`,'objectif'));
+    L.push(calcLine(`${fmt(S.k)}x² = 0`));
+    L.push(calcLine(`x² = <b class="hl-a">0</b>`));
+    L.push(calcLine(`x = <b class="hl-r">0</b>`,'un seul antécédent'));
+    return {kind:'antez',lines:L,xs:[0],y:0,
+      tl:{lines:[0,.7,1.4,2.1],dur:3.4,reveal:2.7,
+        caps:[[0,'On cherche le nombre x dont l\u2019image est 0.'],
+        [1.4,'Un carré est nul seulement si x = 0.'],
+        [2.1,'L\u2019unique antécédent de 0 est 0 : la parabole touche l\u2019axe à l\u2019origine.']]}
+    };
+  }
+  L.push(calcLine(`On cherche x tel que f(x) = ${fmt(v)}`,'objectif'));
+  L.push(calcLine(`${fmt(S.k)}x² = ${fmt(v)}`));
+  L.push(calcLine(`x² = <b class="hl-n">${fmt(r)}</b>`));
+  L.push(calcLine(`<b class="hl-n">Un carré est toujours ≥ 0 : aucune solution.</b>`,'aucun antécédent'));
+  return {kind:'ante0',lines:L,xs:[],y:v,
+    tl:{lines:[0,.7,1.4,2.2],dur:3.6,reveal:null,
+      caps:[[0,'On cherche un nombre x dont l\u2019image serait '+fmt(v)+'.'],
+      [1.4,'Or x² ne peut pas être négatif…'],
+      [2.2,'La droite horizontale ne coupe pas la parabole : aucun antécédent.']]}
+  };
+}
+
+/* ---------- lancement ---------- */
+function launch(){
+  if(S.anim&&!S.anim.fin)return;
+  const inp=$('#valInput');
+  const v=parseFloat(String(inp.value).replace(',','.'));
+  if(isNaN(v)){$('#cap').textContent='Entre d\u2019abord une valeur.';return;}
+  const cv=clamp(v,+inp.min,+inp.max);
+  if(cv!==v){inp.value=cv;}
+  const A=buildLines(cv);
+  A.t0=performance.now();A.fin=false;A.capIdx=-1;A.lineIdx=-1;
+  S.anim=A;
+  S.targetXs=A.xs.map(x=>+x.toFixed(2));
+  renderTable(S.targetXs);
+  $('#calcBox').innerHTML=A.lines.map(l=>`<div class="cline">${l.html}</div>`).join('');
+  $('#objChip').textContent=S.mode==='img'
+    ?`Objectif : calculer f(${fmt(cv)})`
+    :`Objectif : trouver ${A.kind==='ante2'?'les antécédents':'un antécédent'} de ${fmt(cv)}`;
+  $('#btnGo').disabled=true;$('#btnGo').innerHTML='⏳ Animation…';
+}
+function finalize(){
+  const A=S.anim;A.fin=true;
+  if(S.vis!=='table'&&A.xs.length)A.xs.forEach(x=>S.dots.push({x,y:F(x)}));
+  if(S.vis!=='graph'&&A.tl.reveal!=null)revealXs(A.xs);
+  $('#btnGo').disabled=false;$('#btnGo').innerHTML='⟳ Rejouer';
+}
+
+/* ---------- boucle ---------- */
+function tick(now){
+  if(S.anim){
+    const A=S.anim,el=(now-A.t0)/1000,tl=A.tl;
+    const els=[...document.querySelectorAll('.cline')];
+    let idx=-1;
+    tl.lines.forEach((tt,i)=>{if(el>=tt)idx=i;});
+    if(idx!==A.lineIdx){
+      A.lineIdx=idx;
+      els.forEach((e,i)=>{
+        e.classList.toggle('show',i<=idx);
+        e.classList.toggle('active',i===idx);
+        e.classList.toggle('past',i<idx);
+      });
+    }
+    let ci=-1;tl.caps.forEach(([tt],i)=>{if(el>=tt)ci=i;});
+    if(ci!==A.capIdx){A.capIdx=ci;if(ci>=0)$('#cap').textContent=tl.caps[ci][1];}
+    if(!A.fin&&el>=tl.dur)finalize();
+  }
+  drawGraph(now);
+  requestAnimationFrame(tick);
+}
+
+/* ---------- dessin du graphe ---------- */
+function segLine(c,x1,y1,x2,y2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
+function line2(c,x1,y1,x2,y2,col){c.strokeStyle=col;c.lineWidth=1.5;segLine(c,x1,y1,x2,y2);}
+function dot(c,x,y){
+  c.beginPath();c.arc(x,y,5,0,7);c.fillStyle='#fff';c.fill();
+  c.lineWidth=2.4;c.strokeStyle=INK;c.stroke();
+  c.beginPath();c.arc(x,y,2.2,0,7);c.fillStyle=GREEN;c.fill();
+}
+function lab(c,x,y,p,W){
+  c.font='600 10.5px "IBM Plex Mono",monospace';c.fillStyle=INK;
+  const right=x>W-120;c.textAlign=right?'right':'left';
+  c.fillText(`(${fmt(p.x)} ; ${fmt(p.y)})`,x+(right?-9:9),y-9);
+}
+function axisMark(c,x,y,col,p,label,pos){
+  if(p<=0)return;
+  const s=8*easeOut(p);
+  c.save();c.globalAlpha=Math.min(1,p*1.4);
+  c.fillStyle=col;c.fillRect(x-s/2,y-s/2,s,s);
+  c.font='700 12px "IBM Plex Mono",monospace';c.fillStyle=col;
+  if(pos==='bottom'){c.textAlign='center';c.textBaseline='top';c.fillText(label,x,y+9);}
+  else{c.textAlign='right';c.textBaseline='middle';c.fillText(label,x-10,y);}
+  c.restore();
+}
+function drawGraph(now){
+  const c=gctx;if(!gw)return;
+  c.clearRect(0,0,gw,gh);
+  const W=win(),mL=48,mR=16,mT=16,mB=34;
+  const X=x=>mL+(x-W.x0)/(W.x1-W.x0)*(gw-mL-mR);
+  const Y=y=>gh-mB-(y-W.y0)/(W.y1-W.y0)*(gh-mT-mB);
+  const ys=niceStep(W.y1-W.y0),xs=2;
+  /* grille */
+  c.lineWidth=1;
+  for(let x=Math.ceil(W.x0/xs)*xs;x<=W.x1+1e-9;x+=xs){
+    c.strokeStyle='rgba(28,35,51,.08)';segLine(c,X(x),mT,X(x),gh-mB);}
+  for(let y=Math.ceil(W.y0/ys)*ys;y<=W.y1+1e-9;y+=ys){
+    c.strokeStyle='rgba(28,35,51,.08)';segLine(c,mL,Y(y),gw-mR,Y(y));}
+  /* axes */
+  c.strokeStyle=INK;c.lineWidth=2;
+  segLine(c,mL,Y(0),gw-mR,Y(0));segLine(c,X(0),gh-mB,X(0),mT);
+  c.fillStyle=INK;
+  c.beginPath();c.moveTo(gw-mR,Y(0));c.lineTo(gw-mR-9,Y(0)-4.5);c.lineTo(gw-mR-9,Y(0)+4.5);c.closePath();c.fill();
+  c.beginPath();c.moveTo(X(0),mT);c.lineTo(X(0)-4.5,mT+9);c.lineTo(X(0)+4.5,mT+9);c.closePath();c.fill();
+  /* graduations */
+  c.font='10px "IBM Plex Mono",monospace';
+  c.fillStyle=BLUE;c.textAlign='center';c.textBaseline='top';
+  for(let x=Math.ceil(W.x0/xs)*xs;x<=W.x1+1e-9;x+=xs){
+    if(Math.abs(x)<1e-9)continue;
+    line2(c,X(x),Y(0),X(x),Y(0)+4,BLUE);
+    c.fillText(fmt(x),X(x),Y(0)+7);}
+  c.fillStyle=RED;c.textAlign='right';c.textBaseline='middle';
+  for(let y=Math.ceil(W.y0/ys)*ys;y<=W.y1+1e-9;y+=ys){
+    if(Math.abs(y)<1e-9)continue;
+    line2(c,X(0)-4,Y(y),X(0),Y(y),RED);
+    c.fillText(fmt(y),X(0)-8,Y(y));}
+  c.font='700 12px "IBM Plex Mono",monospace';
+  c.fillStyle=BLUE;c.textAlign='right';c.fillText('x',gw-mR-2,Y(0)-8);
+  c.fillStyle=RED;c.textAlign='left';c.fillText('f(x)',X(0)+8,mT+8);
+  /* courbe */
+  c.beginPath();c.strokeStyle=GREEN;c.lineWidth=3;c.lineJoin='round';
+  const N=300;let started=false;
+  for(let i=0;i<=N;i++){
+    const x=W.x0+(W.x1-W.x0)*i/N,y=F(x);
+    if(y<W.y0-2||y>W.y1+2){started=false;continue;}
+    const px=X(x),py=Y(y);
+    if(!started){c.moveTo(px,py);started=true;}else c.lineTo(px,py);
+  }
+  c.stroke();
+  /* points persistants */
+  S.dots.forEach(p=>{dot(c,X(p.x),Y(p.y));lab(c,X(p.x),Y(p.y),p,gw);});
+  /* animation en cours */
+  if(S.anim)overlay(c,X,Y,now);
+}
+function overlay(c,X,Y,now){
+  const A=S.anim,el=(now-A.t0)/1000;
+  if(S.vis==='table'&&A.kind!=='ante0')return;
+  const d=A;
+  c.save();
+  if(A.kind==='img'){
+    const v=d.xs[0],px=X(v),py=Y(d.y);
+    axisMark(c,px,Y(0),BLUE,easeOut(prog(el,.8,1.25)),fmt(v),'bottom');
+    const p1=easeOut(prog(el,1.7,2.5));
+    if(p1>0){c.setLineDash([6,5]);c.strokeStyle=BLUE;c.lineWidth=1.9;
+      segLine(c,px,Y(0),px,Y(0)+(py-Y(0))*p1);c.setLineDash([]);}
+    if(el>=2.6&&el<3.4){
+      const on=Math.floor((el-2.6)*8)%2===0;
+      c.globalAlpha=on?1:.25;
+      c.beginPath();c.arc(px,py,6,0,7);c.fillStyle=ORANGE;c.fill();
+      c.lineWidth=2;c.strokeStyle=INK;c.stroke();c.globalAlpha=1;
+      const rp=((el-2.6)/0.4)%1;
+      c.beginPath();c.arc(px,py,8+rp*15,0,7);
+      c.strokeStyle=`rgba(226,87,27,${1-rp})`;c.lineWidth=2;c.stroke();
+    }else if(el>=3.4)dot(c,px,py);
+    const p2=easeOut(prog(el,3.4,4.2));
+    if(p2>0){c.setLineDash([6,5]);c.strokeStyle=RED;c.lineWidth=1.9;
+      segLine(c,px,py,px+(X(0)-px)*p2,py);c.setLineDash([]);}
+    axisMark(c,X(0),py,RED,easeOut(prog(el,4.2,4.7)),fmt(d.y),'left');
+  }else if(A.kind==='ante1'||A.kind==='antez'){
+    const one=A.kind==='ante1';
+    const px=X(d.xs[0]),py=Y(d.y);
+    const h0=1.3,h1=one?2.1:1.9,b0=one?2.2:1.5,b1=one?3.0:2.3;
+    const v0=one?3.1:2.3,v1=one?3.9:2.6,m0=one?3.9:2.5,m1=one?4.4:2.9;
+    axisMark(c,X(0),py,RED,easeOut(prog(el,.6,1.05)),fmt(d.y),'left');
+    const p1=easeOut(prog(el,h0,h1));
+    if(p1>0&&Math.abs(px-X(0))>2){c.setLineDash([6,5]);c.strokeStyle=RED;c.lineWidth=1.9;
+      segLine(c,X(0),py,X(0)+(px-X(0))*p1,py);c.setLineDash([]);}
+    if(el>=b0&&el<b1){
+      const on=Math.floor((el-b0)*8)%2===0;
+      c.globalAlpha=on?1:.25;
+      c.beginPath();c.arc(px,py,6,0,7);c.fillStyle=ORANGE;c.fill();
+      c.lineWidth=2;c.strokeStyle=INK;c.stroke();c.globalAlpha=1;
+    }else if(el>=b1)dot(c,px,py);
+    const p2=easeOut(prog(el,v0,v1));
+    if(p2>0&&Math.abs(py-Y(0))>2){c.setLineDash([6,5]);c.strokeStyle=BLUE;c.lineWidth=1.9;
+      segLine(c,px,py,px,py+(Y(0)-py)*p2);c.setLineDash([]);}
+    axisMark(c,px,Y(0),BLUE,easeOut(prog(el,m0,m1)),fmt(d.xs[0]),'bottom');
+  }else if(A.kind==='ante2'){
+    const py=Y(d.y);
+    axisMark(c,X(0),py,RED,easeOut(prog(el,.7,1.15)),fmt(d.y),'left');
+    const p1=easeOut(prog(el,1.4,2.2));
+    if(p1>0){c.setLineDash([6,5]);c.strokeStyle=RED;c.lineWidth=1.9;
+      d.xs.forEach(sx=>{const px=X(sx);segLine(c,X(0),py,X(0)+(px-X(0))*p1,py);});
+      c.setLineDash([]);}
+    if(el>=2.3&&el<3.1){
+      const on=Math.floor((el-2.3)*8)%2===0;
+      d.xs.forEach(sx=>{
+        c.globalAlpha=on?1:.25;
+        c.beginPath();c.arc(X(sx),py,6,0,7);c.fillStyle=ORANGE;c.fill();
+        c.lineWidth=2;c.strokeStyle=INK;c.stroke();c.globalAlpha=1;});
+    }else if(el>=3.1)d.xs.forEach(sx=>dot(c,X(sx),py));
+    const p2=easeOut(prog(el,3.2,4.0));
+    if(p2>0){c.setLineDash([6,5]);c.strokeStyle=BLUE;c.lineWidth=1.9;
+      d.xs.forEach(sx=>{segLine(c,X(sx),py,X(sx),py+(Y(0)-py)*p2);});
+      c.setLineDash([]);}
+    d.xs.forEach(sx=>axisMark(c,X(sx),Y(0),BLUE,easeOut(prog(el,4.0,4.5)),fmt(sx),'bottom'));
+  }else if(A.kind==='ante0'){
+    const py=Y(d.y);
+    axisMark(c,X(0),py,RED,easeOut(prog(el,.7,1.15)),fmt(d.y),'left');
+    const p1=easeOut(prog(el,1.5,2.4));
+    if(p1>0){
+      const flash=el>=2.6?(Math.floor((el-2.6)*5)%2===0):false;
+      c.setLineDash([6,5]);c.strokeStyle=flash?'#cf2233':'rgba(207,34,51,.8)';c.lineWidth=2;
+      const half=(gw-64)/2*p1;
+      segLine(c,X(0)-half,py,X(0)+half,py);c.setLineDash([]);
+      if(el>=2.6){
+        c.globalAlpha=.5+.5*Math.sin((el-2.6)*9);
+        c.font='700 16px "IBM Plex Mono",monospace';c.fillStyle='#cf2233';
+        c.textAlign='center';c.textBaseline='bottom';
+        c.fillText('aucune intersection',X(0),py-10);
+        c.globalAlpha=1;
+      }
+    }
+  }
+  c.restore();
+}
+
+/* ---------- initialisation ---------- */
+fit();renderParams();renderSuggs();setValLabel();inputBounds();renderTable();updateChip();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

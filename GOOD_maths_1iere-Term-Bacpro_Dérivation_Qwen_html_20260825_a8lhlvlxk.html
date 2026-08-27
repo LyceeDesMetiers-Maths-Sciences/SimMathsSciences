@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⛰️ DÉRIVATION — Bac Pro & Lycée général</title>
+<style>
+  :root {
+    --bg-0: #0a0e27; --bg-2: #1e2550;
+    --neon-cyan: #00f0ff; --neon-magenta: #ff2bd6; --neon-yellow: #ffe600;
+    --neon-green: #39ff14; --neon-red: #ff3860; --neon-orange: #ff8c00; --neon-purple: #bf00ff;
+    --text-0: #f0f4ff; --text-1: #a8b2d1;
+    --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.12);
+    --radius: 16px; --shadow-neon: 0 0 20px rgba(0,240,255,0.35);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, var(--bg-2) 0%, var(--bg-0) 60%);
+    color: var(--text-0); min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  .app { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .math { font-family: 'STIX Two Math', 'Cambria Math', Georgia, 'Times New Roman', serif; }
+  .math i { font-style: italic; padding: 0 1px; }
+  .math sup { font-size: 0.62em; vertical-align: super; line-height: 0; }
+
+  .frac { display: inline-block; vertical-align: middle; text-align: center; line-height: 1.15; margin: 0 4px; }
+  .frac .top { display: block; padding: 0 6px 2px; border-bottom: 2px solid currentColor; }
+  .frac .bot { display: block; padding: 2px 6px 0; }
+
+  header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--glass-border); }
+  .logo { font-size: 2rem; font-weight: 900; letter-spacing: 2px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .logo-subtitle { font-size: 0.9rem; color: var(--text-1); font-style: italic; }
+  .logo-subtitle b { color: var(--neon-yellow); }
+
+  .main-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .menu-card { background: var(--glass); border: 2px solid var(--glass-border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px); }
+  .menu-card:hover { border-color: var(--neon-cyan); transform: translateY(-4px); box-shadow: var(--shadow-neon); }
+  .menu-card .card-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .menu-card .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: var(--neon-cyan); }
+  .menu-card .card-desc { font-size: 0.85rem; color: var(--text-1); line-height: 1.5; }
+
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--glass-border); }
+  .section-title { font-size: 1.4rem; font-weight: 800; color: var(--neon-yellow); }
+  .btn-back { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-0); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; }
+  .btn-back:hover { border-color: var(--neon-cyan); }
+
+  .graph-layout, .calc-layout, .calc-layout-3 { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .graph-layout, .calc-layout, .calc-layout-3 { grid-template-columns: 1fr !important; } }
+
+  .graph-container, .info-box, .calc-main, .variation-table-container { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 16px; backdrop-filter: blur(10px); }
+  .graph-container svg { width: 100%; height: auto; display: block; touch-action: none; cursor: grab; }
+  .graph-container svg:active { cursor: grabbing; }
+
+  .info-panel, .calc-sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .info-box h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; color: var(--neon-yellow); }
+
+  .slope-display { font-size: 1.9rem; font-weight: 800; text-align: center; padding: 12px; border-radius: 12px; transition: all 0.3s; font-family: 'STIX Two Math', Georgia, serif; }
+  .slope-display.positive { color: var(--neon-green); background: rgba(57,255,20,0.1); }
+  .slope-display.negative { color: var(--neon-red); background: rgba(255,56,96,0.1); }
+  .slope-display.zero { color: var(--neon-yellow); background: rgba(255,230,0,0.1); }
+
+  .variation-text { font-size: 1rem; line-height: 1.6; }
+  .variation-text .up { color: var(--neon-green); }
+  .variation-text .down { color: var(--neon-red); }
+  .variation-text .flat { color: var(--neon-yellow); }
+
+  .step-box { border: 2px solid var(--neon-orange); background: rgba(255,140,0,0.08); }
+  .step-box .step-formula {
+    margin-top: 10px; padding: 10px 10px; border-radius: 10px; background: rgba(0,0,0,0.3);
+    font-family: 'STIX Two Math', Georgia, serif; font-size: 1.05rem; text-align: center; color: var(--text-1);
+  }
+  .step-box .step-formula b { color: var(--neon-orange); }
+
+  .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+  .drag-hint { font-size: 0.85rem; color: var(--text-1); }
+  #snapBadge { color: var(--neon-yellow); font-weight: 700; display: none; }
+
+  .variation-table-container { margin-top: 16px; overflow-x: auto; }
+  .variation-table { width: 100%; border-collapse: collapse; font-size: 1rem; font-family: 'STIX Two Math', Georgia, serif; }
+  .variation-table th, .variation-table td { border: 1px solid var(--glass-border); padding: 8px 12px; text-align: center; min-width: 60px; transition: background 0.3s; }
+  .variation-table th { background: rgba(0,0,0,0.3); color: var(--neon-cyan); font-style: italic; }
+  .variation-table td.highlight { background: rgba(255,230,0,0.18); border-color: var(--neon-yellow); }
+  .variation-table .pos { color: var(--neon-green); font-weight: 700; }
+  .variation-table .neg { color: var(--neon-red); font-weight: 700; }
+  .variation-table .zero { color: var(--neon-yellow); font-weight: 700; }
+  .variation-table .arr-up { color: var(--neon-green); font-size: 1.2rem; }
+  .variation-table .arr-down { color: var(--neon-red); font-size: 1.2rem; }
+
+  .cloud-anim { animation: drift ease-in-out infinite alternate; }
+  @keyframes drift { from { transform: translateX(-22px); } to { transform: translateX(22px); } }
+
+  /* ===== PARTIE 2 ===== */
+  .track-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .track-btn { background: var(--glass); border: 2px solid var(--glass-border); color: var(--text-0); padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.95rem; font-weight: 700; transition: all 0.2s; }
+  .track-btn.active { border-color: var(--neon-magenta); background: rgba(255,43,214,0.1); color: var(--neon-magenta); }
+  .level-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .level-btn {
+    flex: 1; min-width: 150px; background: var(--glass); border: 2px solid var(--glass-border);
+    border-radius: 12px; padding: 10px 12px; cursor: pointer; color: var(--text-0);
+    display: flex; flex-direction: column; gap: 3px; align-items: center; transition: all 0.2s;
+  }
+  .level-btn:hover { border-color: var(--neon-cyan); }
+  .level-btn.active { border-color: var(--neon-yellow); background: rgba(255,230,0,0.08); }
+  .level-btn.locked { opacity: 0.45; cursor: not-allowed; }
+  .level-btn .lv-t { font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; color: var(--neon-cyan); }
+  .level-btn .lv-n { font-size: 0.95rem; }
+  .level-btn .st { color: var(--neon-yellow); letter-spacing: 3px; font-size: 0.95rem; }
+  .stat-line { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .stat-line .stat { background: var(--glass); border: 1px solid var(--glass-border); padding: 6px 14px; border-radius: 10px; font-size: 0.9rem; }
+  .stat-line .stat b { color: var(--neon-cyan); }
+  .stat-line .stat.streak b { color: var(--neon-yellow); }
+
+  .form-selector { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .form-btn { background: var(--glass); border: 2px solid var(--glass-border); color: var(--text-0); padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.2s; }
+  .form-btn:hover { border-color: var(--neon-cyan); }
+  .form-btn.active { border-color: var(--neon-yellow); background: rgba(255,230,0,0.1); }
+
+  .function-display { font-size: 1.5rem; font-weight: 600; text-align: center; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 16px; }
+  .function-display .fx { color: var(--neon-cyan); }
+
+  .srow { display: grid; grid-template-columns: 1.5fr 1fr; border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; opacity: 0.3; transition: all 0.4s; }
+  .srow.active { opacity: 1; border-color: var(--neon-yellow); animation: stepIn 0.45s ease; }
+  .srow.done { opacity: 1; }
+  .srow.head { opacity: 1; }
+  @keyframes stepIn { from { transform: translateX(-14px); opacity: 0.3; } to { transform: translateX(0); opacity: 1; } }
+  .scell { padding: 10px 14px; font-size: 1.12rem; }
+  .rcell { padding: 10px 14px; background: rgba(0,0,0,0.25); border-left: 1px solid var(--glass-border); font-size: 0.98rem; color: var(--text-1); display: flex; align-items: center; }
+  .srow.head .scell, .srow.head .rcell { background: rgba(0,0,0,0.35); color: var(--neon-cyan); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; }
+  .p-all { color: var(--neon-yellow); font-weight: 800; }
+  .p-sum { color: var(--neon-purple); font-weight: 800; }
+  .p-k { color: var(--neon-orange); font-weight: 800; }
+  .p-pow { color: var(--neon-cyan); font-weight: 800; }
+  .p-u { color: var(--neon-cyan); font-weight: 800; }
+  .p-v { color: var(--neon-magenta); font-weight: 800; }
+  .rule-sum { color: var(--neon-purple); }
+  .rule-k { color: var(--neon-orange); }
+  .rule-pow { color: var(--neon-cyan); }
+  .rule-uv { color: var(--neon-green); }
+  .rule-quot { color: var(--neon-magenta); }
+  .rule-comp { color: var(--neon-cyan); }
+
+  .chip { display: inline-block; min-width: 1.7em; padding: 1px 7px; border-radius: 8px; background: rgba(0,240,255,0.14); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); font-weight: 700; text-align: center; transition: transform 0.22s, background 0.22s, color 0.22s, border-color 0.22s; font-style: italic; }
+  .chip.flipping { transform: rotateX(90deg); }
+  .chip.flipped { background: rgba(57,255,20,0.15); border-color: var(--neon-green); color: var(--neon-green); font-style: normal; }
+
+  .rule-box { background: rgba(191,0,255,0.08); border: 2px solid var(--neon-purple); border-radius: 12px; padding: 14px; font-size: 1.05rem; line-height: 1.9; }
+  .rule-box h4 { font-family: 'Segoe UI', sans-serif; font-size: 0.85rem; color: var(--neon-purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .rule-box .rule { font-weight: 700; border-radius: 8px; padding: 2px 8px; transition: all 0.3s; }
+  .rule-box .rule.glow { background: rgba(255,230,0,0.18); box-shadow: 0 0 14px rgba(255,230,0,0.4); }
+  .rule-box .grp { font-family: 'Segoe UI', sans-serif; font-size: 0.7rem; color: var(--text-1); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+
+  .quiz-btn { display: block; width: 100%; margin: 8px 0; padding: 12px 16px; border-radius: 10px; border: 2px solid var(--glass-border); background: var(--glass); color: var(--text-0); font-size: 1.15rem; cursor: pointer; font-family: 'STIX Two Math', Georgia, serif; text-align: left; transition: all 0.2s; }
+  .quiz-btn:hover { border-color: var(--neon-cyan); }
+  .quiz-btn.good { border-color: var(--neon-green); background: rgba(57,255,20,0.12); }
+  .quiz-btn.bad { border-color: var(--neon-red); background: rgba(255,56,96,0.12); }
+  .quiz-btn:disabled { cursor: default; }
+  .quiz-msg { text-align: center; font-weight: 700; margin: 10px 0; min-height: 24px; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn { background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta)); color: var(--bg-0); border: none; padding: 12px 20px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-neon); }
+  .btn.secondary { background: var(--glass); color: var(--text-0); border: 1px solid var(--glass-border); }
+  .btn.secondary:hover { border-color: var(--neon-cyan); }
+
+  .confetti { position: fixed; width: 8px; height: 8px; pointer-events: none; z-index: 999; animation: fall 1.5s ease-out forwards; }
+  @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+  /* ===== PARTIE 3 ===== */
+  .calc-body { background: linear-gradient(180deg, #343a49, #1c202b 70%); border-radius: 26px; padding: 18px 18px 22px; border: 1px solid #05070c; box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); }
+  .calc-brand { display: flex; justify-content: space-between; align-items: center; color: #aab3c7; font-size: 0.78rem; letter-spacing: 3px; font-weight: 700; margin-bottom: 10px; }
+  .calc-brand .model { color: var(--neon-yellow); }
+  .lcd { background: #dfe8d8; color: #17201a; border-radius: 10px; padding: 14px 16px; font-family: 'Consolas', 'Menlo', 'Courier New', monospace; font-size: 1.02rem; line-height: 1.55; min-height: 320px; box-shadow: inset 0 3px 10px rgba(0,0,0,0.4); border: 3px solid #0c0f16; }
+  .lcd .lcd-line { white-space: pre-wrap; word-break: break-word; }
+  .lcd .lcd-line.cmd { color: #14389c; font-weight: 700; }
+  .lcd .lcd-line.ok { color: #0a6b2d; font-weight: 700; }
+  .lcd table { border-collapse: collapse; margin: 6px 0; width: 100%; }
+  .lcd th, .lcd td { border: 1.5px solid #3c4a3e; padding: 5px 8px; text-align: center; }
+  .lcd th { background: rgba(0,0,0,0.08); }
+  .lcd .pos { color: #0a6b2d; font-weight: 700; }
+  .lcd .neg { color: #b01330; font-weight: 700; }
+  .lcd .zero { color: #8a6d00; font-weight: 700; }
+  .lcd .fadein { animation: fadeIn 0.5s ease; }
+  .keypad { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 16px; }
+  @media (max-width: 640px) { .keypad { grid-template-columns: repeat(4, 1fr); } }
+  .key { background: linear-gradient(#4a5163, #343a49); border-radius: 9px; padding: 12px 0; text-align: center; color: #e6ebf7; font-size: 0.85rem; font-weight: 700; box-shadow: 0 3px 0 #10131a; cursor: pointer; user-select: none; }
+  .key:active { transform: translateY(2px); box-shadow: 0 1px 0 #10131a; }
+  .key.accent { background: linear-gradient(#ffe600, #ffb300); color: #1a1a00; }
+  .key.exe { background: linear-gradient(#00e0f0, #0090c0); color: #00222e; font-weight: 800; }
+  .keypad-caption { margin-top: 10px; font-size: 0.75rem; color: #8f97a8; text-align: center; letter-spacing: 0.5px; line-height: 1.5; }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-1); margin-top: 10px; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">⛰️ DÉRIVATION</div>
+      <div class="logo-subtitle"><b>1re & Tle Bac Pro + Lycée général</b> — De la montagne aux formules</div>
+    </div>
+  </header>
+
+  <div class="main-menu" id="mainMenu">
+    <div class="menu-card" data-section="part1">
+      <div class="card-icon">🏔️</div>
+      <div class="card-title">1. Lecture graphique</div>
+      <div class="card-desc">Promenade en montagne : promeneur à glisser, tangente colorée, marche d'escalier en flèches, pente en fraction, tableau animé, mode paysage.</div>
+    </div>
+    <div class="menu-card" data-section="part2">
+      <div class="card-icon">🧮</div>
+      <div class="card-title">2. Calcul de la dérivée</div>
+      <div class="card-desc">Filières Bac Pro & Lycée général, niveaux gamifiés ★, pas à pas 2 colonnes avec parenthèses colorées, quiz.</div>
+    </div>
+    <div class="menu-card" data-section="part3">
+      <div class="card-icon">📱</div>
+      <div class="card-title">3. Calculatrice scientifique</div>
+      <div class="card-desc">Chaque touche = une étape : f(x), f′(x), SOLVE, SIGNE, VAR, EXE. Résolution numérique sans discriminant.</div>
+    </div>
+  </div>
+
+  <!-- ============ PARTIE 1 ============ -->
+  <div class="section" id="part1">
+    <div class="section-header">
+      <div class="section-title">🏔️ Partie 1 — Lecture graphique : promenade en montagne</div>
+      <button class="btn-back" id="back1">← Menu</button>
+    </div>
+    <div class="graph-layout">
+      <div>
+        <div class="graph-container">
+          <svg id="mountainSvg" viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="application" aria-label="Sentier de montagne : faire glisser le promeneur pour déplacer le point A">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1a2a5e"/><stop offset="100%" stop-color="#0a0e27"/>
+              </linearGradient>
+              <marker id="mWhite" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff"/></marker>
+              <marker id="mRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ff3860"/></marker>
+              <marker id="mGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#39ff14"/></marker>
+            </defs>
+            <rect width="700" height="400" fill="url(#skyGrad)"/>
+            <g id="decor"></g>
+            <line x1="60" y1="340" x2="660" y2="340" stroke="#a8b2d1" stroke-width="2"/>
+            <line x1="60" y1="40" x2="60" y2="340" stroke="#a8b2d1" stroke-width="2"/>
+            <text x="360" y="385" text-anchor="middle" fill="#a8b2d1" font-size="12">Distance parcourue x (km)</text>
+            <text x="22" y="190" text-anchor="middle" fill="#a8b2d1" font-size="12" transform="rotate(-90 22 190)">Altitude f(x) (×100 m)</text>
+            <g id="xTicks"></g><g id="yTicks"></g>
+            <rect id="intervalHighlight" x="0" y="336" width="0" height="8" fill="rgba(255,230,0,0.35)" rx="2"/>
+            <path id="mountainFill" fill="#1e3a5f" opacity="0.45"></path>
+            <path id="mountainPath" fill="none" stroke="#00f0ff" stroke-width="3"/>
+            <line id="tangentLine" stroke="#ffe600" stroke-width="2.5" stroke-dasharray="6 3"/>
+            <g id="stepGroup">
+              <line id="stepH" stroke="#ffffff" stroke-width="2.5" marker-end="url(#mWhite)"/>
+              <line id="stepV" stroke="#ff3860" stroke-width="3" marker-end="url(#mRed)"/>
+              <text id="stepHLabel" fill="#ffffff" font-size="13" font-weight="800" text-anchor="middle">+1</text>
+              <text id="stepVLabel" fill="#ff3860" font-size="13" font-weight="800"></text>
+            </g>
+            <circle id="pointA" r="4" fill="#ff2bd6" stroke="#fff" stroke-width="1.5"/>
+            <text id="hiker" font-size="30" text-anchor="middle" style="user-select:none;">🧍</text>
+            <text id="slopeIndicator" x="600" y="60" text-anchor="middle" fill="#ffe600" font-size="14" font-weight="700"></text>
+          </svg>
+          <div class="toolbar">
+            <button class="btn secondary" id="landscapeBtn">🏔️ Paysage : ON</button>
+            <span class="drag-hint">🖱️ Clique sur le promeneur et fais-le glisser le long du sentier (ou flèches ← / →) <span id="snapBadge">🧲 aimanté : f′(x) = 0</span></span>
+          </div>
+          <div class="legend">
+            <span><span class="dot" style="background:var(--neon-yellow)"></span> tangente horizontale : f′ = 0</span>
+            <span><span class="dot" style="background:#fff"></span> flèche +1 (longueur)</span>
+            <span><span class="dot" style="background:var(--neon-red)"></span> hauteur +valeur (on monte)</span>
+            <span><span class="dot" style="background:var(--neon-green)"></span> hauteur −valeur (on descend)</span>
+          </div>
+        </div>
+        <div class="variation-table-container">
+          <h3 style="color:var(--neon-yellow); margin-bottom:12px; font-size:0.95rem;">📊 Tableau de variation (surlignage dynamique)</h3>
+          <table class="variation-table" id="variationTable"></table>
+        </div>
+      </div>
+      <div class="info-panel">
+        <div class="info-box">
+          <h3>📈 Nombre dérivé / pente de la tangente</h3>
+          <div class="slope-display positive" id="slopeDisplay">f′(1,00) = …</div>
+          <p style="font-size:0.95rem; color:var(--text-1); margin-top:10px; text-align:center;" class="math">
+            f′(<i>x</i><sub>A</sub>) = <span class="frac"><span class="top">Δy</span><span class="bot">Δx</span></span> = <span class="frac"><span class="top">hauteur</span><span class="bot">longueur</span></span>
+          </p>
+        </div>
+        <div class="info-box step-box">
+          <h3>🪜 Marche d'escalier (le long de la tangente)</h3>
+          <div class="variation-text" id="stepText"></div>
+          <div class="step-formula">
+            pente = <span class="frac"><span class="top">hauteur</span><span class="bot">longueur</span></span>
+            = <span class="frac" id="fracBox"><span class="top" id="fracTop">…</span><span class="bot">1</span></span>
+            = <b id="stepFormulaSlope">…</b>
+          </div>
+        </div>
+        <div class="info-box">
+          <h3>🚶 Sens de variation</h3>
+          <div class="variation-text" id="variationText"></div>
+        </div>
+        <div class="info-box">
+          <h3>🎯 Intervalle de x</h3>
+          <div class="variation-text" id="intervalText"></div>
+        </div>
+        <div class="info-box">
+          <h3>💡 À retenir</h3>
+          <div class="variation-text" style="font-size:0.9rem;">
+            • f′(x) &gt; 0 ⇔ f <b class="up">croissante</b> (on monte)<br>
+            • f′(x) &lt; 0 ⇔ f <b class="down">décroissante</b> (on descend)<br>
+            • f′(x) = 0 ⇔ <b class="flat">extremum</b> (sommet ou creux)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PARTIE 2 ============ -->
+  <div class="section" id="part2">
+    <div class="section-header">
+      <div class="section-title">🧮 Partie 2 — Calcul de la fonction dérivée</div>
+      <button class="btn-back" id="back2">← Menu</button>
+    </div>
+
+    <div class="track-bar">
+      <button class="track-btn active" data-track="pro">🎓 Bac Pro (polynômes)</button>
+      <button class="track-btn" data-track="gen">🎓 Lycée général (u·v, u/v, uⁿ)</button>
+    </div>
+    <div class="level-bar" id="levelBar"></div>
+    <div class="stat-line">
+      <span class="stat">✅ Score : <b id="score2">0</b></span>
+      <span class="stat streak">🔥 Série : <b id="streak2">0</b></span>
+      <span class="stat">🎯 3 ★ pour débloquer le niveau suivant</span>
+    </div>
+
+    <div class="form-selector">
+      <button class="form-btn" data-mode="heart">🧠 Par cœur</button>
+      <button class="form-btn active" data-mode="rules">📐 Pas à pas (2 colonnes)</button>
+      <button class="form-btn" data-mode="quiz">🎮 Quiz</button>
+    </div>
+
+    <div class="calc-layout">
+      <div class="calc-main">
+        <div class="function-display math"><span class="fx" id="funcDisplay"></span></div>
+        <div id="quizArea"></div>
+        <div id="quizMsg" class="quiz-msg"></div>
+        <div id="stepsTable" class="math"></div>
+        <div class="btn-row">
+          <button class="btn" id="nextStepBtn">▶ Étape suivante</button>
+          <button class="btn secondary" id="autoPlayBtn">⏯️ Lecture auto</button>
+          <button class="btn secondary" id="resetCalcBtn">🔄 Nouvelle fonction</button>
+        </div>
+      </div>
+      <div class="calc-sidebar">
+        <div class="rule-box math">
+          <h4>📐 Règles — couleur = parenthèses</h4>
+          <div class="grp">Bac Pro</div>
+          <div class="rule rule-sum" id="rule-sum">(<i>u</i> + <i>v</i>)′ = <i>u</i>′ + <i>v</i>′</div>
+          <div class="rule rule-k" id="rule-k">(<i>k</i>·<i>u</i>)′ = <i>k</i>·<i>u</i>′</div>
+          <div class="rule rule-pow" id="rule-pow">(<i>x</i><sup>n</sup>)′ = <i>n</i>·<i>x</i><sup>n−1</sup></div>
+          <div class="rule" style="color:var(--text-1)">(<i>k</i>)′ = 0</div>
+          <div class="grp">Lycée général</div>
+          <div class="rule rule-uv" id="rule-uv">(<i>u</i>·<i>v</i>)′ = <i>u</i>′<i>v</i> + <i>u</i><i>v</i>′</div>
+          <div class="rule rule-quot" id="rule-quot">(<i>u</i>/<i>v</i>)′ = (<i>u</i>′<i>v</i> − <i>u</i><i>v</i>′)/<i>v</i>²</div>
+          <div class="rule rule-comp" id="rule-comp">(<i>u</i><sup>n</sup>)′ = <i>n</i>·<i>u</i>′·<i>u</i><sup>n−1</sup></div>
+        </div>
+        <div class="info-box math" style="font-size:1.02rem; line-height:1.9;">
+          <h3>📋 Formules Bac Pro (par cœur)</h3>
+          (<i>a</i><i>x</i> + <i>b</i>)′ = <i>a</i><br>
+          (<i>x</i><sup>2</sup>)′ = 2<i>x</i> • (<i>x</i><sup>3</sup>)′ = 3<i>x</i><sup>2</sup><br>
+          (<i>a</i><i>x</i><sup>2</sup> + <i>b</i><i>x</i> + <i>c</i>)′ = 2<i>a</i><i>x</i> + <i>b</i><br>
+          (<i>a</i><i>x</i><sup>3</sup> + <i>b</i><i>x</i><sup>2</sup> + <i>c</i><i>x</i> + <i>d</i>)′ = 3<i>a</i><i>x</i><sup>2</sup> + 2<i>b</i><i>x</i> + <i>c</i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PARTIE 3 ============ -->
+  <div class="section" id="part3">
+    <div class="section-header">
+      <div class="section-title">📱 Partie 3 — Calculatrice scientifique (étude complète)</div>
+      <button class="btn-back" id="back3">← Menu</button>
+    </div>
+    <div class="calc-layout-3">
+      <div class="calc-body">
+        <div class="calc-brand"><span>NUMMATHS</span><span class="model">SP-1BP · ÉTUDE DE FONCTION</span><span>●●●</span></div>
+        <div class="lcd" id="lcd"></div>
+        <div class="keypad">
+          <div class="key accent" id="keyAC" title="Efface l'écran">AC</div>
+          <div class="key" id="keyF" title="Nouvelle fonction">f(x)</div>
+          <div class="key" id="keyFp" title="Calcule la dérivée">f′(x)</div>
+          <div class="key" id="keySolve" title="Résout f'(x)=0">SOLVE</div>
+          <div class="key" id="keySign" title="Tableau de signe de f'">SIGNE</div>
+          <div class="key" id="keyVar" title="Variations + extremums">VAR</div>
+          <div class="key exe" id="keyExe" title="Enchaîne toute l'étude">EXE ⏎</div>
+        </div>
+        <div class="keypad-caption">
+          Chaque touche exécute <b>une étape</b> de l'étude, dans l'ordre : f(x) → f′(x) → SOLVE → SIGNE → VAR.<br>
+          <b>EXE</b> enchaîne tout • <b>AC</b> efface l'écran • Une touche « saute » automatiquement les étapes manquantes.
+        </div>
+      </div>
+      <div class="info-panel">
+        <div class="info-box">
+          <h3>⌨️ Rôle des touches</h3>
+          <div class="variation-text" style="font-size:0.9rem;">
+            <b>AC</b> : efface l'écran<br>
+            <b>f(x)</b> : tire une nouvelle fonction et l'affiche<br>
+            <b>f′(x)</b> : affiche la dérivée (Dériver)<br>
+            <b>SOLVE</b> : résoudre f′(x) = 0 (numérique)<br>
+            <b>SIGNE</b> : tableau de signe de f′<br>
+            <b>VAR</b> : variations de f + extremums<br>
+            <b>EXE</b> : déroule toute l'étude
+          </div>
+        </div>
+        <div class="info-box">
+          <h3>🧾 Méthode (sans discriminant)</h3>
+          <div class="variation-text" style="font-size:0.9rem;">
+            <b>1.</b> Dériver f(x)<br><b>2.</b> Résoudre f′(x) = 0<br><b>3.</b> Signe de f′ entre les solutions<br><b>4.</b> Tableau de signe → variations<br><b>5.</b> Extremums là où f′ change de signe
+          </div>
+        </div>
+        <div class="info-box">
+          <h3>➕ Signe → variation</h3>
+          <div class="variation-text" style="font-size:0.9rem;">
+            f′ &gt; 0 → f <b class="up">croissante</b> • f′ &lt; 0 → f <b class="down">décroissante</b><br>
+            + → − : <b class="flat">maximum</b> • − → + : <b class="flat">minimum</b>
+          </div>
+        </div>
+        <div class="btn-row" style="flex-direction:column;">
+          <button class="btn" id="newFunctionBtn3">🎲 Nouvelle fonction (touche f(x))</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const cleanFloat = v => Math.round((v + Number.EPSILON) * 100) / 100;
+const fmt = v => String(cleanFloat(v)).replace(".", ",");
+const signed = v => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v));
+const ri = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function powX(p) { return p === 0 ? "" : (p === 1 ? "<i>x</i>" : "<i>x</i><sup>" + p + "</sup>"); }
+function coefStr(abs, p) { return (p > 0 && abs === 1) ? "" : fmt(abs); }
+function polyHTML(c) {
+  const n = c.length - 1; let html = "";
+  c.forEach((k, i) => {
+    const p = n - i;
+    if (cleanFloat(k) === 0) return;
+    const abs = Math.abs(cleanFloat(k));
+    const term = coefStr(abs, p) + powX(p);
+    if (html === "") html += (k < 0 ? "−" : "") + term;
+    else html += (k < 0 ? " − " : " + ") + term;
+  });
+  return html || "0";
+}
+function polyText(c) { const d = document.createElement("div"); d.innerHTML = polyHTML(c); return d.textContent; }
+function derivCoeffs(c) { const n = c.length - 1; return c.slice(0, n).map((k, i) => cleanFloat(k * (n - i))); }
+
+/* Arithmétique polynômes (ordre décroissant) */
+const toLow = c => c.slice().reverse();
+function fromLow(l) { let r = l.slice(); while (r.length > 1 && Math.abs(r[r.length - 1]) < 1e-12) r.pop(); return r.reverse().map(cleanFloat); }
+function mulLow(a, b) { const r = new Array(a.length + b.length - 1).fill(0); a.forEach((k, i) => b.forEach((m, j) => r[i + j] += k * m)); return r; }
+function addLow(a, b, s) { s = s || 1; const n = Math.max(a.length, b.length); const r = []; for (let i = 0; i < n; i++) r[i] = (a[i] || 0) + s * (b[i] || 0); return r; }
+const mulH = (a, b) => fromLow(mulLow(toLow(a), toLow(b)));
+const addH = (a, b, s) => fromLow(addLow(toLow(a), toLow(b), s));
+const evH = (p, x) => p.reduce((s, k, i) => s + k * Math.pow(x, p.length - 1 - i), 0);
+
+function showMenu() {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  $("mainMenu").style.display = "grid";
+}
+document.querySelectorAll(".menu-card").forEach(card => {
+  card.addEventListener("click", () => {
+    $("mainMenu").style.display = "none";
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    $(card.dataset.section).classList.add("active");
+    if (card.dataset.section === "part1") initPart1();
+    if (card.dataset.section === "part2") initPart2();
+    if (card.dataset.section === "part3") initPart3();
+  });
+});
+["back1","back2","back3"].forEach(id => $(id).addEventListener("click", showMenu));
+
+function confetti() {
+  const colors = ['#00f0ff', '#ff2bd6', '#ffe600', '#39ff14'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '-10px';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (1 + Math.random()) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2500);
+  }
+}
+
+/* ============ PARTIE 1 ============ */
+const M = {
+  f: x => 0.15*x*x*x - 1.2*x*x + 1.5*x + 5,
+  fp: x => 0.45*x*x - 2.4*x + 1.5,
+  xMin: 0, xMax: 6, yMin: 0, yMax: 7
+};
+(function(){
+  const A = 0.45, B = -2.4, C = 1.5, d = B*B - 4*A*C;
+  M.r1 = (-B - Math.sqrt(d)) / (2*A);
+  M.r2 = (-B + Math.sqrt(d)) / (2*A);
+  M.intervals = [ {x1:0,x2:M.r1,sign:1}, {x1:M.r1,x2:M.r2,sign:-1}, {x1:M.r2,x2:6,sign:1} ];
+})();
+const PLOT = { x1: 60, x2: 660, y1: 40, y2: 340 };
+const toSvgX = x => PLOT.x1 + (x - M.xMin) * (PLOT.x2 - PLOT.x1) / (M.xMax - M.xMin);
+const toSvgY = y => PLOT.y2 - (y - M.yMin) * (PLOT.y2 - PLOT.y1) / (M.yMax - M.yMin);
+
+let landscapeOn = true;
+let part1Init = false;
+function initPart1() {
+  if (!part1Init) {
+    part1Init = true;
+    drawMountain(); drawDecor(); buildVariationTable(); setupDrag();
+    $("landscapeBtn").addEventListener("click", () => {
+      landscapeOn = !landscapeOn;
+      $("decor").style.display = landscapeOn ? "" : "none";
+      $("hiker").style.display = landscapeOn ? "" : "none";
+      $("pointA").style.display = landscapeOn ? "none" : "";
+      $("landscapeBtn").textContent = landscapeOn ? "🏔️ Paysage : ON" : "📍 Paysage : OFF (point A)";
+      setX(currentX);
+    });
+  }
+  setX(1);
+}
+function drawMountain() {
+  let d = "", dFill = "M " + toSvgX(0) + " " + toSvgY(0) + " ";
+  for (let x = 0; x <= 6.0001; x += 0.05) {
+    d += (x === 0 ? "M" : "L") + " " + toSvgX(x) + " " + toSvgY(M.f(x)) + " ";
+    dFill += "L " + toSvgX(x) + " " + toSvgY(M.f(x)) + " ";
+  }
+  dFill += "L " + toSvgX(6) + " " + toSvgY(0) + " Z";
+  $("mountainPath").setAttribute("d", d);
+  $("mountainFill").setAttribute("d", dFill);
+  let xt = "", yt = "";
+  for (let x = 0; x <= 6; x++) xt += '<line x1="'+toSvgX(x)+'" y1="340" x2="'+toSvgX(x)+'" y2="345" stroke="#a8b2d1"/><text x="'+toSvgX(x)+'" y="360" text-anchor="middle" fill="#a8b2d1" font-size="11">'+x+'</text>';
+  for (let y = 0; y <= 7; y++) yt += '<line x1="55" y1="'+toSvgY(y)+'" x2="60" y2="'+toSvgY(y)+'" stroke="#a8b2d1"/><text x="50" y="'+(toSvgY(y)+4)+'" text-anchor="end" fill="#a8b2d1" font-size="11">'+y+'</text>';
+  $("xTicks").innerHTML = xt; $("yTicks").innerHTML = yt;
+}
+function cloudSVG(cx, cy, s, dur) {
+  return '<g transform="translate(' + cx + ',' + cy + ') scale(' + s + ')"><g class="cloud-anim" style="animation-duration:' + dur + 's">' +
+    '<ellipse cx="0" cy="0" rx="34" ry="12" fill="#ffffff" opacity="0.16"/>' +
+    '<ellipse cx="-20" cy="6" rx="22" ry="9" fill="#ffffff" opacity="0.14"/>' +
+    '<ellipse cx="18" cy="6" rx="24" ry="10" fill="#ffffff" opacity="0.14"/></g></g>';
+}
+function snowCapSVG(r) {
+  const w = 0.55; let top = "";
+  for (let x = r - w; x <= r + w + 1e-9; x += 0.1) top += (top ? " L " : "M ") + toSvgX(x) + " " + toSvgY(M.f(x));
+  const yb = toSvgY(M.f(r) - 0.32); let bot = "";
+  [r + 0.35, r + 0.15, r - 0.05, r - 0.25, r - 0.45].forEach((x, i) => { bot += " L " + toSvgX(x) + " " + (yb + (i % 2 ? -6 : 6)); });
+  return '<path d="' + top + bot + ' Z" fill="#f4fbff" opacity="0.95"/>';
+}
+function treeSVG(x) {
+  const sx = toSvgX(x), sy = toSvgY(M.f(x));
+  return '<g transform="translate(' + sx + ',' + (sy + 2) + ')">' +
+    '<rect x="-2" y="-10" width="4" height="10" fill="#6b4423"/>' +
+    '<path d="M0,-34 L9,-16 L-9,-16 Z" fill="#1d7a3c"/>' +
+    '<path d="M0,-26 L11,-8 L-11,-8 Z" fill="#166534"/></g>';
+}
+function drawDecor() {
+  let g = cloudSVG(150, 78, 1, 26) + cloudSVG(420, 58, 0.8, 34) + cloudSVG(565, 108, 1.1, 22);
+  g += snowCapSVG(M.r1);
+  [M.r2 - 1.0, M.r2 - 0.65, M.r2 - 0.3, M.r2 + 0.15, M.r2 + 0.5, M.r2 + 0.9].forEach(tx => { g += treeSVG(tx); });
+  $("decor").innerHTML = g;
+}
+function buildVariationTable() {
+  $("variationTable").innerHTML =
+    "<tr><th>x</th><td id=\"x-c0\">0</td><td id=\"x-i0\"></td><td id=\"x-c1\">" + fmt(M.r1) + "</td><td id=\"x-i1\"></td><td id=\"x-c2\">" + fmt(M.r2) + "</td><td id=\"x-i2\"></td><td id=\"x-c3\">6</td></tr>" +
+    "<tr><th>f′(x)</th><td></td><td id=\"fp-i0\" class=\"pos\">+</td><td id=\"fp-c1\" class=\"zero\">0</td><td id=\"fp-i1\" class=\"neg\">−</td><td id=\"fp-c2\" class=\"zero\">0</td><td id=\"fp-i2\" class=\"pos\">+</td><td></td></tr>" +
+    "<tr><th>f(x)</th><td id=\"f-c0\">" + fmt(M.f(0)) + "</td><td id=\"f-i0\" class=\"arr-up\">↗</td><td id=\"f-c1\" style=\"color:var(--neon-yellow)\">" + fmt(M.f(M.r1)) + "</td><td id=\"f-i1\" class=\"arr-down\">↘</td><td id=\"f-c2\" style=\"color:var(--neon-yellow)\">" + fmt(M.f(M.r2)) + "</td><td id=\"f-i2\" class=\"arr-up\">↗</td><td id=\"f-c3\">" + fmt(M.f(6)) + "</td></tr>";
+}
+const HL = { 0:["x-c0","x-i0","x-c1","fp-i0","f-i0"], 1:["x-c1","x-i1","x-c2","fp-i1","f-i1"], 2:["x-c2","x-i2","x-c3","fp-i2","f-i2"] };
+
+let currentX = 1, dragging = false;
+function setupDrag() {
+  const svg = $("mountainSvg");
+  const fromEvent = e => {
+    const rect = svg.getBoundingClientRect();
+    const sx = (e.clientX - rect.left) * 700 / rect.width;
+    let x = M.xMin + (sx - PLOT.x1) / (PLOT.x2 - PLOT.x1) * 6;
+    setX(Math.max(0, Math.min(6, x)));
+  };
+  svg.addEventListener("pointerdown", e => { dragging = true; try { svg.setPointerCapture(e.pointerId); } catch (err) {} fromEvent(e); e.preventDefault(); });
+  svg.addEventListener("pointermove", e => { if (dragging) fromEvent(e); });
+  svg.addEventListener("pointerup", () => { dragging = false; });
+  svg.addEventListener("pointercancel", () => { dragging = false; });
+  svg.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") { setX(currentX - 0.05); e.preventDefault(); }
+    if (e.key === "ArrowRight") { setX(currentX + 0.05); e.preventDefault(); }
+  });
+}
+function setX(xIn) {
+  let x = xIn, snapped = false;
+  for (const r of [M.r1, M.r2]) if (Math.abs(x - r) < 0.1) { x = r; snapped = true; }
+  currentX = x;
+  let fp = snapped ? 0 : cleanFloat(M.fp(x));
+  if (Math.abs(fp) < 0.005) fp = 0;
+  const xDisp = fmt(x);
+  const f = M.f(x), sx = toSvgX(x), sy = toSvgY(f);
+  $("snapBadge").style.display = snapped ? "inline" : "none";
+  $("pointA").setAttribute("cx", sx); $("pointA").setAttribute("cy", sy);
+  let emoji = "🧍", mirror = false;
+  if (fp > 0) { emoji = "🧗"; mirror = true; }
+  else if (fp < 0) { emoji = "⛷️"; mirror = true; }
+  $("hiker").textContent = emoji;
+  $("hiker").setAttribute("transform", "translate(" + sx + "," + (sy - 10) + ")" + (mirror ? " scale(-1,1)" : ""));
+  const scX = (PLOT.x2 - PLOT.x1) / 6, scY = (PLOT.y2 - PLOT.y1) / 7;
+  const ang = Math.atan(fp * scY / scX), L = 80;
+  $("tangentLine").setAttribute("x1", sx - L*Math.cos(ang)); $("tangentLine").setAttribute("y1", sy + L*Math.sin(ang));
+  $("tangentLine").setAttribute("x2", sx + L*Math.cos(ang)); $("tangentLine").setAttribute("y2", sy - L*Math.sin(ang));
+  let hx1, hx2, hy, vx, vy1, vy2, hlx, hly, vlx, vly, vAnchor;
+  if (x + 1 <= M.xMax + 0.01) {
+    hx1 = sx; hx2 = sx + scX; hy = sy; vx = sx + scX; vy1 = sy; vy2 = sy - fp * scY;
+    hlx = (hx1 + hx2) / 2; hly = sy + 18; vlx = vx + 8; vAnchor = "start"; vly = (vy1 + vy2) / 2 + 4;
+  } else {
+    hx1 = sx - scX; hx2 = sx; hy = sy + fp * scY; vx = sx; vy1 = sy + fp * scY; vy2 = sy;
+    hlx = (hx1 + hx2) / 2; hly = hy + 18; vlx = vx - 8; vAnchor = "end"; vly = (vy1 + vy2) / 2 + 4;
+  }
+  $("stepH").setAttribute("x1", hx1); $("stepH").setAttribute("y1", hy);
+  $("stepH").setAttribute("x2", hx2); $("stepH").setAttribute("y2", hy);
+  $("stepHLabel").setAttribute("x", hlx); $("stepHLabel").setAttribute("y", hly);
+  const stepV = $("stepV"), stepVLabel = $("stepVLabel");
+  if (fp === 0) {
+    stepV.style.display = "none";
+    stepVLabel.textContent = "hauteur = 0";
+    stepVLabel.setAttribute("fill", "#ffe600");
+    stepVLabel.setAttribute("x", vx + (vAnchor === "start" ? 8 : -8));
+    stepVLabel.setAttribute("y", sy - 8);
+    stepVLabel.setAttribute("text-anchor", vAnchor);
+  } else {
+    stepV.style.display = "";
+    const col = fp > 0 ? "#ff3860" : "#39ff14";
+    stepV.setAttribute("stroke", col);
+    stepV.setAttribute("marker-end", fp > 0 ? "url(#mRed)" : "url(#mGreen)");
+    stepV.setAttribute("x1", vx); stepV.setAttribute("y1", vy1);
+    stepV.setAttribute("x2", vx); stepV.setAttribute("y2", vy2);
+    stepVLabel.setAttribute("x", vlx); stepVLabel.setAttribute("y", vly);
+    stepVLabel.setAttribute("text-anchor", vAnchor);
+    stepVLabel.setAttribute("fill", col);
+    stepVLabel.textContent = "hauteur = " + signed(fp);
+  }
+  let stepHtml;
+  if (fp === 0) stepHtml = "J'avance de <b>+1 km</b> → la marche est plate : hauteur <b class=\"flat\">0</b>. Je reste à la même altitude.";
+  else if (fp > 0) stepHtml = "J'avance de <b>+1 km</b> → je <b>monte</b> : hauteur <b style=\"color:var(--neon-red)\">+" + fmt(fp) + "</b> (×100 m) le long de la tangente.";
+  else stepHtml = "J'avance de <b>+1 km</b> → je <b>descends</b> : hauteur <b style=\"color:var(--neon-green)\">−" + fmt(Math.abs(fp)) + "</b> (×100 m) le long de la tangente.";
+  $("stepText").innerHTML = stepHtml;
+  const valCol = fp === 0 ? "var(--neon-yellow)" : (fp > 0 ? "var(--neon-red)" : "var(--neon-green)");
+  $("fracTop").textContent = signed(fp);
+  $("fracBox").style.color = valCol;
+  $("stepFormulaSlope").textContent = signed(fp);
+  $("stepFormulaSlope").style.color = valCol;
+  let color, cls, varHtml;
+  if (fp === 0) { color = "#ffe600"; cls = "zero"; varHtml = "En x = " + xDisp + " km, f′(x) <b class=\"flat\">= 0</b> : extremum local.<br>Le promeneur est au <b class=\"flat\">sommet ou dans un creux</b> 🏔️"; }
+  else if (fp > 0) { color = "#39ff14"; cls = "positive"; varHtml = "En x = " + xDisp + " km, f′(x) <b class=\"up\">&gt; 0</b> : f <b class=\"up\">croît</b>.<br>Mode <b class=\"up\">escalade</b> : le promeneur monte 🧗"; }
+  else { color = "#ff3860"; cls = "negative"; varHtml = "En x = " + xDisp + " km, f′(x) <b class=\"down\">&lt; 0</b> : f <b class=\"down\">décroît</b>.<br>Mode <b class=\"down\">skieur</b> : le promeneur descend ⛷️"; }
+  $("tangentLine").setAttribute("stroke", color);
+  $("slopeIndicator").textContent = "pente = " + signed(fp);
+  $("slopeIndicator").setAttribute("fill", color);
+  $("slopeDisplay").textContent = "f′(" + xDisp + ") = " + signed(fp);
+  $("slopeDisplay").className = "slope-display " + cls;
+  $("variationText").innerHTML = varHtml;
+  let idx = (x > M.r1 && x <= M.r2) ? 1 : (x > M.r2 ? 2 : 0);
+  const itv = M.intervals[idx];
+  $("intervalText").innerHTML = "x = " + xDisp + " appartient à <b>[" + fmt(itv.x1) + " ; " + fmt(itv.x2) + "]</b><br>Sur cet intervalle : f′(x) " + (itv.sign > 0 ? "≥ 0 → f <b class=\"up\">croissante</b>" : "≤ 0 → f <b class=\"down\">décroissante</b>") + ".";
+  $("intervalHighlight").setAttribute("x", toSvgX(itv.x1));
+  $("intervalHighlight").setAttribute("width", toSvgX(itv.x2) - toSvgX(itv.x1));
+  document.querySelectorAll("#variationTable td").forEach(td => td.classList.remove("highlight"));
+  HL[idx].forEach(id => { const el = $(id); if (el) el.classList.add("highlight"); });
+}
+
+/* ============ PARTIE 2 : FILIÈRES + NIVEAUX GAMIFIÉS ============ */
+let track2 = "pro", mode2 = "rules", level2 = 1, step2 = 0, auto2 = null;
+let score2 = 0, streak2 = 0, quizAnswered = false;
+let F2 = { kind: "poly", c: [2, -0.5, 5, -1] };
+const stars2 = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0 };
+const LEVEL_NAMES = { 1:"ax + b", 2:"ax² + bx + c", 3:"ax³ + bx² + cx + d", 4:"coeff. décimaux", 5:"(ax+b)·(cx+d)", 6:"(ax²+bx+c)/(x+d)", 7:"(ax+b)ⁿ" };
+
+function genCoeffs(lv) {
+  if (lv === 1) return [ri(2, 9) * (Math.random() < 0.3 ? -1 : 1), ri(-9, 9)];
+  if (lv === 2) return [ri(1, 5), ri(-5, 5), ri(-9, 9)];
+  if (lv === 3) return [ri(1, 3), ri(-3, 3), ri(-6, 6), ri(-9, 9)];
+  const h = v => (Math.random() < 0.5 ? v + 0.5 : v);
+  return [h(ri(1, 3)), h(ri(-3, 3)), h(ri(-6, 6)), ri(-9, 9)];
+}
+function genFunction(lv) {
+  if (lv <= 4) return { kind: "poly", c: genCoeffs(lv) };
+  if (lv === 5) return { kind: "prod", u: [ri(1, 4) * (Math.random() < 0.4 ? -1 : 1), ri(-5, 5)], v: [ri(1, 4), ri(-5, 5)] };
+  if (lv === 6) return { kind: "quot", u: [ri(1, 3), ri(-3, 3), ri(-5, 5)], v: [1, ri(-4, 4)] };
+  return { kind: "comp", u: [ri(1, 3), ri(-4, 4)], n: ri(2, 3) };
+}
+const unlocked = lv => (lv === 1 || lv === 5) ? true : stars2[lv - 1] >= 3;
+
+function initPart2() {
+  if (!initPart2.done) {
+    initPart2.done = true;
+    document.querySelectorAll(".form-btn").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll(".form-btn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active"); mode2 = b.dataset.mode; stopAuto2(); step2 = 0; renderAll2();
+    }));
+    document.querySelectorAll(".track-btn").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll(".track-btn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active"); track2 = b.dataset.track;
+      level2 = track2 === "pro" ? 1 : 5;
+      stopAuto2(); renderLevels(); newFunction2();
+    }));
+    $("nextStepBtn").addEventListener("click", () => advance2());
+    $("resetCalcBtn").addEventListener("click", () => { stopAuto2(); newFunction2(); });
+    $("autoPlayBtn").addEventListener("click", toggleAuto2);
+  }
+  renderLevels();
+  renderAll2();
+}
+
+function renderLevels() {
+  const range = track2 === "pro" ? [1, 2, 3, 4] : [5, 6, 7];
+  let html = "";
+  range.forEach(lv => {
+    const un = unlocked(lv);
+    const st = "★".repeat(stars2[lv]) + "☆".repeat(3 - stars2[lv]);
+    html += '<button class="level-btn' + (lv === level2 ? ' active' : '') + (un ? '' : ' locked') + '" data-lv="' + lv + '"' + (un ? '' : ' disabled') + '>' +
+      '<span class="lv-t">NIVEAU ' + lv + (un ? '' : ' 🔒') + '</span><span class="lv-n math">' + LEVEL_NAMES[lv] + '</span><span class="st">' + st + '</span></button>';
+  });
+  $("levelBar").innerHTML = html;
+  document.querySelectorAll(".level-btn").forEach(b => b.addEventListener("click", () => {
+    level2 = +b.dataset.lv; stopAuto2(); newFunction2();
+  }));
+  $("score2").textContent = score2;
+  $("streak2").textContent = streak2;
+}
+
+function newFunction2() {
+  F2 = genFunction(level2);
+  step2 = 0; quizAnswered = false;
+  renderAll2();
+}
+
+function f2HTML(F) {
+  if (F.kind === "poly") return "f(x) = " + polyHTML(F.c);
+  if (F.kind === "prod") return "f(x) = (" + polyHTML(F.u) + ")·(" + polyHTML(F.v) + ")";
+  if (F.kind === "quot") return "f(x) = <span class=\"frac\"><span class=\"top\">" + polyHTML(F.u) + "</span><span class=\"bot\">" + polyHTML(F.v) + "</span></span>";
+  return "f(x) = (" + polyHTML(F.u) + ")<sup>" + F.n + "</sup>";
+}
+
+const PA = s => '<b class="p-all">' + s + '</b>';
+const PS = s => '<b class="p-sum">' + s + '</b>';
+const PK = s => '<b class="p-k">' + s + '</b>';
+const PU = s => '<b class="p-u">' + s + '</b>';
+const PV = s => '<b class="p-v">' + s + '</b>';
+
+function termsOf(c) {
+  const n = c.length - 1, t = [];
+  c.forEach((k, i) => { if (cleanFloat(k) !== 0) t.push([k, n - i]); });
+  return t;
+}
+const termIn = (k, p) => (k < 0 ? "−" : "") + coefStr(Math.abs(k), p) + powX(p);
+
+function rowsRulesPoly(c) {
+  const n = c.length - 1, dc = derivCoeffs(c), terms = termsOf(c);
+  const rows = [];
+  rows.push({ calc: "f(x) = " + polyHTML(c), rule: "fonction à dériver", hl: "" });
+  rows.push({ calc: "f′(x) = " + PA("(") + polyHTML(c) + PA(")") + "′", rule: "on dérive toute l'expression", hl: "" });
+  rows.push({ calc: "f′(x) = " + terms.map(t => PS("(") + termIn(t[0], t[1]) + PS(")") + "′").join(" + "), rule: '<span class="rule-sum">(u + v)′ = u′ + v′</span>', hl: "rule-sum" });
+  rows.push({ calc: "f′(x) = " + terms.map(t => t[1] === 0 ? "0" : (t[0] < 0 ? "−" : "") + fmt(Math.abs(t[0])) + "·" + PK("(") + powX(t[1]) + PK(")") + "′").join(" + "), rule: '<span class="rule-k">(ku)′ = k·u′</span> • (k)′ = 0', hl: "rule-k" });
+  rows.push({ calc: "f′(x) = " + terms.map(t => {
+    if (t[1] === 0) return "0";
+    if (t[1] === 1) return (t[0] < 0 ? "−" : "") + fmt(Math.abs(t[0])) + "·1";
+    return (t[0] < 0 ? "−" : "") + fmt(Math.abs(t[0])) + "·" + t[1] + powX(t[1] - 1);
+  }).join(" + "), rule: '<span class="rule-pow">(xⁿ)′ = n·xⁿ⁻¹</span>', hl: "rule-pow" });
+  rows.push({ calc: "f′(x) = " + polyHTML(dc), rule: "simplification", hl: "" });
+  return rows;
+}
+
+function rowsGen(F) {
+  const rows = [];
+  if (F.kind === "prod") {
+    const u = F.u, v = F.v, du = derivCoeffs(u), dv = derivCoeffs(v);
+    const dc = addH(mulH(du, v), mulH(u, dv));
+    rows.push({ calc: "f(x) = " + PU("(" + polyHTML(u) + ")") + "·" + PV("(" + polyHTML(v) + ")"), rule: "fonction à dériver : u·v", hl: "" });
+    rows.push({ calc: "u = " + polyHTML(u) + " → u′ = " + polyHTML(du) + " ; v = " + polyHTML(v) + " → v′ = " + polyHTML(dv), rule: '<span class="rule-pow">(xⁿ)′ = n·xⁿ⁻¹</span>', hl: "rule-pow" });
+    rows.push({ calc: "f′(x) = " + PU("u′") + "·" + PV("v") + " + " + PU("u") + "·" + PV("v′"), rule: '<span class="rule-uv">(uv)′ = u′v + uv′</span>', hl: "rule-uv" });
+    rows.push({ calc: "f′(x) = (" + PU(polyHTML(du)) + ")·(" + PV(polyHTML(v)) + ") + (" + PU(polyHTML(u)) + ")·(" + PV(polyHTML(dv)) + ")", rule: "substitution", hl: "" });
+    rows.push({ calc: "f′(x) = " + polyHTML(dc), rule: "développement / simplification", hl: "" });
+  } else if (F.kind === "quot") {
+    const u = F.u, v = F.v, du = derivCoeffs(u), dv = derivCoeffs(v);
+    const num = addH(mulH(du, v), mulH(u, dv), -1);
+    rows.push({ calc: "f(x) = <span class=\"frac\"><span class=\"top\">" + PU(polyHTML(u)) + "</span><span class=\"bot\">" + PV(polyHTML(v)) + "</span></span>", rule: "fonction à dériver : u/v", hl: "" });
+    rows.push({ calc: "u = " + polyHTML(u) + " → u′ = " + polyHTML(du) + " ; v = " + polyHTML(v) + " → v′ = " + polyHTML(dv), rule: '<span class="rule-pow">(xⁿ)′ = n·xⁿ⁻¹</span>', hl: "rule-pow" });
+    rows.push({ calc: "f′(x) = (" + PU("u′") + "·" + PV("v") + " − " + PU("u") + "·" + PV("v′") + ") / " + PV("v") + "²", rule: '<span class="rule-quot">(u/v)′ = (u′v − uv′)/v²</span>', hl: "rule-quot" });
+    rows.push({ calc: "f′(x) = [ (" + PU(polyHTML(du)) + ")·(" + PV(polyHTML(v)) + ") − (" + PU(polyHTML(u)) + ")·(" + PV(polyHTML(dv)) + ") ] / (" + PV(polyHTML(v)) + ")²", rule: "substitution", hl: "" });
+    rows.push({ calc: "f′(x) = <span class=\"frac\"><span class=\"top\">" + polyHTML(num) + "</span><span class=\"bot\">(" + polyHTML(v) + ")²</span></span>", rule: "numérateur développé", hl: "" });
+  } else {
+    const u = F.u, n = F.n, a = u[0], k = cleanFloat(n * a);
+    rows.push({ calc: "f(x) = (" + PU(polyHTML(u)) + ")<sup>" + n + "</sup>", rule: "fonction à dériver : uⁿ", hl: "" });
+    rows.push({ calc: "u = " + polyHTML(u) + " → u′ = " + polyHTML(derivCoeffs(u)), rule: '<span class="rule-pow">(xⁿ)′ = n·xⁿ⁻¹</span>', hl: "rule-pow" });
+    rows.push({ calc: "f′(x) = " + n + "·" + PU("u′") + "·(" + PU("u") + ")<sup>" + (n - 1) + "</sup>", rule: '<span class="rule-comp">(uⁿ)′ = n·u′·uⁿ⁻¹</span>', hl: "rule-comp" });
+    rows.push({ calc: "f′(x) = " + n + "·(" + PU(fmt(a)) + ")·(" + PU(polyHTML(u)) + ")<sup>" + (n - 1) + "</sup>", rule: "substitution", hl: "" });
+    rows.push({ calc: "f′(x) = " + fmt(k) + "·(" + polyHTML(u) + ")<sup>" + (n - 1) + "</sup>", rule: "simplification", hl: "" });
+  }
+  return rows;
+}
+
+function chipHTML(letter, val) { return "<span class=\"chip\" data-val=\"" + fmt(Math.abs(val)) + "\">" + letter + "</span>"; }
+function rowsHeartPoly(c) {
+  const n = c.length - 1, dc = derivCoeffs(c);
+  const letters = ["a", "b", "c", "d"];
+  const genPoly = n === 3 ? "<i>a</i>x³ + <i>b</i>x² + <i>c</i>x + <i>d</i>" : n === 2 ? "<i>a</i>x² + <i>b</i>x + <i>c</i>" : "<i>a</i>x + <i>b</i>";
+  const genDeriv = n === 3 ? "3<i>a</i>x² + 2<i>b</i>x + <i>c</i>" : n === 2 ? "2<i>a</i>x + <i>b</i>" : "<i>a</i>";
+  let sub;
+  if (n === 3) sub = "f′(x) = 3·" + chipHTML("a", c[0]) + "·x² " + (c[1] < 0 ? "−" : "+") + " 2·" + chipHTML("b", c[1]) + "·x " + (c[2] < 0 ? "−" : "+") + " " + chipHTML("c", c[2]);
+  else if (n === 2) sub = "f′(x) = 2·" + chipHTML("a", c[0]) + "·x " + (c[1] < 0 ? "−" : "+") + " " + chipHTML("b", c[1]);
+  else sub = "f′(x) = " + chipHTML("a", c[0]);
+  return [
+    { calc: "f(x) = " + polyHTML(c), rule: "polynôme de degré " + n, hl: "" },
+    { calc: "f′(x) = " + PA("(") + genPoly + PA(")") + "′ = " + genDeriv, rule: "formule Bac Pro", hl: "" },
+    { calc: "coefficients : " + letters.slice(0, n + 1).map((L, i) => "<i>" + L + "</i> = " + fmt(c[i])).join(" ; "), rule: "lecture des coefficients", hl: "" },
+    { calc: sub, rule: "on remplace par les valeurs", hl: "" },
+    { calc: "f′(x) = " + polyHTML(dc), rule: "simplification", hl: "" }
+  ];
+}
+
+function rowsFor() {
+  if (F2.kind === "poly") return mode2 === "heart" ? rowsHeartPoly(F2.c) : rowsRulesPoly(F2.c);
+  return rowsGen(F2);
+}
+
+function renderAll2() {
+  $("funcDisplay").innerHTML = f2HTML(F2);
+  $("quizMsg").textContent = "";
+  if (mode2 === "quiz") { buildQuiz(); $("stepsTable").innerHTML = ""; }
+  else { $("quizArea").innerHTML = ""; renderRows(rowsFor()); activateRow(0); }
+}
+
+function renderRows(rows) {
+  let html = '<div class="srow head"><div class="scell">Calcul</div><div class="rcell">Règle appliquée</div></div>';
+  rows.forEach(r => {
+    html += '<div class="srow" data-hl="' + (r.hl || "") + '"><div class="scell">' + r.calc + '</div><div class="rcell">' + r.rule + '</div></div>';
+  });
+  $("stepsTable").innerHTML = html;
+}
+function rowEls() { return Array.from(document.querySelectorAll("#stepsTable .srow:not(.head)")); }
+function activateRow(i) {
+  const rows = rowEls();
+  rows.forEach((r, j) => { r.classList.toggle("active", j === i); r.classList.toggle("done", j < i); });
+  if (rows[i]) { highlightRule(rows[i].dataset.hl || null); animateChips(rows[i]); }
+}
+function advance2() {
+  const rows = rowEls();
+  if (!rows.length) return;
+  let cur = rows.findIndex(r => r.classList.contains("active"));
+  if (cur < 0) cur = -1;
+  if (cur < rows.length - 1) activateRow(cur + 1);
+}
+function highlightRule(id) {
+  ["rule-sum","rule-k","rule-pow","rule-uv","rule-quot","rule-comp"].forEach(r => $(r).classList.remove("glow"));
+  if (id) $(id).classList.add("glow");
+}
+function animateChips(el) {
+  el.querySelectorAll(".chip").forEach((c, i) => {
+    setTimeout(() => {
+      c.classList.add("flipping");
+      setTimeout(() => { c.textContent = c.dataset.val; c.classList.remove("flipping"); c.classList.add("flipped"); }, 220);
+    }, 350 + i * 500);
+  });
+}
+function stopAuto2() { if (auto2) { clearInterval(auto2); auto2 = null; $("autoPlayBtn").textContent = "⏯️ Lecture auto"; } }
+function toggleAuto2() {
+  if (auto2) { stopAuto2(); return; }
+  if (mode2 === "quiz") return;
+  activateRow(0);
+  auto2 = setInterval(() => {
+    const rows = rowEls();
+    const cur = rows.findIndex(r => r.classList.contains("active"));
+    if (cur < rows.length - 1) activateRow(cur + 1);
+    else stopAuto2();
+  }, 1600);
+  $("autoPlayBtn").textContent = "⏸️ Pause";
+}
+
+/* --- Quiz --- */
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function dedup(list) {
+  const seen = new Set(), out = [];
+  list.forEach(ch => { if (!seen.has(ch.key)) { seen.add(ch.key); out.push(ch); } });
+  return out;
+}
+function buildQuiz() {
+  let list = [], prompt = "Choisis la bonne dérivée f′(x) :";
+  if (F2.kind === "poly") {
+    const c = F2.c, n = c.length - 1, dc = derivCoeffs(c);
+    list = [
+      { html: polyHTML(dc), key: JSON.stringify(dc), good: true },
+      { html: polyHTML(c.slice(0, n)), key: JSON.stringify(c.slice(0, n)), good: false },
+      { html: polyHTML(dc.concat([c[n]])), key: JSON.stringify(dc.concat([c[n]])), good: false },
+      { html: polyHTML(dc.map(k => cleanFloat(k + 1))), key: JSON.stringify(dc.map(k => cleanFloat(k + 1))), good: false }
+    ];
+  } else if (F2.kind === "prod") {
+    const u = F2.u, v = F.v || F2.v, du = derivCoeffs(u), dv = derivCoeffs(F2.v);
+    const dc = addH(mulH(du, F2.v), mulH(u, dv));
+    const e1 = mulH(du, dv);
+    const e2 = addH(mulH(du, F2.v), mulH(u, dv), -1);
+    list = [
+      { html: polyHTML(dc), key: JSON.stringify(dc), good: true },
+      { html: polyHTML(e1), key: JSON.stringify(e1), good: false },
+      { html: polyHTML(e2), key: JSON.stringify(e2), good: false }
+    ];
+  } else if (F2.kind === "comp") {
+    const u = F2.u, n = F2.n, a = u[0], k = cleanFloat(n * a);
+    const mk = (kk) => fmt(kk) + "·(" + polyHTML(u) + ")<sup>" + (n - 1) + "</sup>";
+    list = [
+      { html: mk(k), key: "k" + k, good: true },
+      { html: mk(n), key: "k" + n, good: false },
+      { html: mk(a), key: "k" + a, good: false },
+      { html: mk(cleanFloat(k + 1)), key: "k" + cleanFloat(k + 1), good: false }
+    ];
+  } else {
+    const u = F2.u, v = F2.v;
+    const num = addH(mulH(derivCoeffs(u), v), mulH(u, derivCoeffs(v)), -1);
+    const numBad = addH(mulH(derivCoeffs(u), v), mulH(u, derivCoeffs(v)));
+    let x0 = 2; if (Math.abs(evH(v, x0)) < 1) x0 = -v[1] + 2;
+    const val = cleanFloat(evH(num, x0) / Math.pow(evH(v, x0), 2));
+    const bad1 = cleanFloat(evH(numBad, x0) / Math.pow(evH(v, x0), 2));
+    const bad2 = cleanFloat(val + 1);
+    prompt = "Calcule la valeur de f′(" + x0 + ") :";
+    list = [
+      { html: "f′(" + x0 + ") = " + fmt(val), key: String(val), good: true },
+      { html: "f′(" + x0 + ") = " + fmt(bad1), key: String(bad1), good: false },
+      { html: "f′(" + x0 + ") = " + fmt(bad2), key: String(bad2), good: false }
+    ];
+  }
+  let choices = shuffle(dedup(list).slice(0, 3));
+  if (!choices.some(c => c.good)) choices[0] = list[0];
+  $("quizArea").innerHTML = '<div style="font-size:0.9rem; color:var(--text-1); margin-bottom:6px;">' + prompt + '</div>' +
+    choices.map(ch => '<button class="quiz-btn" data-good="' + (ch.good ? "1" : "0") + '">' + (F2.kind === "quot" ? ch.html : "f′(x) = " + ch.html) + '</button>').join("");
+  document.querySelectorAll(".quiz-btn").forEach(b => b.addEventListener("click", onQuiz));
+}
+function onQuiz(e) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const btn = e.currentTarget;
+  const good = btn.dataset.good === "1";
+  document.querySelectorAll(".quiz-btn").forEach(b => { b.disabled = true; if (b.dataset.good === "1") b.classList.add("good"); });
+  if (good) {
+    score2 += 10 * level2; streak2++;
+    if (stars2[level2] < 3) stars2[level2]++;
+    $("quizMsg").innerHTML = '<span style="color:var(--neon-green)">✅ Bravo ! +' + (10 * level2) + ' pts' + (stars2[level2] === 3 && unlocked(level2 + 1) ? " — 🎉 Niveau " + (level2 + 1) + " débloqué !" : "") + '</span>';
+    confetti();
+  } else {
+    btn.classList.add("bad");
+    streak2 = 0;
+    $("quizMsg").innerHTML = '<span style="color:var(--neon-red)">❌ Raté — regarde la correction pas à pas :</span>';
+  }
+  renderLevels();
+  renderRows(F2.kind === "poly" ? rowsRulesPoly(F2.c) : rowsGen(F2));
+  activateRow(0);
+  let i = 0;
+  const t = setInterval(() => {
+    const rows = rowEls();
+    if (i < rows.length - 1) { i++; activateRow(i); }
+    else clearInterval(t);
+  }, 1200);
+}
+
+/* ============ PARTIE 3 ============ */
+let P3 = null;
+const r2s = v => v.toFixed(2).replace(".", ",");
+
+function initPart3() {
+  if (!initPart3.done) {
+    initPart3.done = true;
+    $("keyAC").addEventListener("click", p3AC);
+    $("keyF").addEventListener("click", () => p3New());
+    $("keyFp").addEventListener("click", p3StepFp);
+    $("keySolve").addEventListener("click", p3StepSolve);
+    $("keySign").addEventListener("click", p3StepSign);
+    $("keyVar").addEventListener("click", p3StepVar);
+    $("keyExe").addEventListener("click", p3Exe);
+    $("newFunctionBtn3").addEventListener("click", () => p3New());
+  }
+  p3New();
+  p3Exe();
+}
+function p3New() {
+  const aC = [0.1, 0.2, 0.3, -0.1, -0.2, -0.3];
+  const a = aC[Math.floor(Math.random()*aC.length)];
+  const b = cleanFloat((Math.floor(Math.random()*7) - 3) * 0.5);
+  const c = Math.floor(Math.random()*7) - 3;
+  const d = Math.floor(Math.random()*5) + 1;
+  const A = cleanFloat(3*a), B = cleanFloat(2*b), C = c;
+  const disc = B*B - 4*A*C;
+  let roots = [];
+  if (disc > 1e-12) {
+    let x1 = (-B - Math.sqrt(disc)) / (2*A), x2 = (-B + Math.sqrt(disc)) / (2*A);
+    if (x1 > x2) { const t = x1; x1 = x2; x2 = t; }
+    roots = [x1, x2];
+  } else if (Math.abs(disc) <= 1e-12) roots = [-B / (2*A)];
+  P3 = { a, b, c, d, A, B, C, roots, f: x => a*x*x*x + b*x*x + c*x + d, stage: 0 };
+  $("lcd").innerHTML = "";
+  p3StepF();
+}
+function p3AC() { $("lcd").innerHTML = ""; P3.stage = 0; }
+function lcdAdd(cls, html) { const dv = document.createElement("div"); dv.className = cls + " fadein"; dv.innerHTML = html; $("lcd").appendChild(dv); }
+function lcdText(cls, text) { const dv = document.createElement("div"); dv.className = cls; dv.textContent = text; $("lcd").appendChild(dv); }
+function p3StepF() {
+  if (P3.stage >= 1) return;
+  lcdText("lcd-line cmd", "f(x) := " + polyText([P3.a, P3.b, P3.c, P3.d]));
+  P3.stage = 1;
+}
+function p3StepFp() {
+  p3StepF();
+  if (P3.stage >= 2) return;
+  lcdText("lcd-line res", "Dériver(f(x), x) → " + polyText([P3.A, P3.B, P3.C]));
+  P3.stage = 2;
+}
+function p3StepSolve() {
+  p3StepFp();
+  if (P3.stage >= 3) return;
+  lcdText("lcd-line cmd", "résoudre(" + polyText([P3.A, P3.B, P3.C]) + " = 0, x)");
+  if (P3.roots.length === 2) lcdText("lcd-line ok", "x₁ ≈ " + r2s(P3.roots[0]) + "    x₂ ≈ " + r2s(P3.roots[1]));
+  else if (P3.roots.length === 1) lcdText("lcd-line ok", "x₀ ≈ " + r2s(P3.roots[0]) + " (racine double)");
+  else lcdText("lcd-line res", "Pas de solution : f′ ne s'annule pas.");
+  P3.stage = 3;
+}
+function p3AddSign() {
+  if (P3.stage >= 4) return;
+  if (P3.roots.length === 2) {
+    const x1 = P3.roots[0], x2 = P3.roots[1];
+    const out = P3.A > 0 ? ["+", "−", "+"] : ["−", "+", "−"];
+    lcdAdd("lcd-line cmd", "signe(f′(x)) :");
+    lcdAdd("lcd-line", "<table><tr><th>x</th><td>−∞</td><td>" + r2s(x1) + "</td><td>" + r2s(x2) + "</td><td>+∞</td></tr>" +
+      "<tr><th>f′(x)</th><td class=\"" + (out[0]==="+"?"pos":"neg") + "\">" + out[0] + "</td><td class=\"zero\">0</td><td class=\"" + (out[1]==="+"?"pos":"neg") + "\">" + out[1] + "</td><td class=\"zero\">0</td><td class=\"" + (out[2]==="+"?"pos":"neg") + "\">" + out[2] + "</td></tr></table>");
+  } else {
+    lcdAdd("lcd-line res", "f′ garde le signe " + (P3.A > 0 ? "+" : "−") + " sur ℝ → f strictement " + (P3.A > 0 ? "croissante." : "décroissante."));
+  }
+  P3.stage = 4;
+}
+function p3StepSign() { p3StepSolve(); p3AddSign(); }
+function p3AddVar() {
+  if (P3.stage >= 5) return;
+  if (P3.roots.length === 2) {
+    const x1 = P3.roots[0], x2 = P3.roots[1], f = P3.f, A = P3.A;
+    lcdAdd("lcd-line cmd", "variations(f) :");
+    lcdAdd("lcd-line", "<table><tr><th>x</th><td>−∞</td><td>" + r2s(x1) + "</td><td>" + r2s(x2) + "</td><td>+∞</td></tr>" +
+      "<tr><th>f(x)</th><td>↗</td><td class=\"pos\">" + (A>0?"max ":"min ") + r2s(f(x1)) + "</td><td class=\"neg\">" + (A>0?"↘ min ":"↗ max ") + r2s(f(x2)) + "</td><td>↗</td></tr></table>");
+    lcdAdd("lcd-line ok", (A>0 ? "max local f(" + r2s(x1) + ") ≈ " + r2s(f(x1)) + " ; min local f(" + r2s(x2) + ") ≈ " + r2s(f(x2))
+                         : "min local f(" + r2s(x1) + ") ≈ " + r2s(f(x1)) + " ; max local f(" + r2s(x2) + ") ≈ " + r2s(f(x2))));
+  } else {
+    lcdAdd("lcd-line res", "Pas d'extremum (f′ ne change pas de signe).");
+  }
+  P3.stage = 5;
+}
+function p3StepVar() { p3StepSign(); p3AddVar(); }
+function p3Exe() {
+  p3AC();
+  const seq = [p3StepF, p3StepFp, p3StepSolve, p3StepSign, p3StepVar];
+  seq.forEach((fn, i) => setTimeout(fn, 350 + i * 700));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulation : Synthèse Organique & Chromatographie (CCM)</title>
+  <style>
+    :root {
+      --ink: #1e293b;
+      --muted: #64748b;
+      --line: #3b82f6;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --panel: #f8fafc;
+      --paper: #ffffff;
+      --primary: #4f46e5;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e2e8f0;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    main {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: var(--paper);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-top: 0;
+      color: var(--primary);
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 24px;
+      align-items: start;
+      margin-top: 20px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: inset 0 1px 3px 0 rgb(0 0 0 / 0.05);
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 12px 0 6px;
+    }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      background: white;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #4338ca;
+    }
+    button.secondary {
+      background: var(--muted);
+    }
+    button.secondary:hover {
+      background: #475569;
+    }
+    .ccm-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 20px;
+      min-height: 480px;
+    }
+    .ccm-chamber {
+      background: #f1f5f9;
+      border: 4px solid #94a3b8;
+      border-radius: 12px;
+      height: 400px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 10px;
+    }
+    .ccm-plate {
+      width: 150px;
+      height: 340px;
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      position: relative;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .line-depot {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #94a3b8;
+      border-style: dashed;
+    }
+    .line-front {
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #94a3b8;
+      border-style: dashed;
+      display: none;
+    }
+    .label-depot {
+      position: absolute;
+      bottom: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--muted);
+      width: 33%;
+      text-align: center;
+    }
+    .solvent-eluent {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(59, 130, 246, 0.2);
+      border-top: 2px solid var(--line);
+      height: 40px;
+      transition: height 0.1s linear;
+    }
+    .spot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      bottom: 34px;
+      transform: translateX(-50%);
+      transition: bottom 0.1s linear;
+      opacity: 0; /* invisible until UV */
+    }
+    .revealed {
+      opacity: 0.85;
+      box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+    }
+    .spot.spot-a { left: 25%; background: #ef4444; }
+    .spot.spot-b { left: 50%; background: #10b981; }
+    .spot.spot-c { left: 75%; background: #f59e0b; }
+    .uv-lamp {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #475569;
+      color: #a855f7;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+    }
+    .ccm-results {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .results-table th, .results-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .results-table th {
+      background: #f1f5f9;
+      color: var(--primary);
+    }
+    .molecule-viewer {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+    }
+    .mol-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .mol-card {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .mol-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary);
+    }
+    .mol-card.selected {
+      border: 2px solid var(--primary);
+      background: #e0e7ff;
+    }
+    .mol-display {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      height: 180px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .func-group {
+      stroke: transparent;
+      fill: transparent;
+      cursor: pointer;
+    }
+    .func-group:hover {
+      fill: rgba(245, 158, 11, 0.3);
+      stroke: var(--accent);
+      stroke-width: 2px;
+    }
+    .func-group.found {
+      fill: rgba(16, 185, 129, 0.3);
+      stroke: var(--success);
+      stroke-width: 2px;
+    }
+    .info-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: #eff6ff;
+      border-left: 4px solid var(--line);
+      font-size: 0.85rem;
+      border-radius: 0 6px 6px 0;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Synthèse Organique et Analyse par Chromatographie (CCM)</h1>
+  
+  <div class="grid">
+    <!-- Colonne latérale de contrôle -->
+    <section class="panel">
+      <h2>Contrôles CCM</h2>
+      
+      <label for="eluent">Choix de l'éluant (Solvant)</label>
+      <select id="eluent">
+        <option value="cyclohexane_acetate" selected>Cyclohexane / Acétate d'éthyle (80/20)</option>
+        <option value="eau_ethanol">Eau / Éthanol (50/50)</option>
+      </select>
+      
+      <button id="btn-start">Démarrer l'Élution</button>
+      <button id="btn-uv" class="secondary" disabled>Allumer la Lampe UV</button>
+      <button id="btn-reset" class="secondary">Réinitialiser la plaque</button>
+      
+      <div class="info-box">
+        <strong>Objectif TP :</strong> Analyser la pureté d'un ester de synthèse (Salicylate de méthyle).
+        Déposer sur la plaque :<br>
+        <strong>A</strong> : Réactif 1 (Acide salicylique)<br>
+        <strong>B</strong> : Réactif 2 (Méthanol / Alcool)<br>
+        <strong>C</strong> : Ester synthétisé (Produit de synthèse)
+      </div>
+      
+      <div id="status" style="margin-top: 10px; font-weight: bold; text-align: center;">Prêt pour le dépôt.</div>
+    </section>
+    
+    <!-- Colonne principale : Chambre CCM & Molécules -->
+    <section>
+      <div class="ccm-container">
+        <!-- Visualisation de la chambre -->
+        <div class="ccm-chamber">
+          <div class="uv-lamp" id="uv-status">Lampe UV Éteinte</div>
+          
+          <div class="ccm-plate" id="plate">
+            <!-- Lignes de dépôt et de front -->
+            <div class="line-depot"></div>
+            <div class="line-front" id="front-line"></div>
+            
+            <!-- Légendes dépôt -->
+            <div class="label-depot" style="left: 8%;">A</div>
+            <div class="label-depot" style="left: 41%;">B</div>
+            <div class="label-depot" style="left: 74%;">C</div>
+            
+            <!-- Solvant qui monte -->
+            <div class="solvent-eluent" id="eluent-flow"></div>
+            
+            <!-- Les taches (spots) -->
+            <div class="spot spot-a" id="spot-a"></div>
+            <div class="spot spot-b" id="spot-b"></div>
+            <!-- C correspond au produit, s'il est pur il n'a qu'une tache, s'il est impur il a des taches de réactifs -->
+            <div class="spot spot-c" id="spot-c1" style="background:#f59e0b;"></div>
+            <div class="spot spot-c" id="spot-c2" style="background:#ef4444; left: 75%; display:none;"></div>
+          </div>
+        </div>
+        
+        <!-- Résultats numériques -->
+        <div class="ccm-results">
+          <div>
+            <h2>Mesures et Calculs</h2>
+            <p style="font-size: 0.9rem; margin-top: 0;">
+              Mesurez les rapports frontaux $R_f = \frac{d}{D}$ où :<br>
+              - $D$ = distance de migration du solvant (du dépôt à la ligne de front) = <strong>6,0 cm</strong><br>
+              - $d$ = distance de migration de la tache.
+            </p>
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Tache</th>
+                  <th>Distance $d$ (cm)</th>
+                  <th>Rapport frontal $R_f$</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>A (Acide Salicylique)</th>
+                  <td id="res-d-a">-</td>
+                  <td id="res-rf-a">-</td>
+                </tr>
+                <tr>
+                  <th>B (Méthanol)</th>
+                  <td id="res-d-b">-</td>
+                  <td id="res-rf-b">-</td>
+                </tr>
+                <tr>
+                  <th>C (Ester de synthèse)</th>
+                  <td id="res-d-c">-</td>
+                  <td id="res-rf-c">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="info-box" style="background: #f0fdf4; border-color: var(--success); margin-bottom: 0;">
+            <strong>Analyse de pureté :</strong> Si le dépôt C montre une seule tache identique en hauteur à un produit attendu, il est pur. S'il montre une tache résiduelle de A ou B, la synthèse est incomplète.
+          </div>
+        </div>
+      </div>
+      
+      <!-- Module complémentaire : Reconnaissance de fonctions -->
+      <div class="molecule-viewer">
+        <h2>Identification des Groupes Caractéristiques</h2>
+        <p style="font-size: 0.85rem; margin: 0 0 10px;">Cliquez sur une molécule pour l'afficher, puis cliquez sur le <strong>groupe caractéristique</strong> dans le schéma pour l'identifier.</p>
+        
+        <div class="mol-grid">
+          <div class="mol-card selected" onclick="selectMolecule('acide')">
+            <strong>Acide Salicylique</strong><br><span style="font-size:0.75rem;color:var(--muted)">Acide Carboxylique + Phénol</span>
+          </div>
+          <div class="mol-card" onclick="selectMolecule('alcool')">
+            <strong>Éthanol / Méthanol</strong><br><span style="font-size:0.75rem;color:var(--muted)">Alcool (-OH)</span>
+          </div>
+          <div class="mol-card" onclick="selectMolecule('ester')">
+            <strong>Salicylate de méthyle</strong><br><span style="font-size:0.75rem;color:var(--muted)">Ester de synthèse</span>
+          </div>
+        </div>
+        
+        <div class="mol-display" id="mol-svg-container">
+          <!-- SVG dynamique chargé par JS -->
+        </div>
+        <div id="mol-info" class="info-box" style="text-align: center; font-weight: bold; background: white;">
+          Sélectionnez un groupe sur le schéma de la molécule.
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  // State variables
+  let eluting = false;
+  let elutionProgress = 0; // 0 to 100
+  let isUvOn = false;
+  let currentMolecule = 'acide';
+  
+  // DOM Elements
+  const btnStart = document.getElementById('btn-start');
+  const btnUv = document.getElementById('btn-uv');
+  const btnReset = document.getElementById('btn-reset');
+  const eluentFlow = document.getElementById('eluent-flow');
+  const frontLine = document.getElementById('front-line');
+  const uvStatus = document.getElementById('uv-status');
+  const statusText = document.getElementById('status');
+  
+  const spotA = document.getElementById('spot-a');
+  const spotB = document.getElementById('spot-b');
+  const spotC1 = document.getElementById('spot-c1');
+  const spotC2 = document.getElementById('spot-c2');
+  
+  // Results DOM
+  const resDA = document.getElementById('res-d-a');
+  const resRfA = document.getElementById('res-rf-a');
+  const resDB = document.getElementById('res-d-b');
+  const resRfB = document.getElementById('res-rf-b');
+  const resDC = document.getElementById('res-d-c');
+  const resRfC = document.getElementById('res-rf-c');
+  
+  // Rfs based on eluent
+  // Cyclohexane/acetate: Acide = polar (low Rf), Ester = non-polar (high Rf)
+  const rfs = {
+    cyclohexane_acetate: { a: 0.35, b: 0.15, c1: 0.75, c2: 0.35 },
+    eau_ethanol: { a: 0.65, b: 0.75, c1: 0.40, c2: 0.65 }
+  };
+  
+  function getRfValues() {
+    const eluentVal = document.getElementById('eluent').value;
+    return rfs[eluentVal];
+  }
+  
+  btnStart.addEventListener('click', startElution);
+  btnUv.addEventListener('click', toggleUv);
+  btnReset.addEventListener('click', resetPlaque);
+  
+  function startElution() {
+    if (eluting || elutionProgress > 0) return;
+    eluting = true;
+    btnStart.disabled = true;
+    document.getElementById('eluent').disabled = true;
+    statusText.innerText = "Élution en cours...";
+    
+    // Animate flow and spots
+    const duration = 5000; // 5 seconds
+    const intervalTime = 50;
+    const steps = duration / intervalTime;
+    let step = 0;
+    
+    frontLine.style.display = 'block';
+    
+    const rfVal = getRfValues();
+    
+    const timer = setInterval(() => {
+      step++;
+      elutionProgress = (step / steps) * 100;
+      
+      // Update solvent height (max height is 260px, from bottom 40px to top 300px)
+      const solventHeight = 40 + (260 * elutionProgress / 100);
+      eluentFlow.style.height = `${solventHeight}px`;
+      
+      // Update spots height
+      // Max migration distance is 220px (from bottom 40px to top 260px)
+      const distMax = 220;
+      
+      if (elutionProgress > 5) {
+        spotA.style.bottom = `${40 + (distMax * rfVal.a * elutionProgress / 100)}px`;
+        spotB.style.bottom = `${40 + (distMax * rfVal.b * elutionProgress / 100)}px`;
+        spotC1.style.bottom = `${40 + (distMax * rfVal.c1 * elutionProgress / 100)}px`;
+        // C has a tiny impurity of A
+        if (elutionProgress > 20) {
+          spotC2.style.display = 'block';
+          spotC2.style.bottom = `${40 + (distMax * rfVal.c2 * elutionProgress / 100)}px`;
+        }
+      }
+      
+      if (step >= steps) {
+        clearInterval(timer);
+        eluting = false;
+        btnUv.disabled = false;
+        statusText.innerText = "Élution terminée. Utilisez la lampe UV pour révéler la plaque.";
+      }
+    }, intervalTime);
+  }
+  
+  function toggleUv() {
+    isUvOn = !isUvOn;
+    if (isUvOn) {
+      uvStatus.innerText = "Lampe UV Allumée (254 nm)";
+      uvStatus.style.background = "#a855f7";
+      uvStatus.style.color = "white";
+      btnUv.innerText = "Éteindre la Lampe UV";
+      
+      spotA.classList.add('revealed');
+      spotB.classList.add('revealed');
+      spotC1.classList.add('revealed');
+      spotC2.classList.add('revealed');
+      
+      showResults();
+    } else {
+      uvStatus.innerText = "Lampe UV Éteinte";
+      uvStatus.style.background = "#475569";
+      uvStatus.style.color = "#a855f7";
+      btnUv.innerText = "Allumer la Lampe UV";
+      
+      spotA.classList.remove('revealed');
+      spotB.classList.remove('revealed');
+      spotC1.classList.remove('revealed');
+      spotC2.classList.remove('revealed');
+    }
+  }
+  
+  function showResults() {
+    const rfVal = getRfValues();
+    const D = 6.0; // Fixed total distance
+    
+    const dA = (D * rfVal.a).toFixed(1);
+    const dB = (D * rfVal.b).toFixed(1);
+    const dC = (D * rfVal.c1).toFixed(1);
+    
+    resDA.innerText = `${dA} cm`;
+    resRfA.innerText = rfVal.a.toFixed(2);
+    
+    resDB.innerText = `${dB} cm`;
+    resRfB.innerText = rfVal.b.toFixed(2);
+    
+    resDC.innerText = `${dC} cm (et impureté à ${dA} cm)`;
+    resRfC.innerText = rfVal.c1.toFixed(2);
+  }
+  
+  function resetPlaque() {
+    eluting = false;
+    elutionProgress = 0;
+    isUvOn = false;
+    
+    btnStart.disabled = false;
+    btnUv.disabled = true;
+    document.getElementById('eluent').disabled = false;
+    
+    eluentFlow.style.height = '40px';
+    frontLine.style.display = 'none';
+    
+    uvStatus.innerText = "Lampe UV Éteinte";
+    uvStatus.style.background = "#475569";
+    uvStatus.style.color = "#a855f7";
+    btnUv.innerText = "Allumer la Lampe UV";
+    
+    spotA.classList.remove('revealed');
+    spotB.classList.remove('revealed');
+    spotC1.classList.remove('revealed');
+    spotC2.classList.remove('revealed');
+    
+    spotA.style.bottom = '34px';
+    spotB.style.bottom = '34px';
+    spotC1.style.bottom = '34px';
+    spotC2.style.bottom = '34px';
+    spotC2.style.display = 'none';
+    
+    resDA.innerText = '-';
+    resRfA.innerText = '-';
+    resDB.innerText = '-';
+    resRfB.innerText = '-';
+    resDC.innerText = '-';
+    resRfC.innerText = '-';
+    
+    statusText.innerText = "Prêt pour le dépôt.";
+  }
+  
+  // Molecule Viewer Logic
+  const molecules = {
+    acide: `
+      <svg width="400" height="150" viewBox="0 0 400 150">
+        <!-- Salicylic acid molecule structure -->
+        <g transform="translate(100, 20)">
+          <!-- Benzene ring -->
+          <polygon points="50,30 90,50 90,90 50,110 10,90 10,50" stroke="#1e293b" stroke-width="2.5" fill="none"/>
+          <circle cx="50" cy="70" r="30" stroke="#64748b" stroke-width="1.5" fill="none" stroke-dasharray="4"/>
+          
+          <!-- Carboxylic Acid group -COOH -->
+          <!-- Link to ring -->
+          <line x1="90" y1="50" x2="130" y2="30" stroke="#1e293b" stroke-width="2.5"/>
+          <!-- C=O -->
+          <line x1="127" y1="31" x2="127" y2="-5" stroke="#1e293b" stroke-width="2.5"/>
+          <line x1="133" y1="31" x2="133" y2="-5" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="122" y="-12" font-family="Arial" font-weight="bold" font-size="16">O</text>
+          <!-- C-OH -->
+          <line x1="130" y1="30" x2="160" y2="45" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="162" y="52" font-family="Arial" font-weight="bold" font-size="16">OH</text>
+          
+          <!-- Carboxylic acid click target -->
+          <rect x="110" y="-25" width="85" height="95" class="func-group" id="target-carboxylic" onclick="clickGroup('acide_carb')"/>
+          <text x="120" y="85" font-family="Arial" font-size="10" fill="#64748b">Cliquer pour identifier</text>
+          
+          <!-- Phenol Alcohol group -OH -->
+          <line x1="90" y1="90" x2="130" y2="110" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="133" y="116" font-family="Arial" font-weight="bold" font-size="16">OH</text>
+          
+          <!-- Phenol click target -->
+          <rect x="115" y="90" width="45" height="35" class="func-group" id="target-phenol" onclick="clickGroup('phenol')"/>
+        </g>
+      </svg>
+    `,
+    alcool: `
+      <svg width="400" height="150" viewBox="0 0 400 150">
+        <!-- Ethanol structure -->
+        <g transform="translate(120, 50)">
+          <!-- CH3 - CH2 - OH -->
+          <text x="10" y="35" font-family="Arial" font-weight="bold" font-size="18">CH</text>
+          <text x="38" y="40" font-family="Arial" font-weight="bold" font-size="12">3</text>
+          
+          <line x1="48" y1="30" x2="90" y2="30" stroke="#1e293b" stroke-width="2.5"/>
+          
+          <text x="95" y="35" font-family="Arial" font-weight="bold" font-size="18">CH</text>
+          <text x="123" y="40" font-family="Arial" font-weight="bold" font-size="12">2</text>
+          
+          <line x1="133" y1="30" x2="175" y2="30" stroke="#1e293b" stroke-width="2.5"/>
+          
+          <text x="180" y="35" font-family="Arial" font-weight="bold" font-size="18" fill="#4f46e5">OH</text>
+          
+          <!-- Alcohol click target -->
+          <rect x="170" y="10" width="45" height="35" class="func-group" id="target-alcohol" onclick="clickGroup('alcool')"/>
+          <text x="75" y="75" font-family="Arial" font-size="11" fill="#64748b">Cliquer sur le groupe -OH</text>
+        </g>
+      </svg>
+    `,
+    ester: `
+      <svg width="400" height="150" viewBox="0 0 400 150">
+        <!-- Methyl salicylate structure -->
+        <g transform="translate(100, 20)">
+          <!-- Benzene ring -->
+          <polygon points="50,30 90,50 90,90 50,110 10,90 10,50" stroke="#1e293b" stroke-width="2.5" fill="none"/>
+          <circle cx="50" cy="70" r="30" stroke="#64748b" stroke-width="1.5" fill="none" stroke-dasharray="4"/>
+          
+          <!-- Ester group -COOR -->
+          <!-- Link to ring -->
+          <line x1="90" y1="50" x2="130" y2="30" stroke="#1e293b" stroke-width="2.5"/>
+          <!-- C=O -->
+          <line x1="127" y1="31" x2="127" y2="-5" stroke="#1e293b" stroke-width="2.5"/>
+          <line x1="133" y1="31" x2="133" y2="-5" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="122" y="-12" font-family="Arial" font-weight="bold" font-size="16">O</text>
+          <!-- C-O-CH3 -->
+          <line x1="130" y1="30" x2="160" y2="45" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="162" y="52" font-family="Arial" font-weight="bold" font-size="16">O</text>
+          <line x1="178" y1="45" x2="205" y2="30" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="210" y="35" font-family="Arial" font-weight="bold" font-size="16">CH</text>
+          <text x="236" y="40" font-family="Arial" font-weight="bold" font-size="10">3</text>
+          
+          <!-- Ester target -->
+          <rect x="110" y="-25" width="140" height="95" class="func-group" id="target-ester" onclick="clickGroup('ester')"/>
+          
+          <!-- Phenol Alcohol group -OH -->
+          <line x1="90" y1="90" x2="130" y2="110" stroke="#1e293b" stroke-width="2.5"/>
+          <text x="133" y="116" font-family="Arial" font-weight="bold" font-size="16">OH</text>
+        </g>
+      </svg>
+    `
+  };
+  
+  function selectMolecule(mol) {
+    currentMolecule = mol;
+    const cards = document.querySelectorAll('.mol-card');
+    cards.forEach(card => card.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    document.getElementById('mol-svg-container').innerHTML = molecules[mol];
+    document.getElementById('mol-info').innerText = "Sélectionnez un groupe sur le schéma de la molécule.";
+    document.getElementById('mol-info').className = "info-box";
+  }
+  
+  function clickGroup(groupType) {
+    const info = document.getElementById('mol-info');
+    if (groupType === 'acide_carb') {
+      info.innerHTML = "🎯 <strong>Acide Carboxylique (-COOH) :</strong> Hydrophile. Donne le caractère acide à la molécule.";
+      info.className = "info-box style-success";
+      info.style.borderLeftColor = "var(--success)";
+      document.getElementById('target-carboxylic').classList.add('found');
+    } else if (groupType === 'phenol') {
+      info.innerHTML = "🎯 <strong>Fonction Phénol (Alcool aromatique -OH) :</strong> Permet des réactions de substitution et renforce la polarité.";
+      info.className = "info-box style-success";
+      info.style.borderLeftColor = "var(--success)";
+      document.getElementById('target-phenol').classList.add('found');
+    } else if (groupType === 'alcool') {
+      info.innerHTML = "🎯 <strong>Groupe Hydroxyle / Alcool (-OH) :</strong> C'est la fonction caractéristique des alcools. Très polaire.";
+      info.className = "info-box style-success";
+      info.style.borderLeftColor = "var(--success)";
+      document.getElementById('target-alcohol').classList.add('found');
+    } else if (groupType === 'ester') {
+      info.innerHTML = "🎯 <strong>Fonction Ester (-COOR) :</strong> Formée par estérification. Souvent odorante (odeur de wintergreen/gaulthérie ici).";
+      info.className = "info-box style-success";
+      info.style.borderLeftColor = "var(--success)";
+      document.getElementById('target-ester').classList.add('found');
+    }
+  }
+  
+  // Init
+  selectMolecule('acide');
+  resetPlaque();
+</script>
+</body>
+</html>

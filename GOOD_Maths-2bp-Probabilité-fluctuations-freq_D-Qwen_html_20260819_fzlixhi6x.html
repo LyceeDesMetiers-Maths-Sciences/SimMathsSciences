@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Jeu des 3 Portes — Monty Hall</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0c1a2d; --line:#2b4a6d;
+  --cream:#fdf3dd; --muted:#9fb6cf; --ink:#22303f;
+  --gold:#ffc857; --goldD:#d99a2b; --red:#e64545;
+  --teal:#2ec4b6; --green:#6ee7a0; --orange:#ff9f68;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Atkinson Hyperlegible',sans-serif;color:var(--cream);line-height:1.4;
+  background:
+    radial-gradient(1200px 620px at 72% -10%, #1b4a72 0%, transparent 60%),
+    radial-gradient(900px 520px at 8% 112%, #0f3a55 0%, transparent 55%),
+    linear-gradient(#0d1c30,#0a1626);
+  min-height:100vh;overflow-x:hidden;
+}
+.rideau{position:fixed;top:0;bottom:0;width:48px;z-index:0;opacity:.45;pointer-events:none;
+  background:repeating-linear-gradient(90deg,#5d1420 0 10px,#8e1e31 10px 20px,#5d1420 20px 30px);
+  box-shadow:inset 0 0 40px #000}
+.rideau.g{left:0}.rideau.d{right:0}
+.mote{position:fixed;border-radius:50%;background:#ffc85730;z-index:0;pointer-events:none;animation:flot 9s ease-in-out infinite}
+@keyframes flot{50%{transform:translateY(-28px)}}
+header{position:relative;z-index:2;background:linear-gradient(180deg,#17263c,#101d31);
+  border-bottom:3px solid var(--goldD);box-shadow:0 8px 30px #0009}
+.bulbs{display:flex;gap:9px;justify-content:center;padding:4px 0}
+.bulb{width:6px;height:6px;border-radius:50%;background:#4a3c1a;transition:.3s}
+.bulb.on{background:var(--gold);box-shadow:0 0 8px 2px #ffc85766}
+.brandRow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+  max-width:1280px;margin:0 auto;padding:4px clamp(14px,3vw,36px) 6px}
+h1{font-family:'Bungee';font-size:clamp(1.1rem,2.8vw,1.8rem);line-height:1;text-shadow:0 2px 0 #000a}
+h1 .or{color:var(--gold)}
+.tagline{color:var(--muted);font-size:.8rem}
+@media(max-width:820px){.tagline{display:none}}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font-family:'Atkinson Hyperlegible';font-weight:700;cursor:pointer;border-radius:9px;
+  border:2px solid #3a5f8a;background:#24466b;color:var(--cream);padding:6px 12px;font-size:.82rem;
+  transition:transform .18s,box-shadow .18s,filter .18s}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 16px #0008;filter:brightness(1.1)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.gold{background:linear-gradient(180deg,#ffd77a,#efa52e);border-color:#b97e14;color:#3a2405}
+.btn.teal{background:linear-gradient(180deg,#43d8c9,#1d9c90);border-color:#117268;color:#06302b}
+.btn.red{background:linear-gradient(180deg,#f0625f,#c53030);border-color:#8f1d1d;color:#fff}
+.btn.big{font-family:'Bungee';font-size:clamp(.85rem,1.6vw,1.02rem);padding:10px 16px;border-radius:11px}
+.btn.mini{padding:3px 9px;font-size:.75rem}
+.hidden{display:none!important}
+.lnk{background:none;border:none;color:#5f7d99;font-size:.75rem;cursor:pointer;text-decoration:underline}
+.lnk:hover{color:var(--muted)}
+main{position:relative;z-index:2;max-width:1280px;margin:0 auto;
+  padding:16px clamp(12px,2.5vw,30px) 40px;display:grid;gap:16px}
+.rowA,.rowB,.rowC{display:grid;gap:16px}
+.rowA{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.rowB{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.rowC{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:1000px){.rowA,.rowB,.rowC{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,#16304d,#112640);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;box-shadow:0 10px 26px #0006}
+.secHead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ghost{font-family:'Bungee';font-size:1.7rem;color:transparent;-webkit-text-stroke:2px #39618f;line-height:.8}
+.secHead h2{font-family:'Bungee';font-size:.95rem;color:var(--gold);letter-spacing:.04em}
+.secHead .sub{color:var(--muted);font-size:.76rem}
+.stage{position:relative;overflow:hidden;border-radius:12px;border:1px solid var(--line);
+  background:radial-gradient(120% 95% at 50% 110%, #23425f 0%, #0f2036 58%, #0c1a2d 100%);
+  padding:12px 12px 12px}
+.spot{position:absolute;inset:-40% -20%;pointer-events:none;filter:blur(2px);
+  background:conic-gradient(from 200deg at 50% 0%, transparent 40%, #ffc85715 47%, transparent 55%,
+  transparent 70%, #2ec4b612 77%, transparent 83%);animation:balay 13s ease-in-out infinite alternate}
+@keyframes balay{to{transform:rotate(7deg)}}
+.doors{position:relative;display:flex;gap:clamp(12px,2.5vw,26px);justify-content:center;perspective:1100px;margin-top:4px}
+.door{position:relative;width:clamp(82px,11.5vw,128px);height:clamp(140px,19vw,215px);
+  background:none;border:none;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.door .reveal{position:absolute;inset:0;border-radius:9px;display:grid;place-items:center;
+  background:radial-gradient(90% 70% at 50% 30%, #2b3c52 0%, #0a1320 75%);
+  box-shadow:inset 0 0 30px #000;font-size:clamp(34px,5.5vw,60px)}
+.door.open .reveal span{animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.2)}}
+.door .panel3d{position:absolute;inset:0;border-radius:9px;transform-origin:left center;
+  transition:transform .7s cubic-bezier(.55,.05,.3,1),filter .2s;
+  background:linear-gradient(160deg,#c23a4e,#8e1e31 60%,#741827);border:3px solid var(--goldD);
+  box-shadow:inset 0 0 0 5px #00000022,inset 0 0 30px #0006,0 10px 20px #000a}
+.door .panel3d::before{content:"";position:absolute;inset:9px;border:2px solid #d99a2b88;border-radius:5px}
+.door .panel3d::after{content:"";position:absolute;right:8px;top:50%;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffe9b3,#b97e14);transform:translateY(-50%)}
+.door .num{position:absolute;inset:0;display:grid;place-items:center;font-family:'Bungee';
+  font-size:clamp(1.7rem,3.6vw,2.6rem);color:var(--cream);text-shadow:0 3px 0 #0007}
+.door:not(.open):hover .panel3d{transform:translateY(-4px) rotateY(-7deg);filter:brightness(1.12)}
+.door.open .panel3d{transform:rotateY(-108deg)}
+.door.selected .panel3d{box-shadow:0 0 0 3px var(--gold),0 0 24px #ffc85777,inset 0 0 30px #0006}
+.doors.locked .door:not(.selected):not(.open){opacity:.5;cursor:default}
+.doors.locked .door:not(.selected):not(.open):hover .panel3d{transform:none;filter:none}
+.door .tag{position:absolute;left:0;right:0;bottom:-18px;font-family:'Bungee';font-size:.55rem;
+  letter-spacing:.2em;color:var(--muted)}
+.ribbon{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%) scale(.5);opacity:0;
+  font-family:'Bungee';font-size:clamp(1.2rem,3vw,2rem);pointer-events:none;z-index:5;white-space:nowrap;
+  transition:.35s cubic-bezier(.3,1.5,.5,1);text-shadow:0 4px 0 #0008}
+.ribbon.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.ribbon.win{color:var(--gold)} .ribbon.lose{color:#a9bdd4}
+.host{display:flex;gap:10px;justify-content:center;align-items:flex-start;margin-top:26px}
+.host .ava{font-size:1.6rem;animation:dodel 2.6s ease-in-out infinite}
+@keyframes dodel{50%{transform:rotate(-7deg) translateY(-3px)}}
+.bubble{max-width:520px;background:var(--cream);color:var(--ink);font-weight:700;font-size:.83rem;
+  padding:7px 12px;border-radius:12px 12px 12px 3px;box-shadow:0 6px 16px #0007}
+.bubble.talk{animation:talk .35s ease}
+@keyframes talk{from{transform:scale(.93) translateY(4px);opacity:.3}}
+.decision{min-height:64px;display:grid;place-items:center;margin-top:8px}
+.choice{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#actionHint{color:var(--muted);font-size:.8rem;text-align:center}
+.teams{display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:center;
+  margin-top:10px;padding-top:10px;border-top:1px dashed #2b4a6d}
+.chipPl{display:flex;align-items:center;gap:6px;border:2px solid #3a5f8a;border-radius:999px;
+  padding:3px 9px;background:#182f4b;cursor:pointer;transition:.15s;font-size:.8rem}
+.chipPl:hover{border-color:#5f86b3}
+.chipPl.act{border-color:var(--gold);background:#2a4d75;box-shadow:0 0 10px #ffc85722}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 6px #0008}
+.chipPl input{width:9ch;background:none;border:none;color:var(--cream);font-family:inherit;
+  font-weight:700;font-size:.8rem;padding:1px}
+.chipPl input:focus{outline:none}
+.chipPl .mini2{color:var(--muted);font-size:.68rem}
+.chipPl .del{background:none;border:none;color:#7d95b3;cursor:pointer;font-size:.8rem;padding:0}
+.chipPl .del:hover{color:var(--red)}
+.statsBloc{display:flex;gap:8px;margin-bottom:8px}
+.statBig{flex:1;background:#0f2440;border:1px solid var(--line);border-radius:10px;
+  padding:6px 12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.statBig .lab{font-family:'Bungee';font-size:.66rem;letter-spacing:.05em}
+.statBig .fr{font-family:'Bungee';font-size:1.1rem;color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{font-family:'Bungee';font-size:.58rem;letter-spacing:.08em;color:var(--muted);
+  text-align:left;padding:5px 8px;border-bottom:2px solid var(--line)}
+td{padding:5px 8px;border-bottom:1px solid #22405f;vertical-align:middle}
+tr.tot td{border-top:3px double var(--goldD);border-bottom:none;font-weight:700;background:#0f2440}
+.freqIn{width:6.2ch;background:#0b1a2d;border:2px solid #3a5f8a;border-radius:7px;color:var(--cream);
+  font-family:inherit;font-weight:700;font-size:.85rem;padding:2px 5px;text-align:center;transition:.2s}
+.freqIn:focus{outline:none;border-color:var(--gold)}
+.freqIn.ok{border-color:var(--green);color:var(--green);background:#12351f}
+.freqIn.err{animation:sec .4s}
+@keyframes sec{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.approx{color:var(--teal);font-size:.72rem;margin-left:5px}
+.etat{font-size:.8rem;margin-left:3px}
+.serieZone{border-top:1px dashed #2b4a6d;margin-top:10px;padding-top:10px}
+.serieZone h4{font-family:'Bungee';font-size:.72rem;color:var(--cream);letter-spacing:.05em;margin-bottom:8px}
+.serieCtl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;border:2px solid #3a5f8a;border-radius:9px;overflow:hidden}
+.seg label{padding:5px 10px;cursor:pointer;font-weight:700;font-size:.78rem;background:#182f4b;transition:.15s;white-space:nowrap}
+.seg input{display:none}
+.seg label:has(input:checked){background:var(--teal);color:#06222b}
+.seg.or label:has(input:checked){background:var(--gold)}
+.barre{height:9px;background:#0b1a2d;border-radius:6px;overflow:hidden;border:1px solid var(--line);flex:1;min-width:110px}
+.barre i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .1s}
+#serieCount{font-weight:700;font-size:.8rem;min-width:7ch}
+#serieMsg{margin-top:7px;font-weight:700;color:var(--green);font-size:.8rem;min-height:1.1em}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:'Atkinson Hyperlegible';fill:#cfe0f2}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;min-height:30px}
+.chip{border:2px solid #3a5f8a;background:#182f4b;color:var(--cream);border-radius:999px;
+  padding:4px 10px;font-size:.78rem;font-weight:700;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--gold)}
+.chip.sel{border-color:var(--gold);background:#3a5f8a;box-shadow:0 0 10px #ffc85733}
+.chip.done{opacity:.5;text-decoration:line-through}
+#axisMsg{min-height:1.3em;font-weight:700;margin-top:6px;font-size:.85rem}
+.okTxt{color:var(--green)} .koTxt{color:var(--orange)}
+.legende{display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin-top:6px}
+.legende b{color:var(--cream)}
+.mission{display:flex;gap:8px;align-items:flex-start;padding:5px 4px;border-radius:7px;transition:.2s}
+.mission:hover{background:#1a3557}
+.mission input{width:16px;height:16px;accent-color:var(--gold);margin-top:2px;cursor:pointer;flex:none}
+.mission label{cursor:pointer;font-size:.85rem;line-height:1.35}
+.mission input:checked+label{text-decoration:line-through;color:var(--muted)}
+.question{background:#0f2440;border-left:3px solid var(--goldD);border-radius:0 8px 8px 0;
+  padding:7px 11px;margin-bottom:7px;font-size:.83rem;line-height:1.4}
+.question b{color:var(--gold)}
+textarea{width:100%;min-height:105px;background:#0b1a2d;border:2px solid #3a5f8a;border-radius:9px;
+  color:var(--cream);font-family:inherit;font-size:.85rem;padding:10px;resize:vertical;margin-top:8px}
+textarea:focus{outline:none;border-color:var(--gold)}
+.panelSub{font-family:'Bungee';font-size:.72rem;color:var(--cream);letter-spacing:.05em;margin:10px 0 6px}
+.teachSec{display:none;border:2px solid var(--goldD);background:linear-gradient(180deg,#2a2410,#1d1a0d)}
+body.teach .teachSec{display:block}
+.teachSec h2{font-family:'Bungee';color:var(--gold);font-size:1rem;margin-bottom:8px}
+.teachSec .val{font-family:'Bungee';font-size:1.05rem;color:var(--teal)}
+.teachSec p{line-height:1.5;margin-bottom:8px;font-size:.9rem}
+.teachSec ul{margin:6px 0 10px 20px;line-height:1.55;font-size:.9rem}
+#btnTeach.on{background:var(--gold);color:#3a2405;border-color:#b97e14}
+footer{position:relative;z-index:2;text-align:center;color:#5f7d99;font-size:.75rem;padding:12px 0 26px}
+.conf{position:fixed;width:8px;height:12px;z-index:99;pointer-events:none;
+  animation:conf var(--d) cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rz));opacity:0}}
+</style>
+</head>
+<body>
+<div class="rideau g"></div><div class="rideau d"></div>
+
+<header>
+  <div class="bulbs" id="bulbsTop"></div>
+  <div class="brandRow">
+    <h1>LE JEU DES <span class="or">3 PORTES</span></h1>
+    <p class="tagline">🚗 Une voiture · 🐐 Deux chèvres · Monty ouvre toujours une porte à chèvre. Garder ou changer ?</p>
+    <div class="hud">
+      <button class="btn" id="btnSound" title="Son">🔊</button>
+      <button class="btn" id="btnReset">↺ Réinit.</button>
+      <button class="btn" id="btnTeach">🔑 Enseignant</button>
+    </div>
+  </div>
+  <div class="bulbs" id="bulbsBot"></div>
+</header>
+
+<main>
+
+<section class="rowA">
+  <div class="panel">
+    <div class="secHead"><span class="ghost">01</span><h2>LE PLATEAU</h2><span class="sub">joue, observe, accumule</span></div>
+    <div class="stage">
+      <div class="spot"></div>
+      <div class="doors" id="doors"></div>
+      <div class="ribbon" id="ribbon"></div>
+      <div class="host"><span class="ava">🎩</span><div class="bubble" id="bubble">Bienvenue sur le plateau, agent !</div></div>
+      <div class="decision">
+        <div class="choice hidden" id="choiceBtns">
+          <button class="btn big teal" id="btnGard">🛡 JE GARDE</button>
+          <button class="btn big gold" id="btnChang">🔁 JE CHANGE</button>
+        </div>
+        <button class="btn big red hidden" id="btnNext">▶ PARTIE SUIVANTE</button>
+        <p id="actionHint">Clique sur une porte pour commencer.</p>
+      </div>
+      <div class="teams" id="teamChips"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="secHead"><span class="ghost">02</span><h2>DONNÉES &amp; SÉRIES</h2><span class="sub">mission 1 : calcule les fréquences (au millième)</span></div>
+    <div class="statsBloc">
+      <div class="statBig"><span class="lab" style="color:var(--teal)">🛡 GARDE</span><span class="fr" id="totG">0 / 0</span><span class="approx" id="totGx"></span></div>
+      <div class="statBig"><span class="lab" style="color:var(--gold)">🔁 CHANGE</span><span class="fr" id="totC">0 / 0</span><span class="approx" id="totCx"></span></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="scoreTab">
+        <thead><tr><th>ÉQUIPE</th><th>🛡 GARDE</th><th>FRÉQ.</th><th>🔁 CHANGE</th><th>FRÉQ.</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="serieZone">
+      <h4>⚡ SÉRIES RAPIDES — chaque série devient un point de la boîte à moustaches</h4>
+      <div class="serieCtl">
+        <div class="seg" id="segStrat">
+          <label><input type="radio" name="strat" value="gard" checked><span>🛡 GARDER</span></label>
+          <label><input type="radio" name="strat" value="chang"><span>🔁 CHANGER</span></label>
+        </div>
+        <div class="seg or" id="segN">
+          <label><input type="radio" name="sn" value="10"><span>10</span></label>
+          <label><input type="radio" name="sn" value="20"><span>20</span></label>
+          <label><input type="radio" name="sn" value="30" checked><span>30</span></label>
+          <label><input type="radio" name="sn" value="50"><span>50</span></label>
+          <label><input type="radio" name="sn" value="100"><span>100</span></label>
+        </div>
+        <button class="btn big gold" id="btnGo">▶ LANCER</button>
+        <div class="barre"><i id="serieBar"></i></div>
+        <span id="serieCount"></span>
+      </div>
+      <p id="serieMsg"></p>
+      <button class="lnk" id="btnDemo">⚙ insérer un jeu d'essai (démonstration des graphiques)</button>
+    </div>
+  </div>
+</section>
+
+<section class="rowB">
+  <div class="panel">
+    <div class="secHead"><span class="ghost">03</span><h2>PLACER LES FRÉQUENCES</h2><span class="sub">calcule d'abord, glisse le curseur, puis vérifie</span></div>
+    <div class="chips" id="chips"></div>
+    <svg id="svgAxis" viewBox="0 0 760 158"></svg>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px">
+      <button class="btn gold" id="btnCheck">✔ Vérifier</button>
+      <span id="axisMsg"></span>
+      <span style="margin-left:auto;color:var(--muted);font-size:.78rem">Réussites : <b id="placedN" style="color:var(--gold)">0</b></span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="secHead"><span class="ghost">04</span><h2>BOÎTES À MOUSTACHES</h2><span class="sub">fréquences des séries, par stratégie</span></div>
+    <svg id="svgBox" viewBox="0 0 760 260"></svg>
+    <div class="legende">
+      <span><b>·</b> 1 point = 1 série (couleur = équipe)</span>
+      <span>▭ Q1→Q3 · trait épais = <b>médiane</b> · moustaches = min/max</span>
+    </div>
+  </div>
+</section>
+
+<section class="rowC">
+  <div class="panel">
+    <div class="secHead"><span class="ghost">05</span><h2>MISSIONS &amp; NOTES</h2><span class="sub">parcours en autonomie</span></div>
+    <div id="missions"></div>
+    <div class="panelSub">📝 TES NOTES</div>
+    <textarea id="notes" placeholder="Observations, calculs, schémas, doutes… tout ce qui peut t'aider à argumenter."></textarea>
+  </div>
+  <div class="panel">
+    <div class="secHead"><span class="ghost">❓</span><h2>QUESTIONS D'ENQUÊTE</h2></div>
+    <div class="question"><b>Q1.</b> Avant de jouer : d'après toi, vaut-il mieux garder ou changer ? Pourquoi ?</div>
+    <div class="question"><b>Q2.</b> Le présentateur ouvre <b>toujours</b> une porte à chèvre. Est-ce un hasard ? Que sait-il que tu ignores ?</div>
+    <div class="question"><b>Q3.</b> Au tout début, quelle est la probabilité que la voiture soit derrière <b>ta</b> porte ? Et derrière les <b>deux autres portes réunies</b> ?</div>
+    <div class="question"><b>Q4.</b> Quand le présentateur élimine une chèvre, que deviennent ces chances ?</div>
+    <div class="question"><b>Q5.</b> Tes fréquences sont-elles exactement identiques d'une série à l'autre ? Que se passe-t-il quand on joue <b>plus</b> de parties ?</div>
+    <div class="question"><b>Q6 — Défi.</b> Estime la probabilité de gagner <b>en changeant</b>, puis explique-la avec tes propres mots (un schéma est bienvenu).</div>
+  </div>
+</section>
+
+<section class="panel teachSec">
+  <h2>🔑 APPORT THÉORIQUE — pour la mise en commun</h2>
+  <p>Au départ : la voiture est derrière la porte choisie avec la probabilité <span class="val">1/3 ≈ 0,333</span>, et derrière l'une des deux autres portes avec la probabilité <span class="val">2/3 ≈ 0,667</span>.</p>
+  <ul>
+    <li>Si la voiture était derrière <b>ma</b> porte (cas de probabilité 1/3) : changer fait <b>perdre</b>.</li>
+    <li>Si elle était derrière <b>les deux autres</b> (cas de probabilité 2/3) : le présentateur, qui sait, y élimine la chèvre — changer fait alors <b>gagner à coup sûr</b>.</li>
+  </ul>
+  <p>Donc <b>P(gagner en changeant) = 2/3</b> et <b>P(gagner en gardant) = 1/3</b> : changer double les chances. Les repères 1/3 et 2/3 s'affichent en pointillés dorés sur les deux graphiques. Lien possible avec la <b>fluctuation d'échantillonnage</b> : les boîtes se resserrent autour de ces valeurs quand la taille des séries augmente.</p>
+</section>
+
+</main>
+<footer>Simulation pédagogique — problème des trois portes (Monty Hall) · Mathématiques · 2nde bac pro</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const NS="http://www.w3.org/2000/svg";
+const svgEl=(n,at,parent)=>{const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);if(parent)parent.append(e);return e};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd3=()=>(Math.random()*3)|0;
+const fmt=v=>v.toFixed(3).replace(".",",");
+const uid=()=>Math.random().toString(36).slice(2,9);
+const COLORS=["#ffc857","#2ec4b6","#e64545","#7cc0ff","#a8e05f","#f27bb2"];
+const STRAT_LBL={gard:"🛡 Garde",chang:"🔁 Change"};
+const KEY="troisPortes_v4";
+
+let actx=null, soundOn=true;
+function beep(f=600,d=.08,type="triangle",g=.11,delay=0){
+  if(!soundOn)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime+delay,o=actx.createOscillator(),v=actx.createGain();
+    o.type=type;o.frequency.value=f;v.gain.setValueAtTime(g,t);
+    v.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(v).connect(actx.destination);o.start(t);o.stop(t+d);
+  }catch(e){}
+}
+const sndClick=()=>beep(760,.05,"square",.05);
+const sndOpen=()=>beep(392,.1,"triangle",.09);
+const sndWin=()=>{beep(523,.12);beep(659,.12,"triangle",.11,.1);beep(784,.24,"triangle",.12,.2)};
+const sndLose=()=>{beep(330,.22,"sawtooth",.07);beep(233,.34,"sawtooth",.07,.14)};
+
+const DEF=()=>({
+  players:[
+    {id:uid(),name:"Équipe Alpha",color:COLORS[0],gard:{n:0,w:0},chang:{n:0,w:0}},
+    {id:uid(),name:"Équipe Bravo",color:COLORS[1],gard:{n:0,w:0},chang:{n:0,w:0}}
+  ],
+  series:[], inputs:{}, notes:"", missions:[false,false,false,false,false,false], placed:0
+});
+let state=DEF();
+state.active=state.players[0].id;
+let teacherMode=false;
+
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} }
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY));
+    if(d&&Array.isArray(d.players)&&d.players.length){
+      state=Object.assign(DEF(),d);
+      if(!state.players.some(p=>p.id===state.active)) state.active=state.players[0].id;
+    }
+  }catch(e){}
+}
+const getPlayer=id=>state.players.find(p=>p.id===id);
+const freqOf=(pid,s)=>{
+  if(pid==="all"){let n=0,w=0;state.players.forEach(p=>{n+=p[s].n;w+=p[s].w});return{n,w}}
+  const p=getPlayer(pid);return{n:p[s].n,w:p[s].w};
+};
+
+function hostOpens(car,pick){
+  const opts=[0,1,2].filter(d=>d!==pick&&d!==car);
+  return opts[(Math.random()*opts.length)|0];
+}
+function simulate(strat){
+  const car=rnd3(),pick=rnd3();
+  if(strat==="gard") return pick===car;
+  const opened=hostOpens(car,pick);
+  const fin=[0,1,2].find(d=>d!==pick&&d!==opened);
+  return fin===car;
+}
+
+function buildBulbs(id,n){
+  const box=$(id);const ph=id.includes("Bot")?1:0;let p=ph;
+  for(let i=0;i<n;i++){const b=document.createElement("span");b.className="bulb";box.append(b)}
+  const bulbs=[...box.children];
+  setInterval(()=>{p=(p+1)%3;bulbs.forEach((b,i)=>b.classList.toggle("on",i%3===p))},380);
+}
+buildBulbs("#bulbsTop",30);buildBulbs("#bulbsBot",30);
+for(let i=0;i<12;i++){
+  const m=document.createElement("span");m.className="mote";
+  const s=3+Math.random()*4;
+  m.style.cssText=`left:${Math.random()*100}vw;top:${Math.random()*100}vh;width:${s}px;height:${s}px;
+    animation-delay:${-Math.random()*9}s;animation-duration:${7+Math.random()*6}s`;
+  document.body.append(m);
+}
+
+const doorsBox=$("#doors"), doorEls=[];
+for(let i=0;i<3;i++){
+  const d=document.createElement("button");
+  d.className="door";d.dataset.i=i;d.setAttribute("aria-label","Porte "+(i+1));
+  d.innerHTML=`<span class="reveal"><span></span></span>
+    <span class="panel3d"><span class="num">${i+1}</span></span>
+    <span class="tag">PORTE ${i+1}</span>`;
+  d.addEventListener("click",()=>pickDoor(i));
+  doorsBox.append(d);doorEls.push(d);
+}
+function setReveal(i,emoji){doorEls[i].querySelector(".reveal span").textContent=emoji}
+function openDoor(i,emoji){setReveal(i,emoji);doorEls[i].classList.add("open");sndOpen()}
+function closeDoors(){doorEls.forEach(d=>{d.classList.remove("open","selected");d.querySelector(".reveal span").textContent=""})}
+
+let R=null, phase="idle";
+function hostSay(t){const b=$("#bubble");b.textContent=t;b.classList.remove("talk");void b.offsetWidth;b.classList.add("talk")}
+function setPhase(p){
+  phase=p;
+  $("#choiceBtns").classList.toggle("hidden",p!=="choose");
+  $("#btnNext").classList.toggle("hidden",p!=="done");
+  $("#actionHint").classList.toggle("hidden",p==="choose"||p==="done");
+  doorsBox.classList.toggle("locked",p!=="pick");
+  $("#actionHint").textContent = p==="pick" ? "Clique sur une porte pour commencer." : "";
+}
+function newRound(){
+  R={car:rnd3(),pick:null,opened:null};
+  closeDoors();$("#ribbon").className="ribbon";setPhase("pick");
+  hostSay("Derrière UNE porte : la voiture 🚗. Derrière les DEUX autres : des chèvres 🐐. Choisis une porte !");
+}
+function pickDoor(i){
+  if(phase!=="pick"||!R)return;
+  sndClick();R.pick=i;doorEls[i].classList.add("selected");
+  hostSay("La porte "+(i+1)+"… Intéressant. Laisse-moi t'aider un peu…");
+  setTimeout(()=>{
+    R.opened=hostOpens(R.car,R.pick);
+    openDoor(R.opened,"🐐");
+    hostSay("La porte "+(R.opened+1)+" cache une chèvre 🐐 ! Tu GARDES, ou tu CHANGES ?");
+    setPhase("choose");
+  },700);
+}
+function choose(strat){
+  if(phase!=="choose")return;
+  const p=getPlayer(state.active);
+  const fin = strat==="gard" ? R.pick : [0,1,2].find(d=>d!==R.pick&&d!==R.opened);
+  doorEls[fin].classList.add("selected");
+  const win = fin===R.car;
+  p[strat].n++; if(win)p[strat].w++;
+  openDoor(fin, win?"🚗":"🐐");
+  const rb=$("#ribbon");
+  if(win){rb.textContent="GAGNÉ ! 🚗";rb.className="ribbon show win";sndWin();confetti(doorEls[fin])}
+  else{rb.textContent="PERDU… 🐐";rb.className="ribbon show lose";sndLose()}
+  hostSay(win ? "BRAVO ! La voiture était derrière la porte "+(fin+1)+" !"
+              : "Raté… La voiture était derrière la porte "+(R.car+1)+". Tout est noté !");
+  setPhase("done");
+  renderScore();renderAxis();renderPlayers();save();
+}
+$("#btnGard").addEventListener("click",()=>choose("gard"));
+$("#btnChang").addEventListener("click",()=>choose("chang"));
+$("#btnNext").addEventListener("click",()=>{sndClick();newRound()});
+
+function confetti(el){
+  const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/3;
+  const cols=["#ffc857","#2ec4b6","#e64545","#fdf3dd","#a8e05f","#f27bb2"];
+  for(let i=0;i<60;i++){
+    const c=document.createElement("span");c.className="conf";
+    c.style.cssText=`left:${cx}px;top:${cy}px;background:${cols[i%cols.length]};
+      --dx:${(Math.random()*2-1)*200}px;--dy:${(Math.random()*280-60)}px;
+      --rz:${(Math.random()*2-1)*720}deg;--d:${0.9+Math.random()*0.8}s`;
+    document.body.append(c);setTimeout(()=>c.remove(),1900);
+  }
+}
+
+function renderPlayers(){
+  const box=$("#teamChips");box.innerHTML="";
+  state.players.forEach(p=>{
+    const chip=document.createElement("div");
+    chip.className="chipPl"+(p.id===state.active?" act":"");
+    chip.innerHTML=`<span class="dot" style="background:${p.color}"></span>
+      <input maxlength="16" aria-label="nom de l'équipe">
+      <span class="mini2">${p.gard.n+p.chang.n}p</span>
+      <button class="del" title="Supprimer">✕</button>`;
+    const inp=chip.querySelector("input");inp.value=p.name;
+    inp.addEventListener("input",e=>{p.name=e.target.value||"Équipe";save();renderScore();renderAxis()});
+    inp.addEventListener("click",e=>e.stopPropagation());
+    chip.addEventListener("click",()=>{state.active=p.id;sndClick();renderPlayers();save()});
+    chip.querySelector(".del").addEventListener("click",e=>{
+      e.stopPropagation();
+      if(state.players.length<=1)return;
+      state.players=state.players.filter(q=>q.id!==p.id);
+      if(state.active===p.id)state.active=state.players[0].id;
+      renderPlayers();renderScore();renderAxis();renderBox();save();
+    });
+    box.append(chip);
+  });
+  const add=document.createElement("button");
+  add.className="btn mini";add.textContent="＋ Équipe";
+  add.addEventListener("click",()=>{
+    if(state.players.length>=6)return;
+    const p={id:uid(),name:"Équipe "+["Charlie","Delta","Echo","Foxtrot"][state.players.length-2]||"Nova",
+      color:COLORS[state.players.length%COLORS.length],gard:{n:0,w:0},chang:{n:0,w:0}};
+    state.players.push(p);state.active=p.id;sndClick();
+    renderPlayers();renderScore();save();
+  });
+  box.append(add);
+}
+
+function renderScore(){
+  const tb=$("#scoreTab tbody");tb.innerHTML="";
+  const mkRow=(pid,name,color)=>{
+    const tr=document.createElement("tr");
+    let cells=`<td><span class="dot" style="display:inline-block;vertical-align:-1px;margin-right:6px;background:${color}"></span>${name}</td>`;
+    ["gard","chang"].forEach(s=>{
+      const {n,w}=freqOf(pid,s);
+      cells+=`<td style="font-family:'Bungee';font-size:.8rem;color:${s==="gard"?"var(--teal)":"var(--gold)"}">${n?w+" / "+n:"—"}</td><td>`;
+      if(n>0){
+        const k=pid+"|"+s, saved=state.inputs[k]||"";
+        const ok=Math.abs(parseFloat(saved.replace(",","."))-w/n)<=0.0075 && saved!=="";
+        cells+=`<input class="freqIn ${ok?"ok":""}" data-k="${k}" placeholder="?,???" value="${ok?fmt(w/n):saved}" ${ok?"disabled":""}><span class="etat">${ok?"✓":""}</span>`;
+        if(teacherMode&&!ok)cells+=`<span class="approx">≈ ${fmt(w/n)}</span>`;
+      }else cells+=`<span style="color:#5f7d99">—</span>`;
+      cells+=`</td>`;
+    });
+    tr.innerHTML=cells;
+    tr.querySelectorAll(".freqIn:not(.ok)").forEach(inp=>{
+      inp.addEventListener("input",()=>{state.inputs[inp.dataset.k]=inp.value;save()});
+      inp.addEventListener("change",()=>{
+        const [pid2,s]=inp.dataset.k.split("|"),{n,w}=freqOf(pid2,s),v=parseFloat(inp.value.replace(",","."));
+        if(isNaN(v)){inp.classList.add("err");setTimeout(()=>inp.classList.remove("err"),450);return}
+        if(Math.abs(v-w/n)<=0.0075){inp.value=fmt(w/n);inp.classList.add("ok");inp.disabled=true;
+          inp.nextElementSibling.textContent="✓";sndWin();}
+        else{inp.classList.add("err");beep(200,.15,"square",.06);setTimeout(()=>inp.classList.remove("err"),450);}
+        save();
+      });
+    });
+    tb.append(tr);
+  };
+  state.players.forEach(p=>mkRow(p.id,p.name,p.color));
+  mkRow("all","TOUTES ÉQUIPES","#fdf3dd");
+  tb.lastChild.classList.add("tot");
+  const g=freqOf("all","gard"),c=freqOf("all","chang");
+  $("#totG").textContent=g.n?g.w+" / "+g.n:"0 / 0";
+  $("#totC").textContent=c.n?c.w+" / "+c.n:"0 / 0";
+  $("#totGx").textContent=(teacherMode&&g.n)?"≈ "+fmt(g.w/g.n):"";
+  $("#totCx").textContent=(teacherMode&&c.n)?"≈ "+fmt(c.w/c.n):"";
+}
+
+let running=false;
+$("#btnGo").addEventListener("click",()=>{
+  if(running)return;
+  const p=getPlayer(state.active);
+  const strat=document.querySelector('#segStrat input:checked').value;
+  const n=parseInt(document.querySelector('#segN input:checked').value);
+  running=true;sndClick();
+  $("#btnGo").disabled=true;$("#serieMsg").textContent="";
+  let i=0,w=0;const bar=$("#serieBar"),cnt=$("#serieCount");
+  const iv=setInterval(()=>{
+    const step=Math.max(1,Math.round(n/45));
+    for(let k=0;k<step&&i<n;k++){if(simulate(strat))w++;i++}
+    bar.style.width=(100*i/n)+"%";
+    cnt.textContent=i+"/"+n;
+    if(i>=n){
+      clearInterval(iv);
+      p[strat].n+=n;p[strat].w+=w;
+      state.series.push({strat,f:w/n,color:p.color,n,w});
+      $("#serieMsg").innerHTML=`✅ ${p.name} · ${STRAT_LBL[strat]} : <b>${w}/${n} gagnées</b>. Pense à la même série avec l'autre stratégie !`;
+      (w/n>=0.5)?sndWin():sndLose();
+      bar.style.width="0";cnt.textContent="";
+      $("#btnGo").disabled=false;running=false;
+      renderScore();renderPlayers();renderAxis();renderBox();save();
+    }
+  },40);
+});
+$("#btnDemo").addEventListener("click",()=>{
+  const ex=[["gard",10,3],["gard",20,7],["gard",30,11],["gard",30,9],["gard",50,16],
+            ["chang",10,7],["chang",20,13],["chang",30,20],["chang",30,21],["chang",50,33]];
+  ex.forEach(([s,n,w],i)=>state.series.push({strat:s,f:w/n,color:COLORS[i%COLORS.length],n,w}));
+  renderBox();sndClick();save();
+});
+
+const AX={x0:50,x1:710,y:92}, svgA=$("#svgAxis");
+const X=v=>AX.x0+v*(AX.x1-AX.x0);
+let marker=null, flag=null, curChip=null, dragM=false;
+
+function toSvgPt(svg,e){
+  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function drawAxisBase(){
+  svgA.innerHTML="";
+  svgEl("line",{x1:AX.x0-14,y1:AX.y,x2:AX.x1+14,y2:AX.y,stroke:"#7f9cbd","stroke-width":3},svgA);
+  for(let i=0;i<=10;i++){
+    const v=i/10,x=X(v),big=(i%5===0);
+    svgEl("line",{x1:x,y1:AX.y-(big?10:6),x2:x,y2:AX.y+(big?10:6),stroke:"#7f9cbd","stroke-width":big?3:2},svgA);
+    const t=svgEl("text",{x,y:AX.y+30,"text-anchor":"middle","font-size":big?16:11,"font-weight":big?700:400},svgA);
+    t.textContent=(i/10).toString().replace(".",",");
+  }
+  svgEl("line",{x1:X(.5),y1:AX.y-13,x2:X(.5),y2:AX.y+13,stroke:"#5f7d99","stroke-width":2,"stroke-dasharray":"3 3"},svgA);
+  const t0=svgEl("text",{x:AX.x0-8,y:AX.y-42,"font-size":11,fill:"#9fb6cf"},svgA);
+  t0.textContent="fréquence de gain →";
+  if(teacherMode){
+    [["1/3",1/3],["2/3",2/3]].forEach(([lab,v])=>{
+      svgEl("line",{x1:X(v),y1:26,x2:X(v),y2:AX.y+18,stroke:"#ffc857","stroke-width":2,"stroke-dasharray":"6 5"},svgA);
+      const t=svgEl("text",{x:X(v),y:18,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"#ffc857"},svgA);
+      t.textContent=lab;
+    });
+  }
+  marker=svgEl("circle",{cx:X(0.5),cy:AX.y,r:11,fill:"#ffc857",stroke:"#fdf3dd","stroke-width":3,
+    style:"cursor:grab;display:none"},svgA);
+  flag=svgEl("text",{x:X(0.5),y:AX.y-22,"text-anchor":"middle","font-size":15,"font-weight":700,
+    fill:"#6ee7a0",style:"display:none"},svgA);
+  marker.addEventListener("pointerdown",e=>{dragM=true;marker.setPointerCapture(e.pointerId);e.preventDefault()});
+  svgA.addEventListener("pointermove",e=>{
+    if(!dragM)return;
+    const pt=toSvgPt(svgA,e),v=clamp((pt.x-AX.x0)/(AX.x1-AX.x0),0,1);
+    marker.setAttribute("cx",X(v));flag.setAttribute("x",X(v));
+  });
+  window.addEventListener("pointerup",()=>dragM=false);
+}
+function renderAxis(){
+  drawAxisBase();
+  const box=$("#chips");box.innerHTML="";
+  let any=false;
+  state.players.forEach(p=>["gard","chang"].forEach(s=>{
+    if(p[s].n===0)return;
+    any=true;
+    const k=p.id+"|"+s, b=document.createElement("button");
+    b.className="chip";b.dataset.k=k;
+    b.innerHTML=`<span style="color:${p.color}">●</span> ${p.name} — ${STRAT_LBL[s]} : <b>${p[s].w}/${p[s].n}</b>`;
+    if(curChip===k)b.classList.add("sel");
+    b.addEventListener("click",()=>{
+      sndClick();curChip=k;
+      $$(".chip").forEach(c=>c.classList.toggle("sel",c.dataset.k===k));
+      marker.style.display="block";marker.setAttribute("fill","#ffc857");
+      marker.setAttribute("cx",X(0.5));flag.style.display="none";
+      $("#axisMsg").textContent="";
+    });
+    box.append(b);
+  }));
+  if(!any)box.innerHTML=`<span style="color:var(--muted);font-size:.8rem">Joue des parties pour voir apparaître les étiquettes…</span>`;
+  $("#placedN").textContent=state.placed;
+}
+$("#btnCheck").addEventListener("click",()=>{
+  const msg=$("#axisMsg");
+  if(!curChip){msg.className="koTxt";msg.textContent="Choisis d'abord une étiquette.";return}
+  const [pid,s]=curChip.split("|"),{n,w}=freqOf(pid,s),vrai=w/n;
+  const val=clamp((parseFloat(marker.getAttribute("cx"))-AX.x0)/(AX.x1-AX.x0),0,1);
+  flag.setAttribute("x",marker.getAttribute("cx"));
+  if(Math.abs(val-vrai)<=0.025){
+    marker.setAttribute("fill","#6ee7a0");
+    flag.textContent="✓ "+fmt(vrai);flag.setAttribute("fill","#6ee7a0");flag.style.display="block";
+    msg.className="okTxt";msg.textContent="Bien placé ! Fréquence = "+fmt(vrai);
+    state.placed++;$("#placedN").textContent=state.placed;
+    const chip=document.querySelector(`.chip[data-k="${curChip}"]`);if(chip)chip.classList.add("done");
+    sndWin();
+  }else{
+    msg.className="koTxt";msg.textContent="Pas tout à fait… regarde la correction sur l'axe.";
+    const from=parseFloat(marker.getAttribute("cx"));
+    marker.setAttribute("fill","#ff9f68");
+    const t0=performance.now();
+    (function step(t){const k2=Math.min(1,(t-t0)/380),e=1-Math.pow(1-k2,3);
+      marker.setAttribute("cx",from+(X(vrai)-from)*e);
+      flag.setAttribute("x",marker.getAttribute("cx"));
+      if(k2<1)requestAnimationFrame(step);
+      else{flag.textContent=fmt(vrai);flag.setAttribute("fill","#ff9f68");flag.style.display="block"}
+    })(t0);
+    beep(200,.2,"square",.06);
+  }
+  save();
+});
+
+function quartiles(arr){
+  const s=[...arr].sort((a,b)=>a-b),n=s.length;
+  const q=p=>{const i=(n-1)*p,l=Math.floor(i),h=Math.ceil(i);return s[l]+(s[h]-s[l])*(i-l)};
+  return{min:s[0],q1:q(.25),med:q(.5),q3:q(.75),max:s[n-1]};
+}
+function renderBox(){
+  const svg=$("#svgBox");svg.innerHTML="";
+  const x0=50,x1=710,XB=v=>x0+v*(x1-x0),axisY=220;
+  
+  for(let i=0;i<=10;i++){
+    const x=XB(i/10);
+    svgEl("line",{x1:x,y1:30,x2:x,y2:axisY,stroke:"#1d3a5c","stroke-width":1},svg);
+    svgEl("line",{x1:x,y1:axisY-6,x2:x,y2:axisY+6,stroke:"#7f9cbd","stroke-width":2},svg);
+    if(i%2===0){
+      const t=svgEl("text",{x,y:axisY+22,"text-anchor":"middle","font-size":13, "font-weight":"bold"},svg);
+      t.textContent=(i/10).toString().replace(".",",");
+    }
+  }
+  svgEl("line",{x1:x0-14,y1:axisY,x2:x1+14,y2:axisY,stroke:"#7f9cbd","stroke-width":3},svg);
+  
+  if(teacherMode){
+    [["1/3",1/3],["2/3",2/3]].forEach(([lab,v])=>{
+      svgEl("line",{x1:XB(v),y1:24,x2:XB(v),y2:axisY,stroke:"#ffc857","stroke-width":2,"stroke-dasharray":"6 5"},svg);
+      const t=svgEl("text",{x:XB(v),y:18,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"#ffc857"},svg);
+      t.textContent=lab;
+    });
+  }
+  
+  const lanes=[
+    {s:"gard", y:80, col:"#2ec4b6",label:"🛡 GARDER"},
+    {s:"chang",y:155,col:"#ffc857",label:"🔁 CHANGER"}
+  ];
+  
+  lanes.forEach(L=>{
+    const data=state.series.filter(x=>x.strat===L.s);
+    const lt=svgEl("text",{x:12,y:L.y+6,"font-size":14,"font-weight":700,fill:L.col},svg);
+    lt.textContent=L.label;
+    
+    if(data.length===0){
+      const t=svgEl("text",{x:(x0+x1)/2,y:L.y+6,"text-anchor":"middle","font-size":13,fill:"#9fb6cf", "font-style":"italic"},svg);
+      t.textContent="Lancez des séries pour construire la boîte…";
+      return;
+    }
+    
+    const g=svgEl("g",{},svg);
+    
+    if(data.length < 4){
+      const minF = Math.min(...data.map(d=>d.f));
+      const maxF = Math.max(...data.map(d=>d.f));
+      svgEl("line",{x1:XB(minF),y1:L.y,x2:XB(maxF),y2:L.y,stroke:L.col,"stroke-width":2,"stroke-dasharray":"4 4"},g);
+      data.forEach((d,i)=>{
+        const j = data.length > 1 ? ((i*13)%11)-5 : 0;
+        svgEl("circle",{cx:XB(d.f),cy:L.y+j,r:6,fill:d.color,stroke:"#0c1a2d","stroke-width":2},g);
+      });
+      const t=svgEl("text",{x:(x0+x1)/2,y:L.y+38,"text-anchor":"middle","font-size":12,fill:"#9fb6cf", "font-style":"italic"},g);
+      t.textContent="Il faut au moins 4 séries pour tracer les quartiles (Q1 et Q3).";
+    } else {
+      const st=quartiles(data.map(d=>d.f));
+      svgEl("line",{x1:XB(st.min),y1:L.y,x2:XB(st.max),y2:L.y,stroke:L.col,"stroke-width":2,opacity:.9},g);
+      svgEl("line",{x1:XB(st.min),y1:L.y-10,x2:XB(st.min),y2:L.y+10,stroke:L.col,"stroke-width":3},g);
+      svgEl("line",{x1:XB(st.max),y1:L.y-10,x2:XB(st.max),y2:L.y+10,stroke:L.col,"stroke-width":3},g);
+      svgEl("rect",{
+        x:XB(st.q1),
+        y:L.y-20,
+        width:Math.max(4, XB(st.q3)-XB(st.q1)),
+        height:40,
+        rx:5,
+        fill:L.col,
+        "fill-opacity":.35,
+        stroke:L.col,
+        "stroke-width":3
+      },g);
+      svgEl("line",{x1:XB(st.med),y1:L.y-20,x2:XB(st.med),y2:L.y+20,stroke:"#fdf3dd","stroke-width":4},g);
+      
+      data.forEach((d,i)=>{
+        const j=((i*53)%21)-10;
+        svgEl("circle",{cx:XB(d.f),cy:L.y+j,r:4,fill:d.color,stroke:"#0c1a2d","stroke-width":1.5,opacity:.95},g);
+      });
+      
+      let labelX = XB(st.med);
+      let anchor = "middle";
+      if(labelX < x0 + 40) { labelX = x0 + 40; anchor = "start"; }
+      if(labelX > x1 - 40) { labelX = x1 - 40; anchor = "end"; }
+      
+      const t=svgEl("text",{x:labelX,y:L.y+42,"text-anchor":anchor,"font-size":13,"font-weight":700,fill:"#fdf3dd"},g);
+      t.textContent="Médiane ≈ "+fmt(st.med);
+    }
+  });
+}
+
+const MISSIONS=[
+  "Joue 5 parties « au feeling » (garde ou change selon ton instinct).",
+  "Lance une série de 30 parties GARDER, puis une série de 30 parties CHANGER.",
+  "Calcule les fréquences dans le tableau, puis place-les sur l'axe.",
+  "Recommence avec des séries de 50 ou 100 parties : que deviennent les boîtes ?",
+  "Quelle stratégie choisis-tu finalement ? Argumente avec tes données.",
+  "Défi : explique POURQUOI cette stratégie est la meilleure (un schéma peut aider)."
+];
+function renderMissions(){
+  const box=$("#missions");box.innerHTML="";
+  MISSIONS.forEach((m,i)=>{
+    const d=document.createElement("div");d.className="mission";
+    d.innerHTML=`<input type="checkbox" id="mi${i}" ${state.missions[i]?"checked":""}><label for="mi${i}"><b>${i+1}.</b> ${m}</label>`;
+    d.querySelector("input").addEventListener("change",e=>{state.missions[i]=e.target.checked;sndClick();save()});
+    box.append(d);
+  });
+}
+$("#notes").addEventListener("input",e=>{state.notes=e.target.value;save()});
+
+$("#btnSound").addEventListener("click",e=>{
+  soundOn=!soundOn;e.target.textContent=soundOn?"🔊":"🔇";if(soundOn)sndClick();
+});
+$("#btnTeach").addEventListener("click",e=>{
+  if(teacherMode){
+    teacherMode = false;
+    document.body.classList.remove("teach");
+    e.target.classList.remove("on");
+    e.target.innerHTML = "🔑 Enseignant";
+    renderAxis();renderBox();renderScore();sndClick();
+    return;
+  }
+  
+  const pwd = prompt("🔒 Accès réservé.\nEntrez le code enseignant :");
+  // Codes valides pour l'enseignant : 1990 (historique), parade (secours), monty (secours)
+  if(pwd === "1990" || pwd === "parade" || pwd === "monty"){
+    teacherMode = true;
+    document.body.classList.add("teach");
+    e.target.classList.add("on");
+    e.target.innerHTML = "🔓 Mode Enseignant";
+    renderAxis();renderBox();renderScore();sndClick();
+  } else if(pwd !== null) {
+    alert("Code incorrect.\n\nIndice de recherche : en quelle année la chroniqueuse Marilyn vos Savant a-t-elle déclenché une polémique mondiale en publiant la solution de ce problème dans le magazine Parade ?");
+  }
+});
+$("#btnReset").addEventListener("click",()=>{
+  if(!confirm("Réinitialiser toutes les données (parties, séries, notes) ?"))return;
+  try{localStorage.removeItem(KEY)}catch(e){}
+  state=DEF();state.active=state.players[0].id;
+  $("#notes").value="";curChip=null;
+  renderAll();newRound();
+});
+
+function renderAll(){renderPlayers();renderScore();renderAxis();renderBox();renderMissions()}
+load();
+$("#notes").value=state.notes||"";
+renderAll();
+newRound();
+</script>
+</body>
+</html>

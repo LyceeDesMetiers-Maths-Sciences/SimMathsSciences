@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Règle à Calcul — Manuel interactif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..900;1,9..144,500..900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d2433; --bg2:#0a1d2a; --panel:#102a3c; --panel2:#0b2130;
+  --line:rgba(146,205,226,.16); --line2:rgba(146,205,226,.3);
+  --txt:#dce9f2; --mut:#93adbe; --amber:#f5a83c; --amber2:#ffc46a;
+  --cyan:#8fd4e8; --red:#e04b3a; --green:#7fd99e;
+  --paper:#f2e9d2; --inkR:#241f16;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'IBM Plex Sans',sans-serif; color:var(--txt); background:var(--bg);
+  background-image:
+    radial-gradient(1100px 560px at 88% -8%, rgba(143,212,232,.10), transparent 60%),
+    radial-gradient(900px 520px at -8% 108%, rgba(245,168,60,.08), transparent 60%);
+  overflow-x:hidden;
+}
+/* Grille de bureau d’études, en dérive lente */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(143,212,232,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143,212,232,.055) 1px, transparent 1px),
+    linear-gradient(rgba(143,212,232,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143,212,232,.09) 1px, transparent 1px);
+  background-size:44px 44px, 44px 44px, 220px 220px, 220px 220px;
+  animation:drift 120s linear infinite;
+}
+@keyframes drift{to{background-position:44px 88px, 88px 44px, 220px 440px, 440px 220px}}
+::selection{background:var(--amber);color:#241505}
+
+/* ---------- Barre supérieure ---------- */
+header.top{
+  position:sticky; top:0; z-index:60; height:58px;
+  display:flex; align-items:center; gap:22px; padding:0 28px;
+  background:rgba(9,26,38,.94); border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:12px; font-family:'Fraunces',serif; font-weight:800; font-size:19px; letter-spacing:.01em}
+.brand svg{display:block}
+.brand em{font-style:italic; color:var(--amber); font-weight:600}
+.top .spacer{flex:1}
+.prog{display:flex; align-items:center; gap:10px; font:600 11px 'IBM Plex Mono'; letter-spacing:.12em; color:var(--mut)}
+.prog .bar{width:150px; height:5px; background:rgba(143,212,232,.14); border-radius:99px; overflow:hidden}
+.prog .bar i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--amber),var(--amber2)); transition:width .6s cubic-bezier(.2,.8,.2,1)}
+a.chip-link{font:600 11px 'IBM Plex Mono'; letter-spacing:.12em; color:var(--cyan); text-decoration:none; border:1px solid var(--line2); padding:7px 12px; border-radius:99px; transition:.25s}
+a.chip-link:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-1px)}
+
+main{max-width:1180px; margin:0 auto; padding:0 24px}
+
+/* ---------- Introduction ---------- */
+#intro{position:relative; padding:70px 0 34px; display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:48px; align-items:end}
+.deco-ring{position:absolute; top:-60px; right:-120px; width:460px; height:460px; border:1.5px dashed rgba(143,212,232,.22); border-radius:50%; animation:spin 140s linear infinite; pointer-events:none}
+.deco-ring::after{content:""; position:absolute; inset:46px; border:1px solid rgba(245,168,60,.16); border-radius:50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.deco-cross{position:absolute; width:18px; height:18px; opacity:.5; pointer-events:none}
+.deco-cross::before,.deco-cross::after{content:""; position:absolute; background:var(--cyan)}
+.deco-cross::before{left:50%; top:0; width:1px; height:100%}
+.deco-cross::after{top:50%; left:0; height:1px; width:100%}
+.overline{font:600 11px 'IBM Plex Mono'; letter-spacing:.32em; color:var(--amber); text-transform:uppercase; margin-bottom:18px; display:flex; align-items:center; gap:12px}
+.overline::before{content:""; width:34px; height:1px; background:var(--amber)}
+h1{font-family:'Fraunces',serif; font-weight:900; font-size:clamp(2.7rem,5.6vw,4.5rem); line-height:1.02; letter-spacing:-.01em}
+h1 em{font-style:italic; font-weight:600; color:var(--amber2)}
+.lede{margin-top:20px; max-width:56ch; font-size:17px; line-height:1.65; color:var(--mut)}
+.lede b{color:var(--txt); font-weight:600}
+.meta-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px}
+.meta-row span{font:500 11px 'IBM Plex Mono'; letter-spacing:.1em; color:var(--cyan); border:1px solid var(--line); padding:7px 12px; border-radius:6px; background:rgba(143,212,232,.05)}
+.cta-row{display:flex; gap:14px; margin-top:30px; flex-wrap:wrap}
+.btn{font:600 14px 'IBM Plex Sans'; padding:12px 20px; border-radius:9px; border:1px solid transparent; cursor:pointer; transition:.22s; text-decoration:none; display:inline-flex; align-items:center; gap:8px}
+.btn.p{background:var(--amber); color:#241505}
+.btn.p:hover{transform:translateY(-2px); box-shadow:0 10px 24px rgba(245,168,60,.3); background:var(--amber2)}
+.btn.g{background:transparent; color:#cfe4ef; border-color:var(--line2)}
+.btn.g:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-2px)}
+.btn.s{padding:7px 13px; font-size:12.5px; border-radius:7px}
+.btn[disabled]{opacity:.4; cursor:not-allowed; transform:none!important; box-shadow:none!important}
+/* Cartouche façon plan technique */
+.cartouche{border:1px solid var(--line2); background:rgba(10,30,44,.6); font-family:'IBM Plex Mono'; position:relative}
+.cartouche h3{font:600 10px 'IBM Plex Mono'; letter-spacing:.3em; color:var(--amber); padding:11px 14px; border-bottom:1px solid var(--line2)}
+.cartouche dl{display:grid; grid-template-columns:auto 1fr}
+.cartouche dt,.cartouche dd{padding:9px 14px; border-bottom:1px solid var(--line); font-size:11px}
+.cartouche dt{color:var(--mut); letter-spacing:.12em; border-right:1px solid var(--line)}
+.cartouche dd{color:var(--txt); text-align:right}
+.cartouche dl > :nth-last-child(-n+2){border-bottom:none}
+
+/* ---------- Établi (règle) ---------- */
+#etabli{z-index:50; padding-bottom:30px}
+@media (min-width:1100px) and (min-height:930px){ #etabli{position:sticky; top:58px} }
+.bench{background:linear-gradient(180deg,#0c2233,#081a27); border:1px solid var(--line2); border-radius:16px; box-shadow:0 22px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(143,212,232,.1); overflow:hidden; transition:box-shadow .4s}
+.bench.attn{box-shadow:0 0 0 2px var(--amber), 0 22px 60px rgba(0,0,0,.45)}
+.bench.celebrate{animation:celebrate 1.1s ease}
+@keyframes celebrate{0%,100%{box-shadow:0 22px 60px rgba(0,0,0,.45)}35%{box-shadow:0 0 0 3px var(--green), 0 0 44px rgba(127,217,158,.4)}}
+.bench-head{display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line)}
+.bench-head .tag{font:600 10.5px 'IBM Plex Mono'; letter-spacing:.26em; color:var(--cyan)}
+.bench-head .hintline{font:500 11px 'IBM Plex Mono'; color:var(--mut); margin-left:6px}
+.bench-head .acts{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap}
+.flipwrap{padding:14px 10px 4px; perspective:1100px; overflow-x:auto; transition:transform .18s ease, opacity .18s ease}
+.flipwrap.turning{transform:rotateX(82deg); opacity:.2}
+.rulebox{min-width:760px}
+svg.rule{width:100%; height:auto; display:block; touch-action:none; user-select:none; -webkit-user-select:none}
+svg.rule text{font-family:'IBM Plex Sans'; fill:var(--inkR); pointer-events:none}
+svg.rule .maj{font-weight:600}
+svg.rule .ci{fill:#b3382b}
+svg.rule .cap{font-family:'IBM Plex Mono'; font-weight:600; fill:#8a7a56; letter-spacing:.14em}
+svg.rule .sname{font-family:'Fraunces',serif; font-weight:700}
+svg.rule .grab{cursor:grab}
+svg.rule .grabbing, svg.rule .grabbing *{cursor:grabbing!important}
+svg.rule .hair{cursor:ew-resize}
+.benchbody{padding:12px 18px 16px; display:flex; flex-direction:column; gap:12px; border-top:1px solid var(--line)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chips span{font:500 12px 'IBM Plex Mono'; background:rgba(143,212,232,.07); border:1px solid var(--line); border-radius:7px; padding:7px 11px; color:var(--mut); transition:.3s}
+.chips span b{color:var(--amber2); font-weight:600; margin-left:7px}
+.chips span.hot{border-color:var(--amber); background:rgba(245,168,60,.12)}
+.toolrow{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.toolrow label{font:600 10.5px 'IBM Plex Mono'; letter-spacing:.18em; color:var(--mut)}
+.toolrow input,.toolrow select{font:600 14px 'IBM Plex Mono'; background:#0a1e2d; color:var(--txt); border:1px solid var(--line2); border-radius:8px; padding:8px 11px; width:88px; transition:.2s}
+.toolrow select{width:auto; cursor:pointer}
+.toolrow input:focus,.toolrow select:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(245,168,60,.18)}
+.toolrow input[disabled]{opacity:.35}
+.nudges{margin-left:auto; display:flex; gap:6px}
+.nudges button{font:600 12px 'IBM Plex Mono'; width:34px; height:32px; background:#0a1e2d; color:var(--cyan); border:1px solid var(--line2); border-radius:7px; cursor:pointer; transition:.2s}
+.nudges button:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-1px)}
+#etabli.min .flipwrap,#etabli.min .benchbody{display:none}
+.legend{font:500 11px 'IBM Plex Mono'; color:var(--mut); padding:10px 18px 14px; display:flex; gap:22px; flex-wrap:wrap}
+.legend i{color:var(--amber); font-style:normal}
+
+/* ---------- Leçons ---------- */
+#lecons{padding:64px 0 20px}
+.sec-head{display:flex; align-items:baseline; gap:18px; margin-bottom:34px; flex-wrap:wrap}
+.sec-head .no{font:600 13px 'IBM Plex Mono'; color:var(--amber); letter-spacing:.2em}
+.sec-head h2{font-family:'Fraunces',serif; font-weight:800; font-size:clamp(1.7rem,3vw,2.4rem)}
+.sec-head p{color:var(--mut); font-size:14px; max-width:52ch}
+.lesson-grid{display:grid; grid-template-columns:250px minmax(0,1fr); gap:36px; align-items:start}
+nav.sidenav{display:flex; flex-direction:column; gap:6px}
+nav.sidenav button{display:grid; grid-template-columns:30px 1fr 20px; align-items:center; gap:10px; text-align:left; background:none; border:1px solid transparent; border-left:2px solid transparent; padding:10px 12px; border-radius:0 9px 9px 0; cursor:pointer; transition:.22s; color:var(--mut)}
+nav.sidenav button:hover{background:rgba(143,212,232,.06); color:var(--txt)}
+nav.sidenav button.active{background:rgba(143,212,232,.08); border-left-color:var(--amber); color:var(--txt)}
+nav.sidenav .n{font:600 11px 'IBM Plex Mono'; color:var(--cyan)}
+nav.sidenav .t{font-size:13px; font-weight:500}
+nav.sidenav .st{font-size:12px; color:rgba(143,212,232,.35); transition:.3s}
+nav.sidenav button.done .st{color:var(--green); text-shadow:0 0 10px rgba(127,217,158,.6)}
+nav.sidenav button.done .n{color:var(--green)}
+article.lecon{position:relative; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:32px 34px 30px; margin-bottom:30px; overflow:hidden; transition:border-color .3s}
+article.lecon:hover{border-color:var(--line2)}
+article.lecon .ghost{position:absolute; top:-26px; right:6px; font-family:'Fraunces',serif; font-weight:900; font-size:120px; color:transparent; -webkit-text-stroke:1px rgba(143,212,232,.14); pointer-events:none; line-height:1}
+article.lecon .lhead{display:flex; align-items:center; gap:14px; margin-bottom:6px}
+article.lecon .lhead .num{font:600 11px 'IBM Plex Mono'; color:var(--amber); border:1px solid rgba(245,168,60,.4); border-radius:6px; padding:4px 8px; letter-spacing:.1em}
+article.lecon .lhead .dur{font:500 11px 'IBM Plex Mono'; color:var(--mut); letter-spacing:.08em}
+article.lecon h3{font-family:'Fraunces',serif; font-weight:800; font-size:1.65rem; margin:8px 0 4px}
+article.lecon .accroche{font-family:'Fraunces',serif; font-style:italic; color:var(--amber2); font-size:1.02rem; margin-bottom:16px}
+article.lecon p{line-height:1.68; color:#c4d6e2; margin-bottom:12px; font-size:15px}
+article.lecon p b, article.lecon li b{color:var(--txt)}
+article.lecon ol.steps{margin:6px 0 14px 0; list-style:none; counter-reset:s}
+article.lecon ol.steps li{counter-increment:s; position:relative; padding:8px 0 8px 40px; line-height:1.55; font-size:15px; color:#c4d6e2; border-bottom:1px dashed rgba(143,212,232,.12)}
+article.lecon ol.steps li::before{content:counter(s,decimal-leading-zero); position:absolute; left:0; top:9px; font:600 11px 'IBM Plex Mono'; color:var(--amber); border:1px solid rgba(245,168,60,.35); border-radius:5px; padding:3px 6px}
+.key{border-left:3px solid var(--amber); background:rgba(245,168,60,.07); padding:13px 16px; border-radius:0 9px 9px 0; font-size:14px; line-height:1.6; color:#f0ddb8; margin:16px 0 6px}
+.key::before{content:"À RETENIR — "; font:600 10px 'IBM Plex Mono'; letter-spacing:.22em; color:var(--amber)}
+.objs{margin-top:20px; display:flex; flex-direction:column; gap:12px}
+.obj{border:1px dashed rgba(143,212,232,.3); border-radius:11px; padding:15px 17px; transition:.35s; background:rgba(8,25,37,.4)}
+.obj.done{border-style:solid; border-color:rgba(127,217,158,.5); background:rgba(127,217,158,.06)}
+.obj .ot{display:flex; gap:11px; align-items:flex-start; font-size:14.5px; line-height:1.5}
+.obj .oi{flex:none; font:600 10.5px 'IBM Plex Mono'; color:var(--cyan); border:1px solid var(--line2); border-radius:99px; width:52px; text-align:center; padding:4px 0; letter-spacing:.1em}
+.obj.done .oi{color:var(--green); border-color:rgba(127,217,158,.5); content:"✓"}
+.obj .oacts{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center}
+.fb{font:500 12px 'IBM Plex Mono'; color:var(--mut); margin-top:10px; min-height:16px; line-height:1.5}
+.fb.err{color:#ffb08a}
+.fb.ok{color:var(--green)}
+.obj.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ---------- Épilogue ---------- */
+.epilogue{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:8px 0 26px}
+.epi{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:22px; transition:.25s}
+.epi:hover{transform:translateY(-4px); border-color:var(--line2); box-shadow:0 14px 30px rgba(0,0,0,.3)}
+.epi h4{font-family:'Fraunces',serif; font-size:1.05rem; color:var(--amber2); margin-bottom:9px}
+.epi p{font-size:13.5px; line-height:1.6; color:var(--mut)}
+
+/* ---------- Exercices ---------- */
+#exercices{padding:70px 0 30px}
+.exbox{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:34px; display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:38px}
+.exleft .exq{font:600 12px 'IBM Plex Mono'; letter-spacing:.14em; color:var(--cyan); text-transform:uppercase; margin-bottom:14px}
+.exleft .big{font:600 clamp(2rem,4.4vw,3.1rem) 'IBM Plex Mono'; letter-spacing:.01em; color:var(--txt)}
+.exleft .big i{color:var(--amber); font-style:normal}
+.answer{display:flex; gap:10px; margin-top:24px; flex-wrap:wrap}
+.answer input{font:600 20px 'IBM Plex Mono'; width:170px; background:#0a1e2d; color:var(--amber2); border:1px solid var(--line2); border-radius:10px; padding:11px 14px; transition:.2s}
+.answer input:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(245,168,60,.18)}
+.exfb{margin-top:16px; font:500 13px 'IBM Plex Mono'; min-height:20px; line-height:1.6}
+.exfb.ok{color:var(--green)} .exfb.no{color:#ffb08a}
+.exdots{display:flex; gap:8px; margin-top:26px}
+.exdots i{width:11px; height:11px; border-radius:3px; background:rgba(143,212,232,.15); transition:.35s}
+.exdots i.done{background:var(--green); box-shadow:0 0 10px rgba(127,217,158,.5)}
+.exdots i.cur{background:var(--amber)}
+.exright{border-left:1px dashed var(--line2); padding-left:38px; display:flex; flex-direction:column; gap:14px}
+.score{display:flex; gap:26px}
+.score div{display:flex; flex-direction:column}
+.score b{font-family:'Fraunces',serif; font-size:2.2rem; font-weight:800; color:var(--amber2); line-height:1}
+.score span{font:600 10px 'IBM Plex Mono'; letter-spacing:.22em; color:var(--mut); margin-top:6px}
+.exright p{font-size:13.5px; color:var(--mut); line-height:1.65}
+
+/* ---------- Histoire ---------- */
+#histoire{padding:74px 0 30px}
+ol.timeline{list-style:none; display:grid; grid-template-columns:repeat(6,1fr); gap:0; margin-top:44px; position:relative}
+ol.timeline::before{content:""; position:absolute; top:7px; left:2%; right:2%; height:1px; background:linear-gradient(90deg,transparent,var(--line2) 12%,var(--line2) 88%,transparent)}
+ol.timeline li{position:relative; padding:0 16px}
+ol.timeline li::before{content:""; position:absolute; top:2px; left:16px; width:11px; height:11px; border-radius:50%; background:var(--bg); border:2px solid var(--amber); transition:.3s}
+ol.timeline li:hover::before{background:var(--amber); box-shadow:0 0 14px rgba(245,168,60,.7)}
+ol.timeline .an{font:600 15px 'IBM Plex Mono'; color:var(--amber2); display:block; margin:22px 0 8px}
+ol.timeline p{font-size:12.5px; line-height:1.55; color:var(--mut)}
+.quote{margin:60px auto 0; max-width:760px; text-align:center; font-family:'Fraunces',serif; font-style:italic; font-size:clamp(1.2rem,2.4vw,1.7rem); line-height:1.5; color:#e8d9b5}
+.quote small{display:block; margin-top:14px; font:600 10.5px 'IBM Plex Mono'; letter-spacing:.3em; color:var(--mut); font-style:normal}
+
+footer{border-top:1px solid var(--line); margin-top:70px; padding:30px 24px 44px; text-align:center; font:500 12px 'IBM Plex Mono'; color:var(--mut); letter-spacing:.06em; line-height:1.8}
+
+/* Toast */
+#toast{position:fixed; left:50%; bottom:26px; transform:translate(-50%,80px); background:#122c3f; border:1px solid var(--amber); color:#ffe9c4; font:500 13px 'IBM Plex Mono'; padding:12px 20px; border-radius:10px; box-shadow:0 16px 40px rgba(0,0,0,.5); transition:transform .4s cubic-bezier(.2,.9,.3,1.2), opacity .4s; opacity:0; z-index:99; max-width:90vw}
+#toast.on{transform:translate(-50%,0); opacity:1}
+
+/* Révélations au défilement */
+.rv{opacity:0; transform:translateY(16px); transition:opacity .7s ease, transform .7s ease}
+.rv.in{opacity:1; transform:none}
+
+@media (max-width:1000px){
+  #intro{grid-template-columns:1fr; gap:34px}
+  .lesson-grid{grid-template-columns:1fr}
+  nav.sidenav{flex-direction:row; flex-wrap:wrap}
+  nav.sidenav button{border-radius:8px; border:1px solid var(--line)}
+  .exbox{grid-template-columns:1fr}
+  .exright{border-left:none; padding-left:0; border-top:1px dashed var(--line2); padding-top:24px}
+  ol.timeline{grid-template-columns:1fr; gap:26px}
+  ol.timeline::before{top:0; bottom:0; left:20px; right:auto; width:1px; height:auto; background:linear-gradient(180deg,transparent,var(--line2) 8%,var(--line2) 92%,transparent)}
+  ol.timeline li{padding-left:44px}
+  ol.timeline li::before{left:15px}
+  ol.timeline .an{margin-top:0}
+  .epilogue{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important; transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="deco-cross" style="top:190px; left:6%"></div>
+<div class="deco-cross" style="top:640px; right:5%"></div>
+
+<header class="top">
+  <div class="brand">
+    <svg width="34" height="16" viewBox="0 0 34 16" aria-hidden="true">
+      <rect x="0" y="1" width="34" height="14" rx="2.5" fill="#f2e9d2"/>
+      <rect x="3" y="6" width="28" height="4" rx="1" fill="#e6d9b8"/>
+      <line x1="21" y1="0" x2="21" y2="16" stroke="#e04b3a" stroke-width="1.6"/>
+    </svg>
+    Règle à calcul <em>· manuel interactif</em>
+  </div>
+  <div class="spacer"></div>
+  <div class="prog"><span id="progTxt">0/9 LEÇONS</span><div class="bar"><i id="progBar"></i></div></div>
+  <a class="chip-link" href="#exercices">EXERCICES ↓</a>
+</header>
+
+<main>
+
+<!-- ============ INTRODUCTION ============ -->
+<section id="intro">
+  <div class="deco-ring" aria-hidden="true"></div>
+  <div>
+    <p class="overline">Manuel interactif · Instrument n° 01</p>
+    <h1>Apprendre la<br>règle <em>à calcul</em></h1>
+    <p class="lede">Avant la calculatrice, ingénieurs et pilotes calculaient avec <b>trois pièces de bois graduées et un cheveu rouge</b>. Ce manuel vous met l’instrument entre les mains : une règle fidèle au type Mannheim, à glisser au doigt, et <b>neuf leçons</b> pour la dompter — de la première graduation jusqu’aux sinus.</p>
+    <div class="meta-row">
+      <span>9 LEÇONS GUIDÉES</span><span>ÉMULATEUR 25 CM</span><span>≈ 3 CHIFFRES DE PRÉCISION</span><span>AUCUN PRÉREQUIS</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn p" href="#l00">Commencer la leçon 00 →</a>
+      <a class="btn g" href="#etabli">Toucher l’instrument</a>
+    </div>
+  </div>
+  <aside class="cartouche rv" aria-label="Cartouche du plan">
+    <h3>CARTOUCHE — PLAN N° 01</h3>
+    <dl>
+      <dt>OBJET</dt><dd>Règle à calcul</dd>
+      <dt>TYPE</dt><dd>Mannheim, 25 cm</dd>
+      <dt>ÉCHELLES</dt><dd>K·A·CI·C·D·L·S·T</dd>
+      <dt>PRÉCISION</dt><dd>± 0,5 %</dd>
+      <dt>ÉDITION</dt><dd>Août 2026</dd>
+      <dt>USAGE</dt><dd>Pédagogique</dd>
+    </dl>
+  </aside>
+</section>
+
+<!-- ============ ÉTABLI ============ -->
+<section id="etabli" aria-label="Établi — règle à calcul interactive">
+  <div class="bench" id="bench">
+    <div class="bench-head">
+      <span class="tag">ÉTABLI — INSTRUMENT INTERACTIF</span>
+      <span class="hintline">face <b id="faceLbl" style="color:var(--amber)">RECTO</b></span>
+      <div class="acts">
+        <button class="btn g s" id="btnFlip">⇄ Retourner la règle</button>
+        <button class="btn g s" id="btnReset">Réinitialiser</button>
+        <button class="btn g s" id="btnMin">— Réduire</button>
+      </div>
+    </div>
+    <div class="flipwrap" id="flipwrap"><div class="rulebox">
+      <svg class="rule" id="rule" viewBox="0 0 1220 210" role="img"
+           aria-label="Règle à calcul interactive : faites glisser la coulisse horizontalement et le curseur rouge pour aligner les échelles."></svg>
+    </div></div>
+    <div class="benchbody">
+      <div class="chips" id="chips"></div>
+      <div class="toolrow">
+        <label for="tA">PLACER POUR MOI :</label>
+        <input id="tA" inputmode="decimal" value="2" aria-label="opérande a">
+        <select id="tOp" aria-label="opération">
+          <option value="mul">a × b</option><option value="div">a ÷ b</option>
+          <option value="sq">a²</option><option value="sqrt">√a</option>
+          <option value="cube">a³</option><option value="cbrt">∛a</option>
+          <option value="sin">sin a°</option><option value="tan">tan a°</option>
+        </select>
+        <input id="tB" inputmode="decimal" value="3" aria-label="opérande b">
+        <button class="btn p s" id="btnPlace">Manœuvrer la règle</button>
+        <div class="nudges" aria-label="Réglage fin">
+          <button id="nOL" title="Coulisse vers la gauche">◀</button>
+          <button id="nOR" title="Coulisse vers la droite">▶</button>
+          <button id="nCL" title="Cheveu vers la gauche">‹</button>
+          <button id="nCR" title="Cheveu vers la droite">›</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i>⇋</i> Tirez la coulisse par ses échelles C / CI</span>
+      <span><i>↔</i> Glissez le cheveu rouge — ou cliquez une échelle</span>
+      <span><i>◀ ▶</i> Réglage fin au pixel près</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEÇONS ============ -->
+<section id="lecons">
+  <div class="sec-head rv">
+    <span class="no">§ 02</span>
+    <h2>Le tutoriel, pas à pas</h2>
+    <p>Chaque leçon se termine par une mission sur l’instrument. La règle reste visible ci-dessus pendant que vous lisez : manœuvrez, puis <b>Vérifier</b>.</p>
+  </div>
+  <div class="lesson-grid">
+    <nav class="sidenav" id="sidenav" aria-label="Sommaire des leçons"></nav>
+    <div id="lessonCol"></div>
+  </div>
+  <div class="epilogue">
+    <div class="epi rv"><h4>Estimez d’abord</h4><p>Avant de lire, évaluez l’ordre de grandeur « de tête ». La règle donne les chiffres significatifs ; la virgule est votre responsabilité — c’est la seule source d’erreur de l’instrument.</p></div>
+    <div class="epi rv"><h4>Glissez peu</h4><p>Préférez toujours l’index de la coulisse le plus proche du cheveu. Moins la coulisse dépasse du corps, plus la lecture est précise.</p></div>
+    <div class="epi rv"><h4>Votre première vraie règle</h4><p>Chinez une <b>Pickett N3/N4</b>, une <b>Nestler</b> ou une <b>Faber-Castell 2/83N</b> : gravures nettes, coulisse douce, et l’odeur du bois verni en prime.</p></div>
+  </div>
+</section>
+
+<!-- ============ EXERCICES ============ -->
+<section id="exercices">
+  <div class="sec-head rv">
+    <span class="no">§ 03</span>
+    <h2>Entraînement</h2>
+    <p>Huit calculs. Trois chiffres suffisent — tolérance de 2 %, comme sur une vraie règle.</p>
+  </div>
+  <div class="exbox rv">
+    <div class="exleft">
+      <div class="exq" id="exType">—</div>
+      <div class="big" id="exQ">= ?</div>
+      <div class="answer">
+        <input id="exIn" inputmode="decimal" placeholder="votre résultat" aria-label="Votre résultat">
+        <button class="btn p s" id="exGo">Valider</button>
+        <button class="btn g s" id="exShow">Voir sur la règle</button>
+        <button class="btn g s" id="exNext" disabled>Suivant →</button>
+      </div>
+      <div class="exfb" id="exFb"></div>
+      <div class="exdots" id="exDots" aria-hidden="true"></div>
+    </div>
+    <div class="exright">
+      <div class="score">
+        <div><b id="scOk">0</b><span>RÉUSSIS</span></div>
+        <div><b id="scTry">0</b><span>ESSAIS</span></div>
+        <div><b id="scStreak">0</b><span>SÉRIE</span></div>
+      </div>
+      <p id="exMsg">Faites le calcul sur l’établi (ou de tête, si vous êtes déjà un as), puis entrez le résultat. La virgule ou le point sont acceptés.</p>
+      <button class="btn g s" id="exNew" style="align-self:flex-start">↻ Nouvelle série</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HISTOIRE ============ -->
+<section id="histoire">
+  <div class="sec-head rv">
+    <span class="no">§ 04</span>
+    <h2>Quatre siècles en six dates</h2>
+  </div>
+  <ol class="timeline rv">
+    <li><span class="an">1614</span><p>John Napier publie les <b>logarithmes</b> : transformer les multiplications en additions.</p></li>
+    <li><span class="an">1620</span><p>Edmund Gunter trace ces logarithmes <b>sur une règle</b> ; on mesure les distances au compas.</p></li>
+    <li><span class="an">1630</span><p>William Oughtred fait <b>glisser deux règles</b> l’une contre l’autre : l’instrument est né.</p></li>
+    <li><span class="an">1850</span><p>Le type <b>Mannheim</b> fixe la disposition des échelles et généralise le curseur à cheveu.</p></li>
+    <li><span class="an">1969</span><p>Apollo 11 : une <b>Pickett N600</b> accompagne Buzz Aldrin sur la Lune, en cas de recalcul.</p></li>
+    <li><span class="an">1972</span><p>La <b>HP-35</b>, première calculatrice scientifique de poche, sonne le crépuscule de l’instrument.</p></li>
+  </ol>
+  <p class="quote rv">« La règle à calcul n’avait jamais tort : elle laissait simplement aux humains le soin de penser à la virgule. »
+  <small>MAXIME D’ATELIER</small></p>
+</section>
+
+</main>
+
+<footer>
+  MANUEL FABRIQUÉ À LA MAIN — HTML · CSS · JAVASCRIPT, ZÉRO DÉPENDANCE.<br>
+  GRADUATIONS TRACÉES À LA VOLÉE · LOG₁₀ POUR SEUL MOTEUR · AOÛT 2026
+</footer>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   0. CONSTANTES & AIDES
+============================================================ */
+const NS="http://www.w3.org/2000/svg";
+const L=840, X0=190, X1=X0+L;               // longueur & index de l’échelle principale
+const OFFMAX=800, TOL=8;                     // course de la coulisse, tolérance (px)
+const svg=document.getElementById("rule");
+
+function E(n,at,parent){const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);if(parent)parent.appendChild(e);return e;}
+function T(parent,x,y,str,size,cls,anchor){const t=E("text",{x,y,"font-size":size,class:cls||""},parent);if(anchor)t.setAttribute("text-anchor",anchor);t.textContent=str;return t;}
+const p1=v=>L*Math.log10(v);                 // position 1..10 (C, D, CI)
+const pA=v=>L*Math.log10(v)/2;               // A : 1..100
+const pK=v=>L*Math.log10(v)/3;               // K : 1..1000
+const pS=d=>L*(Math.log10(Math.sin(d*Math.PI/180))+1);
+const pT=d=>L*(Math.log10(Math.tan(d*Math.PI/180))+1);
+const fmt=v=>isFinite(v)?new Intl.NumberFormat("fr-FR",{maximumSignificantDigits:3}).format(v):"—";
+const fmt4=v=>new Intl.NumberFormat("fr-FR",{maximumSignificantDigits:4}).format(v);
+const fr=v=>String(v).replace(".",",");
+function svgX(evt){const p=svg.createSVGPoint();p.x=evt.clientX;p.y=evt.clientY;return p.matrixTransform(svg.getScreenCTM().inverse()).x;}
+const clampX=x=>Math.min(X1-2,Math.max(X0+2,x));
+const clampOff=o=>Math.min(OFFMAX,Math.max(-OFFMAX,o));
+
+/* ============================================================
+   1. CONSTRUCTION DE LA RÈGLE (SVG)
+============================================================ */
+const defs=E("defs",{},svg);
+const gPaper=E("linearGradient",{id:"paper",x1:0,y1:0,x2:0,y2:1},defs);
+E("stop",{offset:"0","stop-color":"#f7efdc"},gPaper);
+E("stop",{offset:"1","stop-color":"#eadfc2"},gPaper);
+const gSlide=E("linearGradient",{id:"slideg",x1:0,y1:0,x2:0,y2:1},defs);
+E("stop",{offset:"0","stop-color":"#fbf5e6"},gSlide);
+E("stop",{offset:"1","stop-color":"#efe4c8"},gSlide);
+
+const gStatic=E("g",{},svg);
+const gRecto=E("g",{},svg);
+const gSlideG=E("g",{class:"grab"},svg);
+const gVerso=E("g",{display:"none"},svg);
+const gCursor=E("g",{},svg);
+const gFx=E("g",{},svg);
+
+/* Corps */
+E("rect",{x:6,y:8,width:1208,height:194,rx:10,fill:"url(#paper)",stroke:"#b9a678","stroke-width":1.5},gStatic);
+E("rect",{x:9,y:11,width:1202,height:3,rx:1.5,fill:"#fffdf4",opacity:.7},gStatic);
+T(gStatic,20,96,"RÈGLE À CALCUL",7.5,"cap");
+T(gStatic,20,110,"TYPE MANNHEIM",7.5,"cap");
+T(gStatic,20,124,"25 CM · ÉMULATION",7.5,"cap");
+
+function ticks(parent,base,arr,cls){
+  arr.forEach(t=>{
+    E("line",{x1:X0+t.x,x2:X0+t.x,y1:base,y2:base-t.h,stroke:"#241f16","stroke-width":t.h>10?1.5:1,opacity:t.h>10?1:.85},parent);
+    if(t.label)T(parent,X0+t.x,t.ly,t.label,t.fs,cls||"maj","middle");
+  });
+}
+function cdTicks(){
+  const a=[];
+  for(let v=1;v<=9;v++)a.push({x:p1(v),h:13,label:String(v),ly:0,fs:11});
+  a.push({x:p1(10),h:13,label:"10",ly:0,fs:10});
+  for(let i=105;i<200;i+=5)a.push({x:p1(i/100),h:i%50===0?9:5});
+  for(let i=21;i<=99;i++){if(i%10===0)continue;a.push({x:p1(i/10),h:i%5===0?9:6});}
+  return a;
+}
+function aTicks(){
+  const a=[];
+  for(let v=1;v<=9;v++)a.push({x:pA(v),h:11,label:String(v),fs:8.5});
+  a.push({x:pA(10),h:11,label:"10",fs:8});
+  for(let v=20;v<=90;v+=10)a.push({x:pA(v),h:11,label:String(v),fs:8});
+  a.push({x:pA(100),h:11,label:"100",fs:7.5});
+  for(let i=11;i<=19;i++)a.push({x:pA(i/10),h:i===15?8:5});
+  for(let m=2;m<=9;m++)a.push({x:pA(m+.5),h:7});
+  for(let i=11;i<=19;i++)a.push({x:pA(i),h:5});
+  for(let m=25;m<=95;m+=10)a.push({x:pA(m),h:7});
+  return a;
+}
+function kTicks(){
+  const a=[];
+  for(let d=0;d<3;d++){const f=10**d;
+    for(let m=1;m<=9;m++)a.push({x:pK(m*f),h:9,label:String(m*f),fs:7});
+    a.push({x:pK(10*f),h:9,label:String(10*f),fs:6.5});
+    for(let i=1;i<=9;i++)a.push({x:pK((1+i/10)*f),h:4.5});
+    for(let m=2;m<=9;m++)a.push({x:pK((m+.5)*f),h:6});
+  }
+  return a;
+}
+function lTicks(){
+  const a=[];
+  for(let i=0;i<=10;i++)a.push({x:L*i/10,h:8,label:i===0?"0":i===10?"1":"."+i,fs:7.5});
+  for(let i=1;i<20;i+=2)a.push({x:L*i/20,h:4});
+  return a;
+}
+function ciTicks(){return cdTicks().map(t=>({...t,x:L-t.x,fs:t.fs>9?9.5:t.fs}));}
+function sTicks(){
+  const maj=[6,8,10,15,20,30,45,60,90], min=[5.7,7,9,12,14,25,35,50,70,80];
+  return [...maj.map(d=>({x:pS(d),h:11,label:String(d),fs:8.5})),...min.map(d=>({x:pS(d),h:5}))];
+}
+function tTicks(){
+  const maj=[6,8,10,15,20,30,40,45], min=[5.7,7,9,12,14,25,35];
+  return [...maj.map(d=>({x:pT(d),h:11,label:String(d),fs:8.5})),...min.map(d=>({x:pT(d),h:5}))];
+}
+
+/* Recto : rainures + échelles fixes */
+E("rect",{x:6,y:76,width:1208,height:4,fill:"#d9c9a0"},gRecto);
+E("rect",{x:6,y:140,width:1208,height:4,fill:"#d9c9a0"},gRecto);
+E("line",{x1:6,x2:1214,y1:76,y2:76,stroke:"#a8946a","stroke-width":1},gRecto);
+E("line",{x1:6,x2:1214,y1:144,y2:144,stroke:"#a8946a","stroke-width":1},gRecto);
+const setLY=(arr,ly)=>arr.map(t=>({...t,ly}));
+ticks(gRecto,44,setLY(kTicks(),31));
+ticks(gRecto,70,setLY(aTicks(),57));
+ticks(gRecto,170,setLY(cdTicks(),152),"maj");
+ticks(gRecto,194,setLY(lTicks(),184),"maj");
+T(gRecto,172,40,"K",12,"sname","end");
+T(gRecto,172,66,"A",12,"sname","end");
+T(gRecto,172,166,"D",12,"sname","end");
+T(gRecto,172,190,"L",10,"sname","end");
+T(gRecto,1208,40,"CUBES",6.5,"cap","end");
+T(gRecto,1208,66,"CARRÉS",6.5,"cap","end");
+T(gRecto,1208,166,"PRINCIPALE",6.5,"cap","end");
+T(gRecto,1208,190,"MANTISSES log₁₀",6.5,"cap","end");
+
+/* Coulisse */
+E("rect",{x:X0-60,y:80,width:L+120,height:60,rx:3,fill:"url(#slideg)",stroke:"#b3a074","stroke-width":1.2},gSlideG);
+for(let s=0;s<2;s++){const gx=X0-60+s*(L+108);
+  for(let i=0;i<5;i++)E("line",{x1:gx+i*2.6,y1:86,x2:gx+i*2.6,y2:134,stroke:"#cbbb92","stroke-width":1},gSlideG);}
+E("line",{x1:X0-60,x2:X0+L+60,y1:103,y2:103,stroke:"#d8caa4","stroke-width":1},gSlideG);
+ticks(gSlideG,98,setLY(ciTicks(),88),"ci");
+ticks(gSlideG,136,setLY(cdTicks(),118),"maj");
+T(gSlideG,172,96,"CI",10,"sname ci","end");
+T(gSlideG,172,130,"C",12,"sname","end");
+T(gSlideG,1052,96,"INVERSE",6,"cap");
+T(gSlideG,1052,132,"COULISSE",6,"cap");
+E("circle",{cx:X0,cy:139,r:2.2,fill:"#b3382b"},gSlideG);
+E("circle",{cx:X0+L,cy:139,r:2.2,fill:"#b3382b"},gSlideG);
+
+/* Verso : trigonométrie */
+E("rect",{x:6,y:76,width:1208,height:4,fill:"#d9c9a0"},gVerso);
+E("rect",{x:6,y:140,width:1208,height:4,fill:"#d9c9a0"},gVerso);
+ticks(gVerso,70,setLY(sTicks(),56),"maj");
+ticks(gVerso,122,setLY(tTicks(),108),"maj");
+ticks(gVerso,170,setLY(cdTicks(),152),"maj");
+T(gVerso,172,66,"S",12,"sname","end");
+T(gVerso,172,118,"T",12,"sname","end");
+T(gVerso,172,166,"D",12,"sname","end");
+T(gVerso,1208,66,"SINUS (deg)",6.5,"cap","end");
+T(gVerso,1208,118,"TANGENTES (deg)",6.5,"cap","end");
+T(gVerso,1208,166,"LECTURE",6.5,"cap","end");
+T(gVerso,610,192,"CHEVEU SUR L’ANGLE → LIRE LE SINUS (OU LA TANGENTE) SUR D",7,"cap","middle");
+
+/* Curseur */
+E("rect",{x:-9,y:0,width:18,height:10,rx:2.5,fill:"#d8402f",stroke:"#8f231a","stroke-width":1,class:"hair"},gCursor);
+E("line",{x1:-4,x2:-4,y1:2.5,y2:7.5,stroke:"#f8d9c8","stroke-width":1},gCursor);
+E("line",{x1:4,x2:4,y1:2.5,y2:7.5,stroke:"#f8d9c8","stroke-width":1},gCursor);
+E("line",{x1:-1.4,x2:-1.4,y1:8,y2:204,stroke:"rgba(224,75,58,.28)","stroke-width":3.6},gCursor);
+E("line",{x1:0,x2:0,y1:8,y2:204,stroke:"#d8402f","stroke-width":1.5,class:"hair"},gCursor);
+gCursor.style.cursor="ew-resize";
+
+/* ============================================================
+   2. ÉTAT & AFFICHAGE
+============================================================ */
+const state={off:0,cx:X0+p1(3.2),face:"recto",moved:{slide:false,cursor:false}};
+const chipsEl=document.getElementById("chips");
+const chipDefsR=[["D","D"],["C","C"],["CI","CI"],["A","A"],["K","K"],["L","L"],["fact","Coulisse"]];
+const chipDefsV=[["D","D"],["S","angle S"],["T","angle T"],["sin","sin θ"],["tan","tan θ"]];
+let chipEls={};
+function buildChips(){
+  chipsEl.innerHTML="";chipEls={};
+  (state.face==="recto"?chipDefsR:chipDefsV).forEach(([k,lb])=>{
+    const s=document.createElement("span");s.innerHTML=lb+"<b>—</b>";
+    chipsEl.appendChild(s);chipEls[k]=s.querySelector("b");chipEls[k+"_p"]=s;
+  });
+}
+function update(){
+  gSlideG.setAttribute("transform",`translate(${state.off},0)`);
+  gCursor.setAttribute("transform",`translate(${state.cx},0)`);
+  const t=(state.cx-X0)/L;
+  if(state.face==="recto"){
+    chipEls.D.textContent=fmt(10**t);
+    const tc=(state.cx-X0-state.off)/L, ok=tc>=-0.001&&tc<=1.001;
+    chipEls.C.textContent=ok?fmt(10**tc):"hors champ";
+    chipEls.CI.textContent=ok?fmt(10**(1-tc)):"hors champ";
+    chipEls.A.textContent=fmt(10**(2*t));
+    chipEls.K.textContent=fmt(10**(3*t));
+    chipEls.L.textContent=fmt(t);
+    chipEls.fact.textContent="× "+fmt(10**(state.off/L));
+    chipEls.D_p.classList.toggle("hot",true);
+  }else{
+    chipEls.D.textContent=fmt(10**t);
+    const s=10**(t-1);
+    chipEls.S.textContent=fmt(Math.asin(Math.min(1,s))*180/Math.PI)+"°";
+    chipEls.T.textContent=s<=1?fmt(Math.atan(s)*180/Math.PI)+"°":"—";
+    chipEls.sin.textContent=fmt(s);
+    chipEls.tan.textContent=fmt(s);
+  }
+}
+function applyFace(f){
+  state.face=f;
+  gRecto.setAttribute("display",f==="recto"?"":"none");
+  gSlideG.setAttribute("display",f==="recto"?"":"none");
+  gVerso.setAttribute("display",f==="verso"?"":"none");
+  document.getElementById("faceLbl").textContent=f.toUpperCase();
+  buildChips();update();
+}
+
+/* ============================================================
+   3. INTERACTIONS (glisser)
+============================================================ */
+let drag=null,raf=null;
+svg.addEventListener("pointerdown",e=>{
+  if(raf)cancelAnimationFrame(raf);
+  const x=svgX(e);
+  const nearC=Math.abs(x-state.cx)<12;
+  if(state.face==="verso"||nearC||e.target.closest("#rule")&&!between(e.offsetY)){ /* fallback below */ }
+  const yLocal=(()=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse()).y;})();
+  const onSlide=state.face==="recto"&&yLocal>=78&&yLocal<=142;
+  if(nearC||!onSlide){
+    state.cx=clampX(x);state.moved.cursor=true;
+    drag={type:"c",dx:x-state.cx};
+  }else{
+    drag={type:"s",x0:x,off0:state.off};
+  }
+  svg.setPointerCapture(e.pointerId);svg.classList.add("grabbing");
+  e.preventDefault();
+});
+function between(){return false;}
+svg.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  const x=svgX(e);
+  if(drag.type==="c"){state.cx=clampX(x-drag.dx);state.moved.cursor=true;}
+  else{state.off=clampOff(drag.off0+(x-drag.x0));state.moved.slide=true;}
+  update();
+});
+["pointerup","pointercancel"].forEach(ev=>svg.addEventListener(ev,()=>{drag=null;svg.classList.remove("grabbing");}));
+
+/* Réglage fin */
+const nudge=(fn)=>(e)=>{fn();update();e.preventDefault();};
+document.getElementById("nOL").onclick=nudge(()=>state.off=clampOff(state.off-3));
+document.getElementById("nOR").onclick=nudge(()=>state.off=clampOff(state.off+3));
+document.getElementById("nCL").onclick=nudge(()=>{state.cx=clampX(state.cx-1.5);state.moved.cursor=true;});
+document.getElementById("nCR").onclick=nudge(()=>{state.cx=clampX(state.cx+1.5);state.moved.cursor=true;});
+
+/* ============================================================
+   4. ANIMATIONS, RETOURNEMENT, PING
+============================================================ */
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function animateTo(target,dur=800,then){
+  if(target.face&&target.face!==state.face)applyFace(target.face);
+  const f={off:state.off,cx:state.cx},t0=performance.now();
+  if(raf)cancelAnimationFrame(raf);
+  (function step(now){
+    const k=Math.min(1,(now-t0)/dur),e=ease(k);
+    if(target.off!=null)state.off=f.off+(target.off-f.off)*e;
+    if(target.cx!=null)state.cx=f.cx+(target.cx-f.cx)*e;
+    update();
+    if(k<1)raf=requestAnimationFrame(step);
+    else{raf=null;then&&then();}
+  })(t0);
+}
+function ping(x){
+  const c=E("circle",{cx:x,cy:105,r:4,fill:"none",stroke:"#f5a83c","stroke-width":2},gFx);
+  c.animate([{r:4,opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(3)"}],{duration:900,easing:"ease-out"});
+  setTimeout(()=>c.remove(),950);
+}
+const flipwrap=document.getElementById("flipwrap");
+document.getElementById("btnFlip").onclick=()=>{
+  flipwrap.classList.add("turning");
+  setTimeout(()=>{applyFace(state.face==="recto"?"verso":"recto");flipwrap.classList.remove("turning");},180);
+};
+document.getElementById("btnReset").onclick=()=>animateTo({off:0,cx:X0+p1(1),face:"recto"},700);
+const etabli=document.getElementById("etabli");
+document.getElementById("btnMin").onclick=function(){
+  etabli.classList.toggle("min");
+  this.textContent=etabli.classList.contains("min")?"+ Agrandir":"— Réduire";
+};
+
+/* ============================================================
+   5. OUTIL « MANŒUVRER LA RÈGLE »
+============================================================ */
+function place(op,a,b){
+  const pa=p1(a);
+  switch(op){
+    case "mul":{const s=pa+p1(b);const off=s<=L?pa:pa-L;return{off,cx:X0+off+p1(b)};}
+    case "div":return{cx:X0+pa,off:clampOff(pa-p1(b))};
+    case "sq":case "cube":return{cx:X0+pa};
+    case "sqrt":return{cx:X0+pA(a)};
+    case "cbrt":return{cx:X0+pK(a)};
+    case "sin":return{face:"verso",cx:X0+pS(a)};
+    case "tan":return{face:"verso",cx:X0+pT(a)};
+  }
+}
+const tA=document.getElementById("tA"),tB=document.getElementById("tB"),tOp=document.getElementById("tOp");
+tOp.onchange=()=>{tB.disabled=["sq","sqrt","cube","cbrt","sin","tan"].includes(tOp.value);};
+document.getElementById("btnPlace").onclick=()=>{
+  const num=s=>parseFloat(String(s.value).replace(",","."));
+  const a=num(tA),b=num(tB);
+  if(!isFinite(a)||a<=0||(tOp.value==="mul"||tOp.value==="div")&&(!isFinite(b)||b<=0)){toast("Entrez des nombres valides (virgule acceptée).");return;}
+  if(tOp.value==="mul"&&(a<1||a>=10||b<1||b>=10)){toast("Pour a × b : choisissez a et b entre 1 et 10 — la virgule se gère de tête.");return;}
+  if(tOp.value==="div"&&(a<1||a>=10||b<1||b>=10)){toast("Pour a ÷ b : ramenez a et b entre 1 et 10 (22 ÷ 7 → 2,2 ÷ 7).");return;}
+  const p=place(tOp.value,a,b);
+  benchAttn();animateTo(p,900,()=>{ping(p.cx);toast("La règle est en place — lisez sous le cheveu.");});
+};
+
+/* ============================================================
+   6. TOAST & PROGRESSION
+============================================================ */
+const toastEl=document.getElementById("toast");let toastTimer=null;
+function toast(msg,ms=2800){toastEl.textContent=msg;toastEl.classList.add("on");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove("on"),ms);}
+function benchAttn(){const b=document.getElementById("bench");b.classList.add("attn");setTimeout(()=>b.classList.remove("attn"),1600);}
+function celebrate(){const b=document.getElementById("bench");b.classList.remove("celebrate");void b.offsetWidth;b.classList.add("celebrate");}
+const store={
+  k:"regle-calcul-2026",
+  get(){try{return JSON.parse(localStorage.getItem(this.k))||{}}catch(e){return{}}},
+  set(v){try{localStorage.setItem(this.k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ============================================================
+   7. LEÇONS
+============================================================ */
+const nearC=x=>Math.abs(state.cx-x)<TOL;
+const nearO=o=>Math.abs(state.off-o)<TOL;
+const hC=(x,sc)=>`Le cheveu lit ${fmt(10**((state.cx-X0)/L))} sur D — visez ${fmt(10**((x-X0)/L))} sur ${sc||"D"}.`;
+const hO=o=>`Votre coulisse place l’index sur ≈ ${fmt(10**(state.off/L))} — il faut ≈ ${fmt(10**(o/L))}.`;
+
+const LESSONS=[
+{id:"l00",num:"00",titre:"Anatomie de l’instrument",dur:"≈ 2 min",
+ accroche:"Trois pièces, un cheveu rouge — et tout tient.",
+ corps:`<p><b>Le corps</b> — la partie fixe — porte quatre échelles : <b>K</b> (cubes), <b>A</b> (carrés), <b>D</b>, l’échelle reine, et <b>L</b>, la linéaire.</p>
+ <p><b>La coulisse</b> — la pièce centrale mobile — est graduée <b>CI</b> (l’échelle inverse, en rouge) et <b>C</b>. C’est elle qui « ajoute » des longueurs.</p>
+ <p><b>Le curseur</b> et son trait rouge, le <b>cheveu</b>, relient toutes les échelles d’un même trait vertical : il sert d’aiguille de lecture.</p>
+ <div class="key">Réflexe d’atelier : on lit toujours « du cheveu vers l’échelle », jamais l’inverse.</div>`,
+ objectifs:[{t:"Prise en main — faites glisser la coulisse d’un bon centimètre, puis déplacez le cheveu.",
+   check:()=>state.moved.slide&&state.moved.cursor,
+   hint:()=>(!state.moved.slide?"Tirez la pièce centrale (échelles C / CI) horizontalement.":"Bien ! Déplacez maintenant le trait rouge du curseur."),
+   demo:()=>animateTo({off:p1(1.6)},500,()=>animateTo({off:0,cx:X0+p1(5)},600,()=>toast("La coulisse et le cheveu répondent au doigt.")))}]},
+
+{id:"l01",num:"01",titre:"Lire sur l’échelle D",dur:"≈ 4 min",
+ accroche:"Les graduations ne sont pas régulières — c’est toute l’astuce.",
+ corps:`<p>Sur D, la distance qui sépare 1 d’un nombre x est proportionnelle à <b>log₁₀(x)</b>. Conséquence : l’intervalle <b>1 → 2 dévore 30 % de la règle</b> (log₁₀ 2 ≈ 0,301), quand 9 → 10 se serre sur 4,6 %.</p>
+ <ol class="steps">
+  <li>Posez le cheveu sur <b>2</b>, puis sur <b>5</b>, pour sentir l’espacement qui se resserre.</li>
+  <li>Cherchez <b>1,41</b> : c’est pile le milieu de 1 → 2, car √2 × √2 = 2 — les longueurs, elles, s’additionnent.</li>
+ </ol>
+ <p>Entre 1 et 2, chaque petit trait vaut <b>0,05</b> ; entre 2 et 10, <b>0,1</b>. On lit trois chiffres significatifs, pas un de plus.</p>
+ <div class="key">La règle donne les chiffres significatifs. La virgule — l’ordre de grandeur — est votre affaire : gardez toujours une estimation en tête.</div>`,
+ objectifs:[
+  {t:"Mission A — amenez le cheveu sur 4,6.",check:()=>nearC(X0+p1(4.6)),hint:()=>hC(X0+p1(4.6)),demo:()=>animateTo({cx:X0+p1(4.6)},700)},
+  {t:"Mission B — amenez le cheveu sur 1,41 (≈ √2), entre 1 et 2.",check:()=>nearC(X0+p1(1.414)),hint:()=>"Cherchez sur le premier tiers de la règle, juste après le trait 1,4.",demo:()=>animateTo({cx:X0+p1(1.414)},700)}]},
+
+{id:"l02",num:"02",titre:"Multiplier : ajouter des longueurs",dur:"≈ 5 min",
+ accroche:"a × b se lit d’un geste : index, glisser, cheveu, lire.",
+ corps:`<ol class="steps">
+  <li>Amenez <b>C1</b> (index gauche de la coulisse, pastille rouge) au-dessus de <b>a</b> sur D.</li>
+  <li>Poussez le cheveu sur <b>b</b>, sur l’échelle C de la coulisse.</li>
+  <li>Lisez le produit sur D, juste sous le cheveu. Exemple : 2 × 3 → <b>6</b>.</li>
+ </ol>
+ <p><b>Si b sort du corps</b>, utilisez l’index droit <b>C10</b> : posez C10 sur a, cheveu sur b, lisez. Ainsi 7 × 8 affiche <b>5,6</b> — et comme 7 × 8 ≈ 10 × 8, c’est bien <b>56</b>.</p>
+ <div class="key">C1 sur a, cheveu sur b — ou C10 sur a quand ça déborde. Le placement est identique dans les deux cas, seul l’index change.</div>`,
+ objectifs:[
+  {t:"Mission A — placez la règle pour 2 × 3, puis lisez sur D.",check:()=>nearO(p1(2))&&nearC(X0+p1(6)),hint:()=>!nearO(p1(2))?hO(p1(2)):"Coulisse parfaite : glissez maintenant le cheveu sur 3 (échelle C).",demo:()=>animateTo({off:p1(2),cx:X0+p1(6)},900)},
+  {t:"Mission B — 7 × 8 : débordement ! Placez C10 sur 7, cheveu sur 8, et lisez 5,6 (= 56).",check:()=>nearO(p1(7)-L)&&nearC(X0+p1(7)-L+p1(8)),hint:()=>!nearO(p1(7)-L)?"Tirez la coulisse vers la gauche : c’est l’index 10 (à droite de C) qui doit venir sur 7.":"Index bien posé : cheveu sur 8, maintenant.",demo:()=>animateTo({off:p1(7)-L,cx:X0+p1(7)-L+p1(8)},900)}]},
+
+{id:"l03",num:"03",titre:"Enchaîner sans repos",dur:"≈ 4 min",
+ accroche:"2 × 3 × 4, sans tout recommencer.",
+ corps:`<ol class="steps">
+  <li>C1 sur <b>2</b> (D) ; cheveu sur <b>3</b> (C). Produit partiel : 6.</li>
+  <li><b>Garez le cheveu</b> : sans y toucher, glissez la coulisse pour amener <b>C10</b> sous le cheveu.</li>
+  <li>Cheveu sur <b>4</b> (C) ; lisez sur D : <b>2,4</b>, donc 2 × 3 × 4 = <b>24</b>.</li>
+ </ol>
+ <p>Le cheveu garde le produit partiel en mémoire pendant que la coulisse se replace : c’est le « parking » du curseur.</p>
+ <div class="key">Quand le cheveu est loin du bord, choisissez l’index de la coulisse le plus proche de lui : moins de glissement, plus de précision.</div>`,
+ objectifs:[
+  {t:"Mission — réalisez 2 × 3 × 4 : le cheveu doit lire 2,4 sur D, avec C10 garé sous le produit partiel.",
+   check:()=>nearO(p1(6)-L)&&nearC(X0+p1(6)-L+p1(4)),
+   hint:()=>!nearO(p1(6)-L)?hO(p1(6)-L):"Il reste à poser le cheveu sur 4, sur C.",
+   demo:()=>animateTo({off:p1(6)-L,cx:X0+p1(6)-L+p1(4)},1000)}]},
+
+{id:"l04",num:"04",titre:"Diviser : remonter le film",dur:"≈ 4 min",
+ accroche:"La multiplication jouée à l’envers.",
+ corps:`<ol class="steps">
+  <li>Cheveu sur le dividende <b>a</b>, sur D.</li>
+  <li>Glissez la coulisse pour amener le diviseur <b>b</b> (échelle C) sous le cheveu.</li>
+  <li>Lisez le quotient sous l’index de la coulisse resté sur le corps — <b>C1</b> ou <b>C10</b>. Exemple : 6 ÷ 2 → C1 montre <b>3</b>.</li>
+ </ol>
+ <p>22 ÷ 7 ? La règle ignore les puissances de dix : cheveu sur <b>2,2</b>, amenez 7 dessous, et lisez sous <b>C10</b>… <b>3,14</b>. Un certain π.</p>
+ <div class="key">Dividende au cheveu, diviseur sous le cheveu, quotient à l’index.</div>`,
+ objectifs:[
+  {t:"Mission A — 6 ÷ 2 : cheveu sur 6, le 2 de C dessous, lisez sous C1.",check:()=>nearC(X0+p1(6))&&nearO(p1(6)-p1(2)),hint:()=>!nearC(X0+p1(6))?hC(X0+p1(6)):"Cheveu bon : glissez la coulisse pour poser le 2 de C dessous.",demo:()=>animateTo({cx:X0+p1(6),off:p1(6)-p1(2)},900)},
+  {t:"Mission B — 22 ÷ 7 : cheveu sur 2,2, le 7 de C dessous, lisez 3,14 sous C10.",check:()=>nearC(X0+p1(2.2))&&nearO(p1(2.2)-p1(7)),hint:()=>!nearC(X0+p1(2.2))?hC(X0+p1(2.2)):"Posez maintenant le 7 de C sous le cheveu — la coulisse doit dépasser à gauche.",demo:()=>animateTo({cx:X0+p1(2.2),off:p1(2.2)-p1(7)},900)}]},
+
+{id:"l05",num:"05",titre:"Carrés & racines : l’échelle A",dur:"≈ 4 min",
+ accroche:"A est une D deux fois compressée : elle affiche le carré de D.",
+ corps:`<p>Cheveu sur <b>3</b> (D) : lisez <b>9</b> sur A. La compression par deux transforme log x en log x² — la règle calcule le carré toute seule.</p>
+ <p>Pour la <b>racine</b>, on inverse : cheveu sur le nombre dans A, lecture sur D. A possède deux tronçons : <b>1 → 10</b> puis <b>10 → 100</b>. Règle de tranche : comptez les chiffres par paires depuis la virgule ; 2 n’a qu’une tranche, donc √2 se lit sur le <b>premier tronçon</b>.</p>
+ <div class="key">D → A : on carré. A → D : on prend la racine. Le bon tronçon décide de la virgule.</div>`,
+ objectifs:[
+  {t:"Mission A — cheveu sur 3 (D) : vérifiez que A affiche 9.",check:()=>nearC(X0+p1(3))&&state.face==="recto",hint:()=>hC(X0+p1(3)),demo:()=>animateTo({face:"recto",cx:X0+p1(3)},700)},
+  {t:"Mission B — √2 : cheveu sur 2, sur le premier tronçon de A, puis lisez 1,41 sur D.",check:()=>nearC(X0+pA(2)),hint:()=>"Le premier tronçon de A va de 1 à 10 (moitié gauche). Visez le 2 de ce tronçon.",demo:()=>animateTo({cx:X0+pA(2)},700)}]},
+
+{id:"l06",num:"06",titre:"Cubes : l’échelle K",dur:"≈ 3 min",
+ accroche:"Trois décades empilées : K lit les cubes.",
+ corps:`<p>K compresse D <b>trois fois</b> : trois décades 1 → 10, 10 → 100, 100 → 1000. Cheveu sur <b>2</b> (D) : K affiche <b>8</b>. Cheveu sur 3 : 27.</p>
+ <p>Le chemin inverse donne la <b>racine cubique</b> : cheveu sur le nombre dans K, lecture sur D. Ainsi ∛27 = 3.</p>
+ <div class="key">Trois décades sur une même règle : c’est la longueur d’onde « volume » de l’instrument.</div>`,
+ objectifs:[
+  {t:"Mission A — cheveu sur 2 (D) : K doit afficher 8.",check:()=>nearC(X0+p1(2))&&state.face==="recto",hint:()=>hC(X0+p1(2)),demo:()=>animateTo({face:"recto",cx:X0+p1(2)},700)},
+  {t:"Mission B — ∛27 : cheveu sur 27 dans K (première décade… ou presque), lisez sur D.",check:()=>nearC(X0+pK(27)),hint:()=>"27 se trouve au début de la deuxième décade de K, juste avant le trait 30.",demo:()=>animateTo({cx:X0+pK(27)},700)}]},
+
+{id:"l07",num:"07",titre:"Le secret : l’échelle L",dur:"≈ 3 min",
+ accroche:"L est linéaire : elle affiche le logarithme lui-même.",
+ corps:`<p>Cheveu sur <b>2</b> (D) : L affiche <b>0,301</b>. Cheveu sur 3 : <b>0,477</b>. L donne la mantisse — la partie décimale de log₁₀.</p>
+ <p>C’est le cœur du mécanisme : <b>D est l’exponentielle de L</b> mise en forme. Voilà pourquoi glisser des longueurs multiplie des nombres, et pourquoi les graduations se resserrent.</p>
+ <div class="key">log₁₀ 2 ≈ 0,3010 et log₁₀ 3 ≈ 0,4771 : les deux constantes que tout possesseur de règle connaissait par cœur.</div>`,
+ objectifs:[
+  {t:"Mission — cheveu sur 3 (D) : L doit afficher ≈ 0,477.",check:()=>nearC(X0+p1(3))&&state.face==="recto",hint:()=>hC(X0+p1(3)),demo:()=>animateTo({face:"recto",cx:X0+p1(3)},700)}]},
+
+{id:"l08",num:"08",titre:"Sinus & tangentes — le verso",dur:"≈ 4 min",
+ accroche:"Retournez la règle : voici S et T.",
+ corps:`<p>Cliquez <b>« Retourner la règle »</b>. L’échelle <b>S</b> va de 5,7° à 90° : cheveu sur un angle, on lit son <b>sinus sur D</b> (entre 0,1 et 1 — à vous la virgule). L’échelle <b>T</b> couvre les tangentes de 5,7° à 45°.</p>
+ <p>Le cosinus suit par l’identité <b>cos θ = sin(90° − θ)</b> : cos 30°, c’est sin 60°.</p>
+ <div class="key">Angles en degrés, lectures en dixièmes : sin 30° = 0,5 ; sin 45° = cos 45° ≈ 0,707.</div>`,
+ objectifs:[
+  {t:"Mission A — retournez la règle, puis cheveu sur 30° (S) : D doit afficher 0,5.",check:()=>state.face==="verso"&&nearC(X0+pS(30)),hint:()=>state.face!=="verso"?"Commencez par retourner la règle (bouton ⇄).":"Cherchez 30 sur S : le cheveu doit ensuite lire 0,5 sur D.",demo:()=>animateTo({face:"verso",cx:X0+pS(30)},800)},
+  {t:"Mission B — cheveu sur 45° (S) : D affiche ≈ 0,707, sinus et cosinus confondus.",check:()=>state.face==="verso"&&nearC(X0+pS(45)),hint:()=>state.face!=="verso"?"La règle doit être sur son verso.":"45° est l’avant-dernier grand trait de S.",demo:()=>animateTo({face:"verso",cx:X0+pS(45)},800)}]}
+];
+
+/* --- Rendu des leçons --- */
+const navEl=document.getElementById("sidenav"),colEl=document.getElementById("lessonCol");
+const saved=store.get();const doneMap=saved.done||{};
+LESSONS.forEach((ls,i)=>{
+  const nb=document.createElement("button");
+  nb.innerHTML=`<span class="n">${ls.num}</span><span class="t">${ls.titre}</span><span class="st">○</span>`;
+  nb.onclick=()=>document.getElementById(ls.id).scrollIntoView({behavior:"smooth",block:"start"});
+  navEl.appendChild(nb);ls.navBtn=nb;
+
+  const art=document.createElement("article");
+  art.className="lecon rv";art.id=ls.id;
+  art.innerHTML=`<span class="ghost">${ls.num}</span>
+    <div class="lhead"><span class="num">LEÇON ${ls.num}</span><span class="dur">${ls.dur}</span></div>
+    <h3>${ls.titre}</h3><p class="accroche">${ls.accroche}</p>${ls.corps}
+    <div class="objs"></div>`;
+  const objs=art.querySelector(".objs");
+  ls.objectifs.forEach((ob,j)=>{
+    const d=document.createElement("div");d.className="obj";
+    d.innerHTML=`<div class="ot"><span class="oi">OB. ${j+1}</span><span>${ob.t}</span></div>
+      <div class="oacts"><button class="btn p s vf">Vérifier</button><button class="btn g s dm">Voir la manœuvre</button></div>
+      <div class="fb"></div>`;
+    const fb=d.querySelector(".fb");
+    d.querySelector(".vf").onclick=()=>{
+      benchAttn();
+      if(ob.check()){
+        if(!ob.done){ob.done=true;d.classList.add("done");d.querySelector(".oi").textContent="✓";
+          fb.textContent="✓ Objectif atteint.";fb.className="fb ok";
+          toast("Objectif atteint ✓");refreshProgress();}
+      }else{
+        fb.textContent="✗ "+ob.hint();fb.className="fb err";
+        d.classList.remove("shake");void d.offsetWidth;d.classList.add("shake");
+      }
+    };
+    d.querySelector(".dm").onclick=()=>{benchAttn();ob.demo();};
+    if(doneMap[ls.id]&&doneMap[ls.id][j]){ob.done=true;d.classList.add("done");d.querySelector(".oi").textContent="✓";}
+    objs.appendChild(d);
+  });
+  colEl.appendChild(art);
+  refreshLesson(ls);
+});
+function refreshLesson(ls){
+  const all=ls.objectifs.every(o=>o.done);
+  ls.navBtn.classList.toggle("done",all);
+  ls.navBtn.querySelector(".st").textContent=all?"✓":"○";
+}
+function refreshProgress(){
+  let n=0;
+  LESSONS.forEach(ls=>{const all=ls.objectifs.every(o=>o.done);if(all)n++;refreshLesson(ls);
+    doneMap[ls.id]=ls.objectifs.map(o=>!!o.done);});
+  store.set({done:doneMap});
+  document.getElementById("progTxt").textContent=`${n}/${LESSONS.length} LEÇONS`;
+  document.getElementById("progBar").style.width=(n/LESSONS.length*100)+"%";
+  if(n===LESSONS.length&&!store.get().feted){store.set({done:doneMap,feted:1});celebrate();toast("Toutes les leçons sont accomplies — la règle est à vous. 🏅",4200);}
+}
+refreshProgress();
+
+/* Leçon active dans le sommaire */
+const io=new IntersectionObserver(es=>{
+  es.forEach(en=>{if(en.isIntersecting){
+    LESSONS.forEach(l=>l.navBtn.classList.toggle("active",en.target.id===l.id));}});
+},{rootMargin:"-35% 0px -55% 0px"});
+document.querySelectorAll("article.lecon").forEach(a=>io.observe(a));
+
+/* ============================================================
+   8. EXERCICES
+============================================================ */
+const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
+const rr=(a,b)=>a+Math.random()*(b-a);
+const SINSET=[15,20,25,30,35,40,45,50,60];
+function genSet(){
+  const P=[];const mk=(type,a,b,exact,q)=>({type,a,b,exact,q,solved:false});
+  for(let i=0;i<2;i++){const a=r1(rr(1.5,9.5)),b=r1(rr(1.5,9.5));P.push(mk("mul",a,b,a*b,`${fr(a)} × ${fr(b)}`));}
+  for(let i=0;i<2;i++){const q=r1(rr(1.5,9.5)),b=r1(rr(1.5,9.5));P.push(mk("div",r2(q*b),b,q,`${fr(r2(q*b))} ÷ ${fr(b)}`));}
+  {const a=r1(rr(1.2,9.8));P.push(mk("sq",a,null,a*a,`${fr(a)}²`));}
+  {const r=r1(rr(1.2,9.8));P.push(mk("sqrt",r2(r*r),null,r,`√${fr(r2(r*r))}`));}
+  {const a=r1(rr(1.2,4.5));P.push(mk("cube",a,null,a*a*a,`${fr(a)}³`));}
+  {const d=SINSET[Math.floor(Math.random()*SINSET.length)];P.push(mk("sin",d,null,Math.sin(d*Math.PI/180),`sin ${d}°`));}
+  for(let i=P.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[P[i],P[j]]=[P[j],P[i]];}
+  return P;
+}
+const TYPELBL={mul:"MULTIPLICATION",div:"DIVISION",sq:"CARRÉ",sqrt:"RACINE CARRÉE",cube:"CUBE",sin:"TRIGONOMÉTRIE"};
+let problems=genSet(),cur=0,score={ok:0,try:0,streak:0};
+const exType=document.getElementById("exType"),exQ=document.getElementById("exQ"),exIn=document.getElementById("exIn"),
+      exFb=document.getElementById("exFb"),exNext=document.getElementById("exNext"),exDots=document.getElementById("exDots");
+function drawDots(){exDots.innerHTML="";problems.forEach((p,i)=>{const d=document.createElement("i");
+  if(p.solved)d.classList.add("done");if(i===cur)d.classList.add("cur");exDots.appendChild(d);});}
+function drawEx(){
+  const p=problems[cur];
+  exType.textContent=TYPELBL[p.type]+" — QUESTION "+(cur+1)+"/"+problems.length;
+  exQ.innerHTML=p.q+" <i>= ?</i>";
+  exIn.value="";exFb.textContent="";exFb.className="exfb";
+  exNext.disabled=!p.solved;drawDots();exIn.focus();
+}
+function placeFor(p){
+  switch(p.type){
+    case "mul":return place("mul",p.a,p.b);
+    case "div":return place("div",r2(p.a/p.exact)>=10? r2(p.a/10):p.a>=10?p.a/10:p.a,p.b>=10?p.b/10:p.b);
+    case "sq":return place("sq",p.a);
+    case "sqrt":return place("sqrt",p.a);
+    case "cube":return place("cube",p.a);
+    case "sin":return place("sin",p.a);
+  }
+}
+document.getElementById("exGo").onclick=()=>{
+  const p=problems[cur];if(p.solved)return;
+  const v=parseFloat(String(exIn.value).replace(",","."));
+  if(!isFinite(v)){exFb.textContent="Entrez un nombre — la virgule ou le point conviennent.";exFb.className="exfb no";return;}
+  score.try++;
+  const err=Math.abs(v-p.exact)/p.exact;
+  if(err<=0.02){
+    p.solved=true;score.ok++;score.streak++;
+    exFb.innerHTML=`✓ Juste. Valeur exacte : ${fmt4(p.exact)} — vous êtes dans la précision de l’instrument.`;
+    exFb.className="exfb ok";exNext.disabled=false;drawDots();
+    if(score.ok===problems.length){toast("Série complète ! La règle n’a plus de secret pour vous. 🏅",4200);celebrate();}
+  }else{
+    score.streak=0;
+    exFb.textContent=`✗ Trop loin (écart ${(err*100).toFixed(1)} %). Indice : ${hintEx(p)}`;
+    exFb.className="exfb no";
+  }
+  document.getElementById("scOk").textContent=score.ok;
+  document.getElementById("scTry").textContent=score.try;
+  document.getElementById("scStreak").textContent=score.streak;
+};
+function hintEx(p){
+  switch(p.type){
+    case "mul":return `posez C1 sur ${fr(p.a)}, cheveu sur ${fr(p.b)} — lisez sous le cheveu.`;
+    case "div":return `cheveu sur le dividende (ramené entre 1 et 10), diviseur dessous, lisez à l’index.`;
+    case "sq":return `cheveu sur ${fr(p.a)} et regardez l’échelle A.`;
+    case "sqrt":return `cheveu sur ${fr(p.a)} dans A, lisez D.`;
+    case "cube":return `cheveu sur ${fr(p.a)} et regardez l’échelle K.`;
+    case "sin":return `retournez la règle, cheveu sur ${p.a}° dans S, lisez D (entre 0,1 et 1).`;
+  }
+}
+exIn.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("exGo").click();});
+exNext.onclick=()=>{if(cur<problems.length-1){cur++;drawEx();}else toast("Série terminée — demandez-en une autre !");};
+document.getElementById("exNew").onclick=()=>{problems=genSet();cur=0;score={ok:0,try:0,streak:0};
+  ["scOk","scTry","scStreak"].forEach(id=>document.getElementById(id).textContent="0");drawEx();toast("Nouvelle série : huit calculs, trois chiffres.");};
+document.getElementById("exShow").onclick=()=>{
+  const p=problems[cur];
+  document.getElementById("etabli").scrollIntoView({behavior:"smooth",block:"center"});
+  benchAttn();animateTo(placeFor(p),900,()=>{ping(placeFor(p).cx);toast("Observez le placement, puis lisez "+(p.type==="mul"||p.type==="div"||p.type==="sqrt"||p.type==="sin"?"sous le cheveu, sur D.":"sur l’échelle adaptée."));});
+};
+drawEx();
+
+/* ============================================================
+   9. RÉVÉLATIONS AU DÉFILEMENT
+============================================================ */
+const ro=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in");ro.unobserve(en.target);}}),{threshold:.12});
+document.querySelectorAll(".rv").forEach(el=>ro.observe(el));
+
+/* Initialisation */
+applyFace("recto");
+update();
+</script>
+</body>
+</html>

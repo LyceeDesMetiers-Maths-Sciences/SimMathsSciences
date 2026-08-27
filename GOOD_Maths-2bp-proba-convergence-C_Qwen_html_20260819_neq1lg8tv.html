@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Pari du Chevalier de Méré</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#1a0f0a; --bg1:#2a1810; --line:#5c3a24;
+  --parch:#f3e4c3; --parchD:#d9c193; --ink:#3a2410; --muted:#a08568;
+  --gold:#e6b422; --goldD:#a67a15; --red:#b23a3a; --redD:#7d1f1f;
+  --teal:#3aa690; --green:#6ecf8a; --orange:#ff9955; --sky:#7cc0ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Atkinson Hyperlegible',sans-serif;color:var(--parch);line-height:1.4;
+  background:
+    radial-gradient(900px 500px at 80% -10%, #3a2418 0%, transparent 60%),
+    radial-gradient(700px 400px at 10% 110%, #2a1810 0%, transparent 55%),
+    linear-gradient(#160c08,#0f0804);
+  min-height:100vh;overflow-x:hidden;
+}
+header{position:relative;z-index:2;background:linear-gradient(180deg,#2a1810,#1a0f0a);
+  border-bottom:3px solid var(--goldD);box-shadow:0 8px 30px #000a}
+.brandRow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+  max-width:1320px;margin:0 auto;padding:8px clamp(14px,3vw,36px) 10px}
+h1{font-family:'Cinzel',serif;font-size:clamp(1.1rem,2.6vw,1.8rem);line-height:1;letter-spacing:.04em;
+  text-shadow:0 2px 0 #000a}
+h1 .or{color:var(--gold)}
+.tagline{color:var(--muted);font-size:.8rem;font-style:italic}
+@media(max-width:820px){.tagline{display:none}}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font-family:'Atkinson Hyperlegible';font-weight:700;cursor:pointer;border-radius:8px;
+  border:2px solid #6b4a2e;background:#3a2418;color:var(--parch);padding:6px 12px;font-size:.82rem;
+  transition:transform .18s,box-shadow .18s,filter .18s}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 14px #0008;filter:brightness(1.15)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.gold{background:linear-gradient(180deg,#f5cf6a,#c88a1a);border-color:#8d5d0a;color:#3a2405}
+.btn.red{background:linear-gradient(180deg,#d55858,#9e2828);border-color:#6b1414;color:#fff}
+.btn.teal{background:linear-gradient(180deg,#5ccfb4,#238571);border-color:#125a4a;color:#072a23}
+.btn.big{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(.9rem,1.6vw,1.05rem);padding:11px 18px;border-radius:10px}
+.btn.mini{padding:3px 9px;font-size:.75rem}
+.hidden{display:none!important}
+.lnk{background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;text-decoration:underline}
+.lnk:hover{color:var(--parchD)}
+main{position:relative;z-index:2;max-width:1320px;margin:0 auto;
+  padding:16px clamp(12px,2.5vw,30px) 40px;display:grid;gap:16px}
+.rowA,.rowB,.rowC{display:grid;gap:16px}
+.rowA{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.rowB{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.rowC{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:1000px){.rowA,.rowB,.rowC{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,#23140c,#1a0e07);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;box-shadow:0 10px 26px #0006}
+.secHead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ghost{font-family:'Cinzel',serif;font-weight:800;font-size:1.7rem;color:transparent;
+  -webkit-text-stroke:2px #5c3a24;line-height:.8}
+.secHead h2{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:.05em}
+.secHead .sub{color:var(--muted);font-size:.76rem;font-style:italic}
+.stage{position:relative;overflow:hidden;border-radius:12px;border:1px solid var(--line);
+  background:
+    radial-gradient(120% 95% at 50% 110%, #3a2618 0%, #1a0e07 58%, #140905 100%);
+  padding:12px 12px 14px}
+.stageTop{text-align:center;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.45em;
+  color:var(--goldD);margin:2px 0 10px}
+.paris{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+@media(max-width:560px){.paris{grid-template-columns:1fr}}
+.pari{background:linear-gradient(180deg,#2d1a10,#1f1008);border:2px solid var(--line);
+  border-radius:10px;padding:10px;position:relative;transition:.2s}
+.pari.actif{border-color:var(--gold);box-shadow:0 0 20px #e6b42233}
+.pari h3{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold);letter-spacing:.05em;
+  padding-bottom:5px;margin-bottom:6px;border-bottom:1px solid #3a2418}
+.pari .desc{font-size:.8rem;color:var(--parchD);min-height:2.4em}
+.pari .desc b{color:var(--gold)}
+.desRow{display:flex;gap:6px;justify-content:center;min-height:44px;margin:6px 0;flex-wrap:wrap}
+.de{width:36px;height:36px;border-radius:6px;background:linear-gradient(160deg,#faf0d8,#d9b87a);
+  display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:800;font-size:1.1rem;
+  color:#3a2410;box-shadow:inset 0 0 0 2px #8a6a3e,0 3px 6px #0008;
+  transition:transform .4s cubic-bezier(.4,1.5,.5,1)}
+.de.roule{animation:roule .45s ease-out}
+@keyframes roule{0%{transform:rotate(-180deg) scale(.7)}100%{transform:rotate(0) scale(1)}}
+.de.hit{background:linear-gradient(160deg,#ffe07a,#f2a520);box-shadow:inset 0 0 0 2px #8d5d0a,0 0 14px #e6b422aa}
+.de.double{background:linear-gradient(160deg,#b5e08a,#5aa84a);color:#fff;text-shadow:0 1px 0 #0007}
+.compteur{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
+  padding:4px 4px 0;font-variant-numeric:tabular-nums}
+.compteur b{color:var(--parch);font-family:'Cinzel',serif}
+.ctlRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;
+  margin-top:10px;padding-top:10px;border-top:1px dashed #3a2418}
+.seg{display:flex;border:2px solid var(--line);border-radius:8px;overflow:hidden}
+.seg label{padding:5px 11px;cursor:pointer;font-weight:700;font-size:.78rem;background:#2a1810;transition:.15s;white-space:nowrap}
+.seg input{display:none}
+.seg label:has(input:checked){background:var(--gold);color:#3a2405}
+.seg.pari label:has(input:checked){background:var(--teal)}
+.seg.pari label:last-child:has(input:checked){background:var(--gold)}
+.barre{height:9px;background:#0a0604;border-radius:6px;overflow:hidden;border:1px solid var(--line);flex:1;min-width:110px}
+.barre i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .1s}
+#runCount{font-weight:700;font-size:.8rem;min-width:8ch}
+#runMsg{margin-top:7px;font-weight:700;color:var(--green);font-size:.82rem;min-height:1.1em;text-align:center}
+.statsBloc{display:flex;gap:8px;margin-bottom:8px}
+.statBig{flex:1;background:#1a0e07;border:1px solid var(--line);border-radius:10px;
+  padding:7px 12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.statBig .lab{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.05em}
+.statBig .fr{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.08em;color:var(--muted);
+  text-align:left;padding:5px 8px;border-bottom:2px solid var(--line)}
+td{padding:6px 8px;border-bottom:1px solid #2a1a10;vertical-align:middle}
+tr.tot td{border-top:3px double var(--goldD);border-bottom:none;font-weight:700;background:#1a0e07}
+.freqIn{width:6.2ch;background:#0a0604;border:2px solid #6b4a2e;border-radius:7px;color:var(--parch);
+  font-family:inherit;font-weight:700;font-size:.85rem;padding:2px 5px;text-align:center;transition:.2s}
+.freqIn:focus{outline:none;border-color:var(--gold)}
+.freqIn.ok{border-color:var(--green);color:var(--green);background:#122e1a}
+.freqIn.err{animation:sec .4s}
+@keyframes sec{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.approx{color:var(--teal);font-size:.72rem;margin-left:5px}
+.etat{font-size:.8rem;margin-left:3px}
+.serieZone{border-top:1px dashed #3a2418;margin-top:10px;padding-top:10px}
+.serieZone h4{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold);letter-spacing:.05em;margin-bottom:8px}
+.serieCtl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:'Atkinson Hyperlegible';fill:var(--parchD)}
+.legende{display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin-top:6px}
+.legende b{color:var(--parch)}
+.courbeMsg{color:var(--muted);font-size:.8rem;font-style:italic;min-height:1.1em;margin-top:6px;text-align:center}
+.mission{display:flex;gap:8px;align-items:flex-start;padding:5px 4px;border-radius:7px;transition:.2s}
+.mission:hover{background:#2a1810}
+.mission input{width:16px;height:16px;accent-color:var(--gold);margin-top:2px;cursor:pointer;flex:none}
+.mission label{cursor:pointer;font-size:.85rem;line-height:1.35}
+.mission input:checked+label{text-decoration:line-through;color:var(--muted)}
+.question{background:#1a0e07;border-left:3px solid var(--goldD);border-radius:0 8px 8px 0;
+  padding:7px 11px;margin-bottom:7px;font-size:.83rem;line-height:1.4}
+.question b{color:var(--gold)}
+textarea{width:100%;min-height:110px;background:#0a0604;border:2px solid #6b4a2e;border-radius:9px;
+  color:var(--parch);font-family:inherit;font-size:.85rem;padding:10px;resize:vertical;margin-top:8px}
+textarea:focus{outline:none;border-color:var(--gold)}
+.panelSub{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold);letter-spacing:.05em;margin:10px 0 6px}
+.teachSec{display:none;border:2px solid var(--goldD);background:linear-gradient(180deg,#2e230e,#1f180a)}
+body.teach .teachSec{display:block}
+.teachSec h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem;margin-bottom:8px}
+.teachSec .val{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--teal)}
+.teachSec p{line-height:1.5;margin-bottom:8px;font-size:.9rem}
+.teachSec ul{margin:6px 0 10px 20px;line-height:1.55;font-size:.9rem}
+#btnTeach.on{background:var(--gold);color:#3a2405;border-color:#8d5d0a}
+footer{position:relative;z-index:2;text-align:center;color:#6b5a48;font-size:.75rem;padding:12px 0 26px}
+.tip{position:absolute;background:#1a0e07;border:1px solid var(--goldD);border-radius:6px;
+  padding:4px 8px;font-size:.78rem;color:var(--parch);pointer-events:none;z-index:5;
+  white-space:nowrap;opacity:0;transition:.12s}
+.zoomCtl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px;
+  background:#1a0e07;border:1px solid var(--line);border-radius:8px}
+.zoomCtl label{font-size:.75rem;color:var(--muted);font-weight:700}
+.zoomCtl .seg{font-size:.72rem}
+.zoomCtl .seg label{padding:3px 8px;font-size:.72rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brandRow">
+    <div>
+      <h1>LE PARI DU <span class="or">CHEVALIER DE MÉRÉ</span></h1>
+      <p class="tagline">1654 · un joueur perd son argent à deux jeux qui semblaient égaux. Pascal et Fermat vont résoudre l'énigme.</p>
+    </div>
+    <div class="hud">
+      <button class="btn" id="btnSound" title="Son">🔊</button>
+      <button class="btn" id="btnReset">↺ Réinit.</button>
+      <button class="btn" id="btnTeach">🔑 Enseignant</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="rowA">
+  <div class="panel">
+    <div class="secHead"><span class="ghost">01</span><h2>LE PLATEAU</h2><span class="sub">deux paris, une seule question : lequel est gagnant ?</span></div>
+    <div class="stage">
+      <div class="stageTop">· TABLE DE JEU ·</div>
+      <div class="paris">
+        <div class="pari" id="pari1">
+          <h3>Pari A · UN 6 en 4 lancers</h3>
+          <p class="desc">On lance <b>un dé 4 fois</b>. On gagne si <b>au moins un 6</b> apparaît.</p>
+          <div class="desRow" id="desA"></div>
+          <div class="compteur"><span>Lancers : <b id="countA">0</b></span><span>Victoires : <b id="winA">0</b></span></div>
+        </div>
+        <div class="pari" id="pari2">
+          <h3>Pari B · UN DOUBLE-6 en 24 lancers</h3>
+          <p class="desc">On lance <b>deux dés 24 fois</b>. On gagne si <b>au moins un double-6</b> apparaît.</p>
+          <div class="desRow" id="desB"></div>
+          <div class="compteur"><span>Lancers : <b id="countB">0</b></span><span>Victoires : <b id="winB">0</b></span></div>
+        </div>
+      </div>
+      <div class="ctlRow">
+        <div class="seg" id="segMode">
+          <label><input type="radio" name="mode" value="manuel" checked><span>Manuel</span></label>
+          <label><input type="radio" name="mode" value="auto"><span>Automatique</span></label>
+        </div>
+        <div class="seg pari" id="segPariPlateau">
+          <label><input type="radio" name="pariPlateau" value="A" checked><span>Pari A</span></label>
+          <label><input type="radio" name="pariPlateau" value="B"><span>Pari B</span></label>
+        </div>
+        <button class="btn big gold" id="btnLance">▶ LANCER UN PARI</button>
+        <div class="seg" id="segSpeed">
+          <label><input type="radio" name="speed" value="slow"><span>Lent</span></label>
+          <label><input type="radio" name="speed" value="fast" checked><span>Rapide</span></label>
+          <label><input type="radio" name="speed" value="instant"><span>Instant</span></label>
+        </div>
+        <button class="btn big teal hidden" id="btnRun100">⚡ 100 paris</button>
+        <button class="btn big teal hidden" id="btnRun1000">⚡ 1000 paris</button>
+        <button class="btn big red hidden" id="btnStop">■ Stop</button>
+      </div>
+      <p id="runMsg">Choisis un pari et clique sur LANCER. Observe les dés puis la fréquence.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="secHead"><span class="ghost">02</span><h2>DONNÉES &amp; SÉRIES</h2><span class="sub">mission 1 : calcule toi-même les fréquences (au millième)</span></div>
+    <div class="statsBloc">
+      <div class="statBig"><span class="lab" style="color:var(--teal)">A · 1 dé ×4</span><span class="fr" id="totA">0 / 0</span><span class="approx" id="totAx"></span></div>
+      <div class="statBig"><span class="lab" style="color:var(--gold)">B · 2 dés ×24</span><span class="fr" id="totB">0 / 0</span><span class="approx" id="totBx"></span></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="scoreTab">
+        <thead><tr><th>ÉQUIPE</th><th>A GAGNÉ</th><th>FRÉQ.</th><th>B GAGNÉ</th><th>FRÉQ.</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="serieZone">
+      <h4>⚡ SÉRIES — chaque série = un point sur la boîte à moustaches</h4>
+      <div class="serieCtl">
+        <div class="seg" id="segPari">
+          <label><input type="radio" name="pari" value="A" checked><span>Pari A</span></label>
+          <label><input type="radio" name="pari" value="B"><span>Pari B</span></label>
+        </div>
+        <div class="seg" id="segN">
+          <label><input type="radio" name="sn" value="50"><span>50</span></label>
+          <label><input type="radio" name="sn" value="100" checked><span>100</span></label>
+          <label><input type="radio" name="sn" value="200"><span>200</span></label>
+          <label><input type="radio" name="sn" value="500"><span>500</span></label>
+          <label><input type="radio" name="sn" value="1000"><span>1000</span></label>
+        </div>
+        <button class="btn big gold" id="btnSerie">▶ SÉRIE</button>
+        <div class="barre"><i id="serieBar"></i></div>
+        <span id="serieCount"></span>
+      </div>
+      <p id="serieMsg"></p>
+      <button class="lnk" id="btnDemo">⚙ insérer un jeu d'essai (démonstration des graphiques)</button>
+    </div>
+  </div>
+</section>
+
+<section class="rowB">
+  <div class="panel" style="position:relative">
+    <div class="secHead"><span class="ghost">03</span><h2>CONVERGENCE DES FRÉQUENCES</h2><span class="sub">la fréquence de gain en fonction du nombre de paris joués</span></div>
+    <svg id="svgCourbe" viewBox="0 0 760 320"></svg>
+    <div class="tip" id="courbeTip"></div>
+    <div class="legende">
+      <span><b style="color:#3aa690">—</b> Pari A (1 dé × 4)</span>
+      <span><b style="color:#e6b422">—</b> Pari B (2 dés × 24)</span>
+      <span><b style="color:#ffffff;opacity:.6">- - -</b> ligne 50 % = jeu équitable</span>
+    </div>
+    <p class="courbeMsg" id="courbeMsg">Lance quelques paris pour faire naître les courbes…</p>
+    <div class="zoomCtl">
+      <label>🔍 Zoom Y :</label>
+      <div class="seg" id="segZoomY">
+        <label><input type="radio" name="zoomY" value="0-100" checked><span>0–100%</span></label>
+        <label><input type="radio" name="zoomY" value="40-60"><span>40–60%</span></label>
+        <label><input type="radio" name="zoomY" value="45-55"><span>45–55%</span></label>
+        <label><input type="radio" name="zoomY" value="48-52"><span>48–52%</span></label>
+      </div>
+      <button class="btn mini" id="btnResetCourbe">↺ Échelle par défaut</button>
+      <span style="margin-left:auto;color:var(--muted);font-size:.78rem">Points : <b id="courbeN" style="color:var(--gold)">0</b></span>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn mini" id="btnClearCourbe">Effacer les courbes</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="secHead"><span class="ghost">04</span><h2>BOÎTES À MOUSTACHES</h2><span class="sub">fréquences des séries, par pari</span></div>
+    <svg id="svgBox" viewBox="0 0 760 260"></svg>
+    <div class="legende">
+      <span><b>·</b> 1 point = 1 série (couleur = équipe)</span>
+      <span>▭ Q1→Q3 · trait épais = <b>médiane</b> · moustaches = min/max</span>
+    </div>
+    <div class="zoomCtl">
+      <label>🔍 Zoom X :</label>
+      <div class="seg" id="segZoomX">
+        <label><input type="radio" name="zoomX" value="0-100" checked><span>0–100%</span></label>
+        <label><input type="radio" name="zoomX" value="40-60"><span>40–60%</span></label>
+        <label><input type="radio" name="zoomX" value="45-55"><span>45–55%</span></label>
+        <label><input type="radio" name="zoomX" value="48-52"><span>48–52%</span></label>
+      </div>
+      <button class="btn mini" id="btnResetBox">↺ Échelle par défaut</button>
+    </div>
+  </div>
+</section>
+
+<section class="rowC">
+  <div class="panel">
+    <div class="secHead"><span class="ghost">05</span><h2>MISSIONS &amp; NOTES</h2><span class="sub">parcours en autonomie</span></div>
+    <div id="missions"></div>
+    <div class="panelSub">📝 TES NOTES</div>
+    <textarea id="notes" placeholder="Calculs, observations, schémas, doutes…"></textarea>
+  </div>
+  <div class="panel">
+    <div class="secHead"><span class="ghost">❓</span><h2>QUESTIONS D'ENQUÊTE</h2></div>
+    <div class="question"><b>Q1.</b> Avant de jouer : le chevalier pense que les deux paris ont la <b>même probabilité de gain</b>. Quel calcul a-t-il fait ?</div>
+    <div class="question"><b>Q2.</b> Regarde la courbe de convergence : les deux courbes finissent-elles par se confondre ? Autour de quelle valeur se stabilisent-elles ?</div>
+    <div class="question"><b>Q3.</b> Combien de paris faut-il environ pour que la différence entre A et B devienne visible à l'œil nu ?</div>
+    <div class="question"><b>Q4.</b> Le chevalier ne pouvait pas faire 10 000 parties au XVIIᵉ siècle. Est-ce pour cela qu'il s'est trompé ?</div>
+    <div class="question"><b>Q5 — Défi calcul.</b> La probabilité de NE PAS faire de 6 en 4 lancers est (5/6)⁴. Pourquoi ? Quelle est alors la probabilité de <b>gagner le pari A</b> ?</div>
+    <div class="question"><b>Q6 — Défi bis.</b> Fais le même raisonnement pour le pari B (probabilité de perdre = ?). Compare les deux résultats.</div>
+  </div>
+</section>
+
+<section class="panel teachSec">
+  <h2>🔑 APPORT THÉORIQUE — pour la mise en commun</h2>
+  <p>L'erreur de Méré est de croire que les probabilités s'additionnent. Or l'événement « au moins un succès » se calcule par <b>l'événement contraire</b> « aucun succès ».</p>
+  <ul>
+    <li><b>Pari A</b> : P(perdre) = (5/6)⁴ ≈ 0,4823, donc <span class="val">P(gagner) = 1 − (5/6)⁴ ≈ 0,5177</span>.</li>
+    <li><b>Pari B</b> : P(perdre) = (35/36)²⁴ ≈ 0,5086, donc <span class="val">P(gagner) = 1 − (35/36)²⁴ ≈ 0,4914</span>.</li>
+  </ul>
+  <p>Le pari A est donc <b>légèrement favorable</b> (51,8 %), le pari B <b>légèrement défavorable</b> (49,1 %). La différence n'est que de <b>2,6 points</b> — d'où la difficulté à la percevoir sans un très grand nombre de répétitions. C'est cette question posée à Pascal en 1654 qui a donné naissance, avec Fermat, à la théorie des probabilités.</p>
+  <p><b>Sur le graphique</b> : les droites horizontales pointillées affichent en mode enseignant les deux valeurs limites 0,5177 et 0,4914. La ligne des 50 % en gris sert de référence « jeu équitable ». À mesure que n augmente, les courbes convergent vers ces valeurs (loi des grands nombres) et les fluctuations diminuent (fluctuation d'échantillonnage).</p>
+</section>
+
+</main>
+<footer>Simulation pédagogique — problème du Chevalier de Méré (1654) · Statistique &amp; probabilités · 2nde bac pro</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const NS="http://www.w3.org/2000/svg";
+const svgEl=(n,at,parent)=>{const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);if(parent)parent.append(e);return e};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=faces=>1+Math.floor(Math.random()*faces);
+const fmt=v=>v.toFixed(3).replace(".",",");
+const uid=()=>Math.random().toString(36).slice(2,9);
+const COLORS=["#e6b422","#3aa690","#d55858","#7cc0ff","#a8e05f","#f27bb2"];
+const KEY="mere_v3";
+
+let actx=null, soundOn=true;
+function beep(f=600,d=.07,type="triangle",g=.1,delay=0){
+  if(!soundOn)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime+delay,o=actx.createOscillator(),v=actx.createGain();
+    o.type=type;o.frequency.value=f;v.gain.setValueAtTime(g,t);
+    v.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(v).connect(actx.destination);o.start(t);o.stop(t+d);
+  }catch(e){}
+}
+const sndClick=()=>beep(760,.04,"square",.05);
+const sndDe=()=>{beep(440,.06,"triangle",.08);beep(520,.06,"triangle",.06,.04)};
+const sndWin=()=>{beep(523,.12);beep(659,.12,"triangle",.1,.1);beep(784,.22,"triangle",.11,.2)};
+const sndLose=()=>{beep(330,.18,"sawtooth",.06);beep(233,.28,"sawtooth",.06,.12)};
+
+const DEF=()=>({
+  players:[
+    {id:uid(),name:"Équipe Alpha",color:COLORS[0],A:{n:0,w:0},B:{n:0,w:0}},
+    {id:uid(),name:"Équipe Bravo",color:COLORS[1],A:{n:0,w:0},B:{n:0,w:0}}
+  ],
+  cumA:[], cumB:[], series:[], inputs:{}, notes:"", missions:[false,false,false,false,false,false],
+  zoomY:"0-100", zoomX:"0-100"
+});
+let state=DEF();
+state.active=state.players[0].id;
+let teacherMode=false;
+
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} }
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY));
+    if(d&&Array.isArray(d.players)&&d.players.length){
+      state=Object.assign(DEF(),d);
+      if(!state.players.some(p=>p.id===state.active)) state.active=state.players[0].id;
+    }
+  }catch(e){}
+}
+const getPlayer=id=>state.players.find(p=>p.id===id);
+const freqOf=(pid,p)=>{
+  if(pid==="all"){let n=0,w=0;state.players.forEach(q=>{n+=q[p].n;w+=q[p].w});return{n,w}}
+  const q=getPlayer(pid);return{n:q[p].n,w:q[p].w};
+};
+
+function playA(){
+  for(let i=0;i<4;i++) if(rnd(6)===6) return {lancers:[...Array(4)].map((_,k)=>i<=k?rnd(6):0), win:true, idx:i};
+  return {lancers:[rnd(6),rnd(6),rnd(6),rnd(6)], win:false, idx:-1};
+}
+function playB(){
+  const lancers=[];
+  for(let i=0;i<24;i++){
+    const d1=rnd(6), d2=rnd(6);
+    lancers.push([d1,d2]);
+    if(d1===6&&d2===6) return {lancers, win:true, idx:i};
+  }
+  return {lancers, win:false, idx:-1};
+}
+
+function renderDesA(lancers, winIdx){
+  const box=$("#desA");box.innerHTML="";
+  lancers.forEach((v,i)=>{
+    const d=document.createElement("div");d.className="de roule";
+    d.textContent=v;
+    if(i===winIdx) d.classList.add("hit");
+    box.append(d);
+  });
+}
+function renderDesB(lancers, winIdx){
+  const box=$("#desB");box.innerHTML="";
+  const last=lancers.slice(-6);
+  last.forEach((pair,i)=>{
+    const idx=lancers.length-6+i;
+    const w=document.createElement("div");w.style.display="flex";w.style.gap="2px";
+    pair.forEach(v=>{
+      const d=document.createElement("div");d.className="de roule";
+      d.style.width="28px";d.style.height="28px";d.style.fontSize=".9rem";
+      d.textContent=v;
+      if(idx===winIdx && v===6) d.classList.add("double");
+      w.append(d);
+    });
+    box.append(w);
+  });
+}
+
+function renderPlayers(){
+  const box=$("#teamChips");box.innerHTML="";
+  state.players.forEach(p=>{
+    const chip=document.createElement("div");
+    chip.className="chipPl"+(p.id===state.active?" act":"");
+    chip.innerHTML=`<span class="dot" style="background:${p.color}"></span>
+      <input maxlength="16" aria-label="nom">
+      <span class="mini2">${p.A.n+p.B.n}p</span>
+      <button class="del">✕</button>`;
+    const inp=chip.querySelector("input");inp.value=p.name;
+    inp.addEventListener("input",e=>{p.name=e.target.value||"Équipe";save();renderScore()});
+    inp.addEventListener("click",e=>e.stopPropagation());
+    chip.addEventListener("click",()=>{state.active=p.id;sndClick();renderPlayers();save()});
+    chip.querySelector(".del").addEventListener("click",e=>{
+      e.stopPropagation();if(state.players.length<=1)return;
+      state.players=state.players.filter(q=>q.id!==p.id);
+      if(state.active===p.id)state.active=state.players[0].id;
+      renderPlayers();renderScore();renderBox();save();
+    });
+    box.append(chip);
+  });
+  const add=document.createElement("button");
+  add.className="btn mini";add.textContent="＋ Équipe";
+  add.addEventListener("click",()=>{
+    if(state.players.length>=6)return;
+    const p={id:uid(),name:"Équipe "+["Charlie","Delta","Echo","Foxtrot"][state.players.length-2]||"Nova",
+      color:COLORS[state.players.length%COLORS.length],A:{n:0,w:0},B:{n:0,w:0}};
+    state.players.push(p);state.active=p.id;sndClick();
+    renderPlayers();renderScore();save();
+  });
+  box.append(add);
+}
+(function(){
+  const stage=document.querySelector(".stage");
+  const t=document.createElement("div");
+  t.id="teamChips";t.className="teams";
+  t.style.cssText="display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px dashed #3a2418";
+  stage.append(t);
+})();
+const chipStyles=document.createElement("style");
+chipStyles.textContent=`
+  .chipPl{display:flex;align-items:center;gap:6px;border:2px solid #6b4a2e;border-radius:999px;padding:3px 9px;background:#2a1810;cursor:pointer;transition:.15s;font-size:.8rem}
+  .chipPl:hover{border-color:var(--goldD)}
+  .chipPl.act{border-color:var(--gold);background:#3a2418;box-shadow:0 0 10px #e6b42233}
+  .chipPl input{width:9ch;background:none;border:none;color:var(--parch);font-family:inherit;font-weight:700;font-size:.8rem;padding:1px}
+  .chipPl input:focus{outline:none}
+  .chipPl .mini2{color:var(--muted);font-size:.68rem}
+  .chipPl .del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:0}
+  .chipPl .del:hover{color:var(--red)}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 6px #0008}
+  .teams{margin-top:10px}`;
+document.head.append(chipStyles);
+
+function renderScore(){
+  const tb=$("#scoreTab tbody");tb.innerHTML="";
+  const mkRow=(pid,name,color)=>{
+    const tr=document.createElement("tr");
+    let cells=`<td><span class="dot" style="display:inline-block;vertical-align:-1px;margin-right:6px;background:${color}"></span>${name}</td>`;
+    ["A","B"].forEach(p=>{
+      const {n,w}=freqOf(pid,p);
+      cells+=`<td style="font-family:'Cinzel',serif;font-size:.8rem;color:${p==="A"?"var(--teal)":"var(--gold)"}">${n?w+" / "+n:"—"}</td><td>`;
+      if(n>0){
+        const k=pid+"|"+p, saved=state.inputs[k]||"";
+        const ok=Math.abs(parseFloat(saved.replace(",","."))-w/n)<=0.0075 && saved!=="";
+        cells+=`<input class="freqIn ${ok?"ok":""}" data-k="${k}" placeholder="?,???" value="${ok?fmt(w/n):saved}" ${ok?"disabled":""}><span class="etat">${ok?"✓":""}</span>`;
+        if(teacherMode&&!ok)cells+=`<span class="approx">≈ ${fmt(w/n)}</span>`;
+      }else cells+=`<span style="color:var(--muted)">—</span>`;
+      cells+=`</td>`;
+    });
+    tr.innerHTML=cells;
+    tr.querySelectorAll(".freqIn:not(.ok)").forEach(inp=>{
+      inp.addEventListener("input",()=>{state.inputs[inp.dataset.k]=inp.value;save()});
+      inp.addEventListener("change",()=>{
+        const [pid2,p]=inp.dataset.k.split("|"),{n,w}=freqOf(pid2,p),v=parseFloat(inp.value.replace(",","."));
+        if(isNaN(v)){inp.classList.add("err");setTimeout(()=>inp.classList.remove("err"),450);return}
+        if(Math.abs(v-w/n)<=0.0075){inp.value=fmt(w/n);inp.classList.add("ok");inp.disabled=true;
+          inp.nextElementSibling.textContent="✓";sndWin();}
+        else{inp.classList.add("err");beep(200,.15,"square",.06);setTimeout(()=>inp.classList.remove("err"),450);}
+        save();
+      });
+    });
+    tb.append(tr);
+  };
+  state.players.forEach(p=>mkRow(p.id,p.name,p.color));
+  mkRow("all","TOUTES ÉQUIPES","#d9c193");
+  tb.lastChild.classList.add("tot");
+  const a=freqOf("all","A"),b=freqOf("all","B");
+  $("#totA").textContent=a.n?a.w+" / "+a.n:"0 / 0";
+  $("#totB").textContent=b.n?b.w+" / "+b.n:"0 / 0";
+  $("#totAx").textContent=(teacherMode&&a.n)?"≈ "+fmt(a.w/a.n):"";
+  $("#totBx").textContent=(teacherMode&&b.n)?"≈ "+fmt(b.w/b.n):"";
+}
+
+let running=false, stopReq=false;
+function speed(){return document.querySelector('#segSpeed input:checked').value}
+function mode(){return document.querySelector('#segMode input:checked').value}
+function delay(){return {slow:260, fast:60, instant:0}[speed()]}
+
+function updateCompteurs(){
+  const p=getPlayer(state.active);
+  $("#countA").textContent=p.A.n; $("#winA").textContent=p.A.w;
+  $("#countB").textContent=p.B.n; $("#winB").textContent=p.B.w;
+}
+function setMsg(t){$("#runMsg").textContent=t}
+
+function playOnce(pari){
+  const p=getPlayer(state.active);
+  if(pari==="A"){
+    const r=playA();
+    renderDesA(r.lancers, r.win?r.idx:-1);
+    p.A.n++; if(r.win) p.A.w++;
+    state.cumA.push(r.win?1:0);
+    if(r.win) sndWin(); else sndLose();
+    $("#pari1").classList.add("actif");$("#pari2").classList.remove("actif");
+  } else {
+    const r=playB();
+    renderDesB(r.lancers, r.win?r.idx:-1);
+    p.B.n++; if(r.win) p.B.w++;
+    state.cumB.push(r.win?1:0);
+    if(r.win) sndWin(); else sndLose();
+    $("#pari2").classList.add("actif");$("#pari1").classList.remove("actif");
+  }
+  updateCompteurs();
+  renderCourbe();
+  renderScore();
+  save();
+}
+
+$("#btnLance").addEventListener("click",()=>{
+  if(running)return;
+  sndClick();
+  const pari = document.querySelector('#segPariPlateau input:checked')?.value || "A";
+  playOnce(pari);
+});
+
+async function runBatch(n){
+  if(running)return;
+  running=true; stopReq=false;
+  $("#btnLance").disabled=true;
+  $("#btnRun100").classList.add("hidden");$("#btnRun1000").classList.add("hidden");
+  $("#btnStop").classList.remove("hidden");
+  const pari = document.querySelector('#segPariPlateau input:checked').value;
+  const p=getPlayer(state.active);
+  let i=0, win=0;
+  const d=delay();
+  while(i<n && !stopReq){
+    const r = pari==="A" ? playA() : playB();
+    if(pari==="A"){renderDesA(r.lancers,r.win?r.idx:-1); p.A.n++; if(r.win){p.A.w++;win++} state.cumA.push(r.win?1:0);}
+    else {renderDesB(r.lancers,r.win?r.idx:-1); p.B.n++; if(r.win){p.B.w++;win++} state.cumB.push(r.win?1:0);}
+    i++;
+    if(d>0){
+      updateCompteurs(); renderCourbe();
+      await new Promise(r=>setTimeout(r,d));
+    } else if(i%50===0){
+      updateCompteurs(); renderCourbe(); renderScore();
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
+  sndClick();
+  setMsg(`✅ ${i} paris ${pari} joués par ${getPlayer(state.active).name} — ${win} gagnés (fréq. ${fmt(win/i)}).`);
+  running=false; $("#btnLance").disabled=false;
+  $("#btnStop").classList.add("hidden");
+  if(mode()==="auto"){$("#btnRun100").classList.remove("hidden");$("#btnRun1000").classList.remove("hidden");}
+  updateCompteurs(); renderCourbe(); renderScore(); save();
+}
+$("#btnRun100").addEventListener("click",()=>runBatch(100));
+$("#btnRun1000").addEventListener("click",()=>runBatch(1000));
+$("#btnStop").addEventListener("click",()=>{stopReq=true; sndClick()});
+
+$$('input[name="mode"]').forEach(r=>r.addEventListener("change",()=>{
+  const auto=mode()==="auto";
+  $("#btnRun100").classList.toggle("hidden",!auto);
+  $("#btnRun1000").classList.toggle("hidden",!auto);
+  $("#btnLance").classList.toggle("hidden",auto);
+  if(!auto) setMsg("Choisis un pari et clique sur LANCER.");
+  else setMsg("Mode auto : choisis A ou B puis lance 100 ou 1000 paris.");
+}));
+
+let serieRunning=false;
+$("#btnSerie").addEventListener("click",async()=>{
+  if(serieRunning)return;
+  const p=getPlayer(state.active);
+  const pari=document.querySelector('#segPari input:checked').value;
+  const n=parseInt(document.querySelector('#segN input:checked').value);
+  serieRunning=true;sndClick();
+  $("#btnSerie").disabled=true;$("#serieMsg").textContent="";
+  let i=0,w=0;const bar=$("#serieBar"),cnt=$("#serieCount");
+  while(i<n){
+    const step=Math.max(1,Math.round(n/45));
+    for(let k=0;k<step&&i<n;k++){
+      const r=pari==="A"?playA():playB();
+      if(r.win) w++;
+      i++;
+    }
+    bar.style.width=(100*i/n)+"%";
+    cnt.textContent=i+"/"+n;
+    await new Promise(r=>setTimeout(r,30));
+  }
+  p[pari].n+=n;p[pari].w+=w;
+  state.series.push({pari,f:w/n,color:p.color,n,w});
+  $("#serieMsg").innerHTML=`✅ ${p.name} · ${pari} : <b>${w}/${n} gagnées</b> → fréquence = ${fmt(w/n)}.`;
+  (w/n>=0.5)?sndWin():sndLose();
+  bar.style.width="0";cnt.textContent="";
+  $("#btnSerie").disabled=false;serieRunning=false;
+  renderScore();renderPlayers();renderBox();save();
+});
+
+const CRV={x0:60,x1:720,y0:30,y1:285};
+function getZoomYRange(){
+  const z=state.zoomY;
+  if(z==="40-60") return [0.4,0.6];
+  if(z==="45-55") return [0.45,0.55];
+  if(z==="48-52") return [0.48,0.52];
+  return [0,1];
+}
+function renderCourbe(){
+  const svg=$("#svgCourbe");svg.innerHTML="";
+  const W=CRV.x1-CRV.x0, H=CRV.y1-CRV.y0;
+  const [yMin,yMax]=getZoomYRange();
+  const yRange=yMax-yMin;
+  
+  for(let i=0;i<=10;i++){
+    const y=CRV.y0+(H*i/10);
+    svgEl("line",{x1:CRV.x0,y1:y,x2:CRV.x1,y2:y,stroke:"#2a1a10","stroke-width":1},svg);
+  }
+  const nA=state.cumA.length, nB=state.cumB.length;
+  const nMax=Math.max(nA,nB,10);
+  const useLog = nMax>100;
+  const xOf=k=>{
+    if(k===0) return CRV.x0;
+    if(useLog) return CRV.x0 + W * (Math.log10(k+1)/Math.log10(nMax+1));
+    return CRV.x0 + W * (k/nMax);
+  };
+  const ticks = useLog ? [1,10,50,100,500,1000,2000,5000,10000].filter(t=>t<=nMax) : [];
+  if(!useLog){const step=Math.max(1,Math.ceil(nMax/8));for(let t=0;t<=nMax;t+=step)ticks.push(t);}
+  ticks.forEach(t=>{
+    const x=xOf(t);
+    svgEl("line",{x1:x,y1:CRV.y1,x2:x,y2:CRV.y1+5,stroke:"#6b4a2e","stroke-width":2},svg);
+    const txt=svgEl("text",{x,y:CRV.y1+18,"text-anchor":"middle","font-size":11},svg);
+    txt.textContent=t;
+  });
+  for(let i=0;i<=10;i++){
+    const y=CRV.y0+H*i/10, v=yMax-(yRange*i/10);
+    svgEl("line",{x1:CRV.x0-4,y1:y,x2:CRV.x0+4,y2:y,stroke:"#6b4a2e","stroke-width":2},svg);
+    if(i%2===0){
+      const txt=svgEl("text",{x:CRV.x0-8,y:y+4,"text-anchor":"end","font-size":11},svg);
+      txt.textContent=v.toFixed(2).replace(".",",");
+    }
+  }
+  svgEl("line",{x1:CRV.x0,y1:CRV.y0,x2:CRV.x0,y2:CRV.y1,stroke:"#6b4a2e","stroke-width":2},svg);
+  svgEl("line",{x1:CRV.x0,y1:CRV.y1,x2:CRV.x1,y2:CRV.y1,stroke:"#6b4a2e","stroke-width":2},svg);
+  const t1=svgEl("text",{x:CRV.x0-6,y:CRV.y0-8,"font-size":11,fill:"#a08568"},svg);
+  t1.textContent="fréq.";
+  const t2=svgEl("text",{x:CRV.x1+8,y:CRV.y1+4,"font-size":11,fill:"#a08568"},svg);
+  t2.textContent="n";
+  
+  if(yMin<=0.5 && yMax>=0.5){
+    const y50=CRV.y0+H*((yMax-0.5)/yRange);
+    svgEl("line",{x1:CRV.x0,y1:y50,x2:CRV.x1,y2:y50,stroke:"#fdf3dd","stroke-width":1,"stroke-dasharray":"4 4",opacity:.6},svg);
+    const t50=svgEl("text",{x:CRV.x1-4,y:y50-4,"text-anchor":"end","font-size":10,fill:"#fdf3dd",opacity:.7},svg);
+    t50.textContent="50 %";
+  }
+  
+  if(teacherMode){
+    [[0.5177,"P(A)≈0,518","#3aa690"],[0.4914,"P(B)≈0,491","#e6b422"]].forEach(([v,lab,col])=>{
+      if(v>=yMin && v<=yMax){
+        const y=CRV.y0+H*((yMax-v)/yRange);
+        svgEl("line",{x1:CRV.x0,y1:y,x2:CRV.x1,y2:y,stroke:col,"stroke-width":2,"stroke-dasharray":"6 5",opacity:.85},svg);
+        const t=svgEl("text",{x:CRV.x1-4,y:y-4,"text-anchor":"end","font-size":11,"font-weight":700,fill:col},svg);
+        t.textContent=lab;
+      }
+    });
+  }
+  
+  function traceCum(cum, color){
+    if(cum.length<2) return;
+    let wins=0;
+    const pts=[];
+    const sampleStep = cum.length>800 ? Math.ceil(cum.length/800) : 1;
+    for(let k=0;k<cum.length;k++){
+      wins+=cum[k];
+      const f=wins/(k+1);
+      if(f>=yMin && f<=yMax){
+        if(k===0 || (k+1)%sampleStep===0 || k===cum.length-1){
+          const x=xOf(k+1), y=CRV.y0+H*((yMax-f)/yRange);
+          pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        }
+      }
+    }
+    if(pts.length>0) svgEl("polyline",{points:pts.join(" "),fill:"none",stroke:color,"stroke-width":2.2,"stroke-linejoin":"round",opacity:.95},svg);
+  }
+  traceCum(state.cumA, "#3aa690");
+  traceCum(state.cumB, "#e6b422");
+  
+  $("#courbeN").textContent=state.cumA.length+state.cumB.length;
+  if(state.cumA.length===0 && state.cumB.length===0){
+    $("#courbeMsg").textContent="Lance quelques paris pour faire naître les courbes…";
+  } else {
+    const nMaxAff=Math.max(state.cumA.length,state.cumB.length);
+    let msg=`${nMaxAff} paris joués au total. `;
+    if(nMaxAff<50) msg+="On ne voit pas encore de stabilisation : il faut continuer !";
+    else if(nMaxAff<300) msg+="Les courbes commencent à se stabiliser.";
+    else if(nMaxAff<2000) msg+="La tendance se dessine : quelle courbe passe au-dessus de 50 % ?";
+    else msg+="Belle accumulation ! Les deux courbes convergent vers des valeurs différentes.";
+    $("#courbeMsg").textContent=msg;
+  }
+}
+$$('input[name="zoomY"]').forEach(r=>r.addEventListener("change",()=>{
+  state.zoomY=document.querySelector('#segZoomY input:checked').value;
+  renderCourbe();save();
+}));
+$("#btnResetCourbe").addEventListener("click",()=>{
+  state.zoomY="0-100";
+  document.querySelector('#segZoomY input[value="0-100"]').checked=true;
+  renderCourbe();save();
+});
+$("#btnClearCourbe").addEventListener("click",()=>{
+  if(!confirm("Effacer les courbes de convergence ? (Les scores des équipes sont conservés.)"))return;
+  state.cumA=[];state.cumB=[];renderCourbe();save();
+});
+
+function quartiles(arr){
+  const s=[...arr].sort((a,b)=>a-b),n=s.length;
+  const q=p=>{const i=(n-1)*p,l=Math.floor(i),h=Math.ceil(i);return s[l]+(s[h]-s[l])*(i-l)};
+  return{min:s[0],q1:q(.25),med:q(.5),q3:q(.75),max:s[n-1]};
+}
+function getZoomXRange(){
+  const z=state.zoomX;
+  if(z==="40-60") return [0.4,0.6];
+  if(z==="45-55") return [0.45,0.55];
+  if(z==="48-52") return [0.48,0.52];
+  return [0,1];
+}
+function renderBox(){
+  const svg=$("#svgBox");svg.innerHTML="";
+  const [xMin,xMax]=getZoomXRange();
+  const xRange=xMax-xMin;
+  const x0=50,x1=710,XB=v=>x0+((v-xMin)/xRange)*(x1-x0),axisY=220;
+  
+  for(let i=0;i<=10;i++){
+    const v=xMin+(xRange*i/10), x=XB(v);
+    svgEl("line",{x1:x,y1:30,x2:x,y2:axisY,stroke:"#2a1a10","stroke-width":1},svg);
+    svgEl("line",{x1:x,y1:axisY-6,x2:x,y2:axisY+6,stroke:"#6b4a2e","stroke-width":2},svg);
+    if(i%2===0){
+      const t=svgEl("text",{x,y:axisY+22,"text-anchor":"middle","font-size":13,"font-weight":"bold"},svg);
+      t.textContent=v.toFixed(2).replace(".",",");
+    }
+  }
+  svgEl("line",{x1:x0-14,y1:axisY,x2:x1+14,y2:axisY,stroke:"#6b4a2e","stroke-width":3},svg);
+  
+  if(xMin<=0.5 && xMax>=0.5){
+    svgEl("line",{x1:XB(.5),y1:30,x2:XB(.5),y2:axisY,stroke:"#fdf3dd","stroke-width":1,"stroke-dasharray":"4 4",opacity:.6},svg);
+    const t50=svgEl("text",{x:XB(.5),y:22,"text-anchor":"middle","font-size":10,fill:"#fdf3dd",opacity:.7},svg);
+    t50.textContent="50%";
+  }
+  
+  if(teacherMode){
+    [[0.5177,"P(A)","#3aa690"],[0.4914,"P(B)","#e6b422"]].forEach(([v,lab,col])=>{
+      if(v>=xMin && v<=xMax){
+        svgEl("line",{x1:XB(v),y1:24,x2:XB(v),y2:axisY,stroke:col,"stroke-width":2,"stroke-dasharray":"6 5"},svg);
+        const t=svgEl("text",{x:XB(v),y:16,"text-anchor":"middle","font-size":11,"font-weight":700,fill:col},svg);
+        t.textContent=lab;
+      }
+    });
+  }
+  const lanes=[
+    {p:"A",y:80, col:"#3aa690",label:"Pari A (1dé ×4)"},
+    {p:"B",y:155,col:"#e6b422",label:"Pari B (2dés ×24)"}
+  ];
+  lanes.forEach(L=>{
+    const data=state.series.filter(x=>x.pari===L.p && x.f>=xMin && x.f<=xMax);
+    const lt=svgEl("text",{x:12,y:L.y+6,"font-size":13,"font-weight":700,fill:L.col},svg);
+    lt.textContent=L.label;
+    if(data.length===0){
+      const t=svgEl("text",{x:(x0+x1)/2,y:L.y+6,"text-anchor":"middle","font-size":13,fill:"#a08568","font-style":"italic"},svg);
+      t.textContent="Pas de données dans cette plage…";
+      return;
+    }
+    const g=svgEl("g",{},svg);
+    if(data.length<4){
+      const minF=Math.min(...data.map(d=>d.f)),maxF=Math.max(...data.map(d=>d.f));
+      svgEl("line",{x1:XB(minF),y1:L.y,x2:XB(maxF),y2:L.y,stroke:L.col,"stroke-width":2,"stroke-dasharray":"4 4"},g);
+      data.forEach((d,i)=>{
+        const j=data.length>1?((i*13)%11)-5:0;
+        svgEl("circle",{cx:XB(d.f),cy:L.y+j,r:6,fill:d.color,stroke:"#0a0604","stroke-width":2},g);
+      });
+      const t=svgEl("text",{x:(x0+x1)/2,y:L.y+38,"text-anchor":"middle","font-size":12,fill:"#a08568","font-style":"italic"},g);
+      t.textContent="Il faut au moins 4 séries pour tracer les quartiles.";
+    } else {
+      const st=quartiles(data.map(d=>d.f));
+      svgEl("line",{x1:XB(st.min),y1:L.y,x2:XB(st.max),y2:L.y,stroke:L.col,"stroke-width":2,opacity:.9},g);
+      svgEl("line",{x1:XB(st.min),y1:L.y-10,x2:XB(st.min),y2:L.y+10,stroke:L.col,"stroke-width":3},g);
+      svgEl("line",{x1:XB(st.max),y1:L.y-10,x2:XB(st.max),y2:L.y+10,stroke:L.col,"stroke-width":3},g);
+      svgEl("rect",{x:XB(st.q1),y:L.y-20,width:Math.max(4,XB(st.q3)-XB(st.q1)),height:40,rx:5,
+        fill:L.col,"fill-opacity":.35,stroke:L.col,"stroke-width":3},g);
+      svgEl("line",{x1:XB(st.med),y1:L.y-20,x2:XB(st.med),y2:L.y+20,stroke:"#fdf3dd","stroke-width":4},g);
+      data.forEach((d,i)=>{
+        const j=((i*53)%21)-10;
+        svgEl("circle",{cx:XB(d.f),cy:L.y+j,r:4,fill:d.color,stroke:"#0a0604","stroke-width":1.5,opacity:.95},g);
+      });
+      let labelX=XB(st.med),anchor="middle";
+      if(labelX<x0+40){labelX=x0+40;anchor="start"}
+      if(labelX>x1-40){labelX=x1-40;anchor="end"}
+      const t=svgEl("text",{x:labelX,y:L.y+42,"text-anchor":anchor,"font-size":13,"font-weight":700,fill:"#fdf3dd"},g);
+      t.textContent="médiane ≈ "+fmt(st.med);
+    }
+  });
+}
+$$('input[name="zoomX"]').forEach(r=>r.addEventListener("change",()=>{
+  state.zoomX=document.querySelector('#segZoomX input:checked').value;
+  renderBox();save();
+}));
+$("#btnResetBox").addEventListener("click",()=>{
+  state.zoomX="0-100";
+  document.querySelector('#segZoomX input[value="0-100"]').checked=true;
+  renderBox();save();
+});
+
+const MISSIONS=[
+  "Lance 5 paris A manuellement et 5 paris B : observe les dés.",
+  "Lance 100 paris A en automatique, puis 100 paris B : que disent les courbes ?",
+  "Calcule les fréquences dans le tableau, puis place-les sur l'axe.",
+  "Lance 1000 paris de chaque : la différence entre A et B est-elle plus nette ?",
+  "Lequel des deux paris est gagnant à long terme ? Justifie avec tes courbes.",
+  "Défi : en t'aidant de la question Q5, explique pourquoi le pari A est gagnant à ~51,8 %."
+];
+function renderMissions(){
+  const box=$("#missions");box.innerHTML="";
+  MISSIONS.forEach((m,i)=>{
+    const d=document.createElement("div");d.className="mission";
+    d.innerHTML=`<input type="checkbox" id="mi${i}" ${state.missions[i]?"checked":""}><label for="mi${i}"><b>${i+1}.</b> ${m}</label>`;
+    d.querySelector("input").addEventListener("change",e=>{state.missions[i]=e.target.checked;sndClick();save()});
+    box.append(d);
+  });
+}
+$("#notes").addEventListener("input",e=>{state.notes=e.target.value;save()});
+
+$("#btnDemo").addEventListener("click",()=>{
+  const ex=[
+    ["A",50,27],["A",100,52],["A",200,102],["A",500,261],
+    ["B",50,22],["B",100,48],["B",200,99],["B",500,247]
+  ];
+  ex.forEach(([p,n,w],i)=>state.series.push({pari:p,f:w/n,color:COLORS[i%COLORS.length],n,w}));
+  renderBox();sndClick();save();
+});
+
+$("#btnSound").addEventListener("click",e=>{
+  soundOn=!soundOn;e.target.textContent=soundOn?"🔊":"🔇";if(soundOn)sndClick();
+});
+$("#btnTeach").addEventListener("click",e=>{
+  if(teacherMode){
+    teacherMode=false;document.body.classList.remove("teach");
+    e.target.classList.remove("on");e.target.innerHTML="🔑 Enseignant";
+    renderCourbe();renderBox();renderScore();sndClick();return;
+  }
+  const pwd=prompt("🔒 Accès réservé.\nEntrez le code enseignant :");
+  if(pwd==="1654" || pwd==="pascal" || pwd==="fermat"){
+    teacherMode=true;document.body.classList.add("teach");
+    e.target.classList.add("on");e.target.innerHTML="🔓 Mode Enseignant";
+    renderCourbe();renderBox();renderScore();sndClick();
+  } else if(pwd!==null){
+    alert("Code incorrect.\n\nIndice : en quelle année le Chevalier de Méré a-t-il écrit à Blaise Pascal pour lui soumettre son problème ?");
+  }
+});
+$("#btnReset").addEventListener("click",()=>{
+  if(!confirm("Réinitialiser toutes les données ?"))return;
+  try{localStorage.removeItem(KEY)}catch(e){}
+  state=DEF();state.active=state.players[0].id;
+  $("#notes").value="";
+  renderAll();
+});
+
+function renderAll(){renderPlayers();renderScore();renderCourbe();renderBox();renderMissions()}
+load();
+$("#notes").value=state.notes||"";
+// restaurer les zooms
+document.querySelector(`#segZoomY input[value="${state.zoomY}"]`).checked=true;
+document.querySelector(`#segZoomX input[value="${state.zoomX}"]`).checked=true;
+renderAll();
+$("#desA").innerHTML=`<div class="de" style="opacity:.4">·</div><div class="de" style="opacity:.4">·</div><div class="de" style="opacity:.4">·</div><div class="de" style="opacity:.4">·</div>`;
+$("#desB").innerHTML=`<span style="color:var(--muted);font-size:.8rem;font-style:italic">2 dés, 24 fois…</span>`;
+</script>
+</body>
+</html>

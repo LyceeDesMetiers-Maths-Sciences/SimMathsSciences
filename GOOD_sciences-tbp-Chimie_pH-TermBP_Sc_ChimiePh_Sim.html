@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dosage pH-métrique : modèle particulaire</title>
+<style>
+  :root{
+    --ink:#20242a;--muted:#5d6673;--line:#2f5d8c;--acid:#c93333;
+    --base:#1f6fc2;--neutral:#2f8f4e;--panel:#f5f6f8;--paper:#fffdf8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--paper);color:var(--ink)}
+  main{max-width:1160px;margin:0 auto;padding:18px}
+  h1{font-size:1.45rem;margin:0 0 12px}
+  h2{font-size:1.05rem;margin:0 0 8px}
+  .grid{display:grid;grid-template-columns:310px 1fr;gap:16px;align-items:start}
+  .panel{background:var(--panel);border:1px solid #d8dde3;border-radius:8px;padding:14px}
+  label{display:block;font-weight:700;margin:12px 0 6px}
+  input{width:100%}
+  .value{font-weight:400;color:var(--muted)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .controls{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:end;margin-top:12px}
+  button{border:1px solid #20242a;background:#fff;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
+  button:hover{background:#eef2f6}
+  details{margin-top:12px}
+  summary{cursor:pointer;font-weight:700}
+  .equation{font-family:"Times New Roman",serif;font-size:1.05rem;background:white;border:1px solid #d4dbe3;border-radius:6px;padding:8px;margin:8px 0}
+  canvas{width:100%;height:auto;background:white;border:1px solid #cfd6dd;border-radius:8px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;background:white}
+  th,td{border:1px solid #d4dbe3;padding:7px;text-align:left}
+  .states{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .state{background:white;border:1px solid #ccd3da;border-radius:6px;padding:8px;min-height:62px}
+  .active{outline:3px solid #111}
+  .acid{border-top:6px solid var(--acid)}
+  .eq{border-top:6px solid var(--neutral)}
+  .base{border-top:6px solid var(--base)}
+  .questions{margin-top:16px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  ol{margin:0;padding-left:22px}
+  li{margin:6px 0}
+  .note{color:var(--muted);font-size:.92rem;line-height:1.35}
+  @media(max-width:850px){.grid,.questions{grid-template-columns:1fr}.states{grid-template-columns:1fr}}
+</style>
+<main>
+  <h1>Titrage pH-métrique : pH initial et acidité titrable</h1>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Paramètres</h2>
+      <label for="acid">Acidité titrable totale de la prise d'essai <span id="acidV" class="value"></span></label>
+      <input id="acid" type="range" min="0.5" max="1.8" step="0.1" value="1.2">
+
+      <label for="ph0">pH initial mesuré <span id="ph0V" class="value"></span></label>
+      <input id="ph0" type="range" min="3.0" max="6.8" step="0.1" value="5.6">
+
+      <label for="cb">Concentration de la soude C<sub>B</sub> <span id="cbV" class="value"></span></label>
+      <input id="cb" type="range" min="0.05" max="0.20" step="0.01" value="0.10">
+
+      <table>
+        <tbody>
+          <tr><th>[H<sub>3</sub>O<sup>+</sup>] déduite du pH</th><td id="h3o"></td></tr>
+          <tr><th>n(H<sub>3</sub>O<sup>+</sup>) dans 10,0 mL</th><td id="nH3O"></td></tr>
+          <tr><th>n(OH<sup>-</sup>) ajouté</th><td id="nOH"></td></tr>
+          <tr><th>Volume à l'équivalence</th><td id="vEq"></td></tr>
+          <tr><th>pH approximatif</th><td id="ph"></td></tr>
+          <tr><th>État dominant</th><td id="stateText"></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Le pH initial renseigne sur les ions H<sub>3</sub>O<sup>+</sup> déjà présents. Le volume à l'équivalence renseigne sur toute l'acidité neutralisable. Le modèle par billes est simplifié : les « + » représentent l'acidité titrable restante, les points gris des espèces déjà neutralisées, et les « - » seulement un excès de soude après l'équivalence.</p>
+      <details>
+        <summary>Mode avancé : équilibre de l'acide faible</summary>
+        <div class="equation">HA + H<sub>2</sub>O ⇌ A<sup>-</sup> + H<sub>3</sub>O<sup>+</sup></div>
+        <div class="equation">H<sub>3</sub>O<sup>+</sup> + OH<sup>-</sup> → 2 H<sub>2</sub>O</div>
+        <p class="note">Quand la soude consomme H<sub>3</sub>O<sup>+</sup>, l'équilibre de l'acide faible se déplace vers la droite. La réaction globale utilisée pour le titrage reste : HA + OH<sup>-</sup> → A<sup>-</sup> + H<sub>2</sub>O.</p>
+      </details>
+    </section>
+
+    <section>
+      <canvas id="scene" width="760" height="520"></canvas>
+      <div class="panel">
+        <h2>Manipulation</h2>
+        <div class="controls">
+          <button id="play" type="button">Lecture</button>
+          <label for="vol">Volume de soude versé <span id="volV" class="value"></span>
+            <input id="vol" type="range" min="0" max="24" step="0.5" value="0">
+          </label>
+        </div>
+      </div>
+      <div class="states">
+        <div id="sAcid" class="state acid"><strong>Avant l'équivalence</strong><br>Il reste de l'acidité titrable : le volume de soude versé est insuffisant.</div>
+        <div id="sEq" class="state eq"><strong>Proche de l'équivalence</strong><br>Les quantités apportées sont presque égales.</div>
+        <div id="sBase" class="state base"><strong>Après l'équivalence</strong><br>Les ions OH<sup>-</sup> sont majoritaires : le pH augmente.</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="questions">
+    <div class="panel">
+      <h2>Questions liées au modèle</h2>
+      <ol>
+        <li>Modifier seulement le pH initial. La valeur de [H<sub>3</sub>O<sup>+</sup>] change-t-elle ?</li>
+        <li>Modifier seulement le pH initial. Le volume à l'équivalence change-t-il ?</li>
+        <li>Augmenter le volume de soude. Observer la diminution des « + », puis l'apparition éventuelle des « - » après l'équivalence.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>Questions liées à la dilution</h2>
+      <ol start="4">
+        <li>Si on ajoute seulement de l'eau distillée dans l'erlenmeyer, ajoute-t-on des ions OH<sup>-</sup> de la soude ?</li>
+        <li>La quantité d'acidité titrable déjà prélevée disparaît-elle quand on dilue ?</li>
+        <li>Pour calculer la concentration du lait initial, faut-il utiliser le volume de lait prélevé ou le volume total après ajout d'eau ?</li>
+      </ol>
+    </div>
+  </section>
+</main>
+<script>
+const acid=document.getElementById('acid');
+const ph0=document.getElementById('ph0');
+const vol=document.getElementById('vol');
+const cb=document.getElementById('cb');
+const play=document.getElementById('play');
+const canvas=document.getElementById('scene');
+const ctx=canvas.getContext('2d');
+let animation=null;
+let fallingIons=[];
+let particleFrame=null;
+let previousVolume=+vol.value;
+const BEAKER_X=40;
+const BEAKER_Y=104;
+const BEAKER_W=330;
+const BEAKER_H=250;
+const ION_X0=72;
+const ION_Y0=BEAKER_Y+62;
+const LIQUID_SURFACE_Y=BEAKER_Y+45;
+const SUMMARY_Y=BEAKER_Y+278;
+
+function pHAt(V, nA, Cb, phInitial){
+  const veq = Math.max(nA / Cb * 1000, 0.1);
+  const targetBeforeEq = Math.max(phInitial, 6.7);
+  const slowBeforeEq = (targetBeforeEq - phInitial) *
+    (1 - Math.exp(-Math.min(V, veq) / Math.max(veq * 0.75, 0.1)));
+  const jumpWidth = 0.55;
+  const jumpHeight = 4.2;
+  const jump = jumpHeight / (1 + Math.exp(-(V - veq) / jumpWidth));
+  const jumpAtOrigin = jumpHeight / (1 + Math.exp(veq / jumpWidth));
+  const afterEq = Math.max(0, V - veq);
+  const basicTail = 1.5 * (1 - Math.exp(-afterEq / 7));
+  const ph = phInitial + slowBeforeEq + jump - jumpAtOrigin + basicTail;
+  return Math.max(2.0, Math.min(12.5, ph));
+}
+
+function ionPositions(total, x0, y0, w, h){
+  const base=[
+    [0.12,0.18],[0.29,0.30],[0.46,0.18],[0.63,0.30],[0.80,0.18],
+    [0.20,0.55],[0.38,0.68],[0.57,0.55],[0.75,0.68],
+    [0.12,0.82],[0.29,0.92],[0.46,0.82],[0.63,0.92],[0.80,0.82],
+    [0.88,0.50],[0.05,0.48],[0.52,0.36],[0.68,0.48],
+    [0.34,0.46],[0.48,0.50],[0.62,0.72],[0.22,0.74],[0.72,0.12],
+    [0.08,0.64],[0.92,0.70],[0.36,0.12],[0.58,0.12],[0.48,0.92]
+  ];
+  return base.slice(0,total).map(([px,py])=>({x:x0+px*w,y:y0+py*h}));
+}
+
+function drawIon(x,y,type,alpha=1){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.beginPath();
+  ctx.arc(x,y,11,0,Math.PI*2);
+  ctx.fillStyle=type==='plus'?'#f8dddd':'#dcecff';
+  ctx.strokeStyle=type==='plus'?'#c93333':'#1f6fc2';
+  ctx.lineWidth=2;
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle=type==='plus'?'#9f2020':'#174e8a';
+  ctx.font='bold 17px Arial';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(type==='plus'?'+':'-',x,y+0.5);
+  ctx.restore();
+}
+
+function drawNeutralized(x,y,alpha=1){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.beginPath();
+  ctx.arc(x,y,8,0,Math.PI*2);
+  ctx.fillStyle='#e5e7eb';
+  ctx.strokeStyle='#8b949e';
+  ctx.lineWidth=1.5;
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#5d6673';
+  ctx.font='bold 10px Arial';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('0',x,y+0.5);
+  ctx.restore();
+}
+
+function drawBurette(){
+  ctx.save();
+  ctx.strokeStyle='#20242a';
+  ctx.fillStyle='rgba(31,111,194,0.12)';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.rect(196,18,22,92);
+  ctx.fill(); ctx.stroke();
+  for(let y=30;y<=98;y+=12){
+    ctx.beginPath();
+    ctx.moveTo(218,y); ctx.lineTo(228,y);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(207,110); ctx.lineTo(207,134);
+  ctx.moveTo(192,121); ctx.lineTo(222,121);
+  ctx.stroke();
+  ctx.fillStyle='#20242a';
+  ctx.font='12px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('soude',207,14);
+  ctx.restore();
+}
+
+function drawBeaker(x,y,w,h,label){
+  ctx.strokeStyle='#20242a'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(x,y); ctx.lineTo(x+16,y+h); ctx.lineTo(x+w-16,y+h); ctx.lineTo(x+w,y); ctx.stroke();
+  ctx.fillStyle='rgba(91,154,214,0.10)';
+  ctx.fillRect(x+10,y+45,w-20,h-58);
+  ctx.fillStyle='#20242a'; ctx.font='bold 15px Arial'; ctx.textAlign='center';
+  ctx.fillText(label,x+w/2,y+24);
+}
+
+function spawnFallingOH(deltaVolume){
+  if(deltaVolume<=0) return;
+  const count=Math.min(10, Math.max(1, Math.round(deltaVolume*4)));
+  for(let i=0;i<count;i++){
+    fallingIons.push({
+      x:207 + (Math.random()-0.5)*18,
+      y:132 - Math.random()*28,
+      vy:2.2 + Math.random()*1.5,
+      vx:(Math.random()-0.5)*0.6,
+      life:1
+    });
+  }
+  if(!particleFrame) particleFrame=requestAnimationFrame(animateFallingOH);
+}
+
+function drawFallingOH(){
+  for(const ion of fallingIons){
+    drawIon(ion.x,ion.y,'minus',ion.life);
+  }
+}
+
+function animateFallingOH(){
+  fallingIons=fallingIons.filter(ion=>{
+    ion.x+=ion.vx;
+    ion.y+=ion.vy;
+    if(ion.y>LIQUID_SURFACE_Y+14) ion.life-=0.08;
+    return ion.life>0;
+  });
+  draw(false);
+  if(fallingIons.length>0) particleFrame=requestAnimationFrame(animateFallingOH);
+  else particleFrame=null;
+}
+
+function drawCurve(nA,C,V,phInitial){
+  const L=420,T=38,W=300,H=190;
+  ctx.strokeStyle='#d5dbe2'; ctx.lineWidth=1;
+  for(let i=0;i<=12;i++){const x=L+i*W/12;ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+H);ctx.stroke();}
+  for(let j=0;j<=14;j++){const y=T+j*H/14;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(L+W,y);ctx.stroke();}
+  ctx.strokeStyle='#20242a';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(L,T+H);ctx.lineTo(L+W,T+H);ctx.moveTo(L,T+H);ctx.lineTo(L,T);ctx.stroke();
+  ctx.fillStyle='#20242a';ctx.font='12px Arial';ctx.textAlign='center';ctx.textBaseline='top';
+  for(let xv=0;xv<=24;xv+=4){
+    const x=L+xv/24*W;
+    ctx.beginPath();ctx.moveTo(x,T+H);ctx.lineTo(x,T+H+5);ctx.stroke();
+    ctx.fillText(String(xv),x,T+H+8);
+  }
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let yv=0;yv<=14;yv+=2){
+    const y=T+H-yv/14*H;
+    ctx.beginPath();ctx.moveTo(L-5,y);ctx.lineTo(L,y);ctx.stroke();
+    ctx.fillText(String(yv),L-8,y);
+  }
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillText('V_B (mL)',L+232,T+H+36);ctx.fillText('pH',L-33,T+10);
+  const veq=Math.min(24, nA/C*1000);
+  const xEq=L+veq/24*W;
+  ctx.save();
+  ctx.setLineDash([5,5]);
+  ctx.strokeStyle='#2f8f4e';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(xEq,T);ctx.lineTo(xEq,T+H);ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#2f8f4e';ctx.font='12px Arial';ctx.textAlign='center';
+  ctx.fillText('V_E',xEq,T-8);
+  ctx.strokeStyle='#2f5d8c';ctx.lineWidth=3;ctx.beginPath();
+  for(let i=0;i<=240;i++){
+    const xv=i/10, ph=pHAt(xv,nA,C,phInitial);
+    const x=L+xv/24*W, y=T+H-ph/14*H;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  const ph=pHAt(V,nA,C,phInitial), x=L+V/24*W, y=T+H-ph/14*H;
+  ctx.fillStyle='#c93333';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();
+}
+
+function formatDecimal(value, digits){
+  return value.toLocaleString('fr-FR', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  });
+}
+
+function formatPowerOfTen(value, digits=2){
+  if(!Number.isFinite(value) || value===0) return '0';
+  const exponent=Math.floor(Math.log10(Math.abs(value)));
+  const mantissa=value/Math.pow(10, exponent);
+  return `${formatDecimal(mantissa, digits)} × 10<sup>${exponent}</sup>`;
+}
+
+function draw(trackVolume=true){
+  const nA=+acid.value/1000;
+  const phInitial=+ph0.value;
+  const V=+vol.value;
+  const C=+cb.value;
+  const nOHValue=C*V/1000;
+  const veq=nA/C*1000;
+  const ph=pHAt(V,nA,C,phInitial);
+  const h3o = Math.pow(10, -phInitial);
+  const nH3O = h3o * 0.010;
+  const totalAcidUnits=16;
+  const progress=Math.max(0, Math.min(1, nOHValue / Math.max(nA, 1e-6)));
+  const acidRemaining=Math.round(totalAcidUnits * (1 - progress));
+  const neutralizedUnits=totalAcidUnits - acidRemaining;
+  const baseExcessRatio=Math.max(0, (nOHValue - nA) / Math.max(nA, 1e-6));
+  const baseExcess=Math.min(10, Math.round(baseExcessRatio * 10));
+
+  acidV.textContent=`${formatDecimal(+acid.value, 1)} mmol`;
+  ph0V.textContent=`${formatDecimal(phInitial, 1)}`;
+  volV.textContent=`${formatDecimal(V, 1)} mL`;
+  cbV.textContent=`${formatDecimal(C, 2)} mol/L`;
+  document.getElementById('h3o').innerHTML=`${formatPowerOfTen(h3o, 2)} mol/L`;
+  document.getElementById('nH3O').innerHTML=`${formatPowerOfTen(nH3O, 2)} mol`;
+  document.getElementById('nOH').innerHTML=`${formatDecimal(nOHValue*1000, 2)} mmol`;
+  vEq.textContent=`${formatDecimal(veq, 1)} mL`;
+  document.getElementById('ph').textContent=formatDecimal(ph, 1);
+
+  let state='Avant équivalence';
+  if(Math.abs(V-veq)<0.8) state='Proche de l’équivalence';
+  if(V>veq+0.8) state='Après équivalence';
+  stateText.textContent=state;
+  for(const id of ['sAcid','sEq','sBase']) document.getElementById(id).classList.remove('active');
+  document.getElementById(state.startsWith('Proche')?'sEq':(state.startsWith('Après')?'sBase':'sAcid')).classList.add('active');
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBurette();
+  drawBeaker(BEAKER_X,BEAKER_Y,BEAKER_W,BEAKER_H,'Modèle particulaire');
+  const positions=ionPositions(totalAcidUnits + baseExcess,ION_X0,ION_Y0,255,150);
+  for(let i=0;i<acidRemaining;i++) drawIon(positions[i].x,positions[i].y,'plus');
+  for(let i=acidRemaining;i<totalAcidUnits;i++) drawNeutralized(positions[i].x,positions[i].y);
+  for(let i=0;i<baseExcess;i++) drawIon(positions[totalAcidUnits+i].x,positions[totalAcidUnits+i].y,'minus');
+  drawFallingOH();
+  ctx.fillStyle='#5d6673';ctx.font='13px Arial';ctx.textAlign='left';
+  ctx.fillText(`Acidité titrable restante : ${acidRemaining} unité(s)`,58,SUMMARY_Y);
+  ctx.fillText(`Unités neutralisées : ${neutralizedUnits}`,58,SUMMARY_Y+22);
+  ctx.fillText(`Ions OH− en excès : ${baseExcess}`,58,SUMMARY_Y+44);
+  drawCurve(nA,C,V,phInitial);
+  if(trackVolume){
+    spawnFallingOH(V-previousVolume);
+    previousVolume=V;
+  }
+}
+
+function stopAnimation(){
+  if(animation) clearInterval(animation);
+  animation=null;
+  play.textContent='Lecture';
+}
+
+function startAnimation(){
+  stopAnimation();
+  play.textContent='Pause';
+  if(+vol.value>=+vol.max){
+    vol.value=0;
+    previousVolume=0;
+  }
+  animation=setInterval(()=>{
+    const next=Math.min(+vol.max, +vol.value + 0.25);
+    vol.value=next.toFixed(2);
+    draw();
+    if(next>=+vol.max) stopAnimation();
+  }, 80);
+}
+
+[acid,ph0,cb].forEach(el=>el.addEventListener('input',()=>{
+  stopAnimation();
+  fallingIons=[];
+  previousVolume=+vol.value;
+  draw();
+}));
+vol.addEventListener('input',()=>{
+  stopAnimation();
+  draw();
+});
+play.addEventListener('click',()=>{
+  if(animation) stopAnimation();
+  else startAnimation();
+});
+draw();
+</script>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Étude statistique · Statistiques CAP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f3ea; --card:#fffdf6; --ink:#1c2333; --ink2:#4d5468;
+  --blue:#1450b4; --red:#cf2233; --green:#0f7b4f; --amber:#d98e04; --orange:#e2571b; --purple:#6f42c1;
+  --grid:rgba(23,86,170,.075); --grid2:rgba(23,86,170,.13);
+  --disp:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--body);color:var(--ink);background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid2) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid2) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:60px 60px,60px 60px,12px 12px,12px 12px;
+  min-height:100vh;overflow-x:hidden;
+}
+.wrap{max-width:1440px;margin:0 auto;padding:22px 18px 40px;position:relative;z-index:1}
+
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:3px solid var(--ink);margin-bottom:16px;animation:rise .5s both}
+.tag{display:inline-block;font:700 11px var(--mono);letter-spacing:1.4px;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:5px;padding:5px 10px;background:var(--card);margin-bottom:10px}
+h1{font:800 clamp(28px,4vw,44px)/1 var(--disp);letter-spacing:-.5px}
+h1 .hl{background:linear-gradient(transparent 62%,rgba(217,142,4,.45) 62%)}
+.sub{margin-top:8px;font-size:14px;color:var(--ink2);max-width:640px;line-height:1.5}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:12px 14px;
+  border:2.5px solid var(--ink);border-radius:11px;background:var(--card);box-shadow:6px 6px 0 rgba(28,35,51,.10)}
+.ctrl-grp{display:flex;flex-direction:column;gap:5px}
+.ctrl-grp .lbl{font:700 10px var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--ink2)}
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden;background:#fff;flex-wrap:wrap}
+.seg button{font:700 12px var(--body);padding:7px 12px;border:none;background:transparent;cursor:pointer;color:var(--ink2);transition:.15s;white-space:nowrap}
+.seg button:hover{background:rgba(28,35,51,.06)}
+.seg button.on{background:var(--ink);color:#fdf9ec}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.seg.small button{font:600 11px var(--mono);padding:6px 10px}
+.spacer{flex:1}
+.btn{font:700 13px var(--body);border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:8px 14px;border-radius:8px;box-shadow:3px 3px 0 rgba(28,35,51,.25);cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(28,35,51,.25)}
+.btn:active{transform:translate(2px,2px);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:3px 3px 0 rgba(20,80,180,.4)}
+.btn.primary:hover{background:#0f47a0}
+.badge{font:700 9px var(--mono);padding:2px 6px;border-radius:4px;margin-left:4px}
+.badge.cont{background:rgba(217,142,4,.15);color:var(--amber)}
+.badge.disc{background:rgba(20,80,180,.1);color:var(--blue)}
+.badge.quali{background:rgba(111,66,193,.12);color:var(--purple)}
+
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;background:var(--card);border:2.5px solid var(--ink);border-radius:11px;
+  min-height:460px;box-shadow:6px 6px 0 rgba(28,35,51,.10);overflow:hidden;transition:.25s;position:relative}
+.col.locked{opacity:.55;filter:grayscale(.4)}
+.col.locked::before{content:"🔒";position:absolute;top:10px;right:10px;font-size:18px}
+.col.done{border-color:var(--green)}
+.col.done .colHd{background:rgba(15,123,79,.12)}
+.colHd{padding:10px 12px;border-bottom:2px dashed rgba(28,35,51,.25);display:flex;align-items:center;gap:8px}
+.colHd .n{font:700 12px var(--mono);background:var(--ink);color:#fdf9ec;padding:3px 8px;border-radius:4px}
+.col.done .colHd .n{background:var(--green)}
+.colHd h3{font:800 13px var(--disp);text-transform:uppercase;letter-spacing:.5px}
+.colBody{flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:540px}
+
+.rawchips{display:flex;flex-wrap:wrap;gap:4px;max-height:380px;overflow-y:auto}
+.chip{font:700 12px var(--mono);padding:3px 7px;border-radius:5px;background:var(--card);border:1.5px solid var(--ink);
+  min-width:26px;text-align:center}
+.chip.sorted{background:rgba(20,80,180,.1);border-color:var(--blue);color:var(--blue)}
+.chip.q0{background:rgba(20,80,180,.12);border-color:var(--blue);color:var(--blue)}
+.chip.q1{background:rgba(226,87,27,.12);border-color:var(--orange);color:var(--orange)}
+.chip.q2{background:rgba(15,123,79,.12);border-color:var(--green);color:var(--green)}
+.chip.q3{background:rgba(207,34,51,.12);border-color:var(--red);color:var(--red)}
+.chip.q4{background:rgba(111,66,193,.12);border-color:var(--purple);color:var(--purple)}
+.chip.q5{background:rgba(217,142,4,.15);border-color:var(--amber);color:var(--amber)}
+
+.efftbl{width:100%;border-collapse:separate;border-spacing:0;border:2px solid var(--ink);border-radius:8px;overflow:hidden;background:#fff;font:600 12px var(--mono)}
+.efftbl th{background:#f0ecdf;padding:6px;border:1px solid rgba(28,35,51,.15);font-weight:700;text-align:center}
+.efftbl td{padding:4px;border:1px solid rgba(28,35,51,.15);text-align:center}
+.efftbl input{width:100%;border:none;background:transparent;text-align:center;font:700 13px var(--mono);color:var(--blue);outline:none}
+.efftbl input:focus{background:rgba(20,80,180,.08)}
+.efftbl input.ok{color:var(--green)}
+.efftbl input.ko{color:var(--red);background:rgba(207,34,51,.12)}
+.efftbl .total{background:rgba(28,35,51,.08);font-weight:700}
+
+#graphCv{width:100%;height:320px;background:#fff;border:2px solid var(--ink);border-radius:8px;display:block}
+
+.paramRow{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1.5px dashed rgba(28,35,51,.25);border-radius:6px}
+.paramRow label{font:700 12px var(--body);color:var(--ink2);text-transform:uppercase;letter-spacing:.5px}
+.paramRow input{font:700 14px var(--mono);width:110px;padding:4px 8px;border:2px solid var(--ink);border-radius:5px;text-align:center;background:#fff}
+.paramRow input.ok{border-color:var(--green);color:var(--green)}
+.paramRow input.ko{border-color:var(--red);color:var(--red)}
+
+.info{font:500 12px var(--mono);color:var(--ink2);line-height:1.5;padding:8px 10px;background:rgba(20,80,180,.06);border-left:3px solid var(--blue);border-radius:4px}
+.info b{color:var(--ink)}
+.info.ok{background:rgba(15,123,79,.08);border-color:var(--green)}
+.info.warn{background:rgba(217,142,4,.08);border-color:var(--amber)}
+.info.err{background:rgba(207,34,51,.08);border-color:var(--red)}
+
+footer{margin-top:26px;text-align:center;font:500 12px var(--mono);color:var(--ink2);opacity:.8}
+@media(max-width:1100px){.kanban{grid-template-columns:repeat(2,1fr)}.col{min-height:auto}}
+@media(max-width:600px){.kanban{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <span class="tag">CAP · Mathématiques · Statistiques</span>
+    <h1>Étude <span class="hl">statistique</span></h1>
+    <p class="sub">Des données brutes au graphique, en passant par le tableau et les paramètres.
+      Variables quantitatives (discrètes / continues) <b>et qualitatives</b>.</p>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="ctrl-grp"><span class="lbl">Secteur</span><div class="seg" id="sectSeg"></div></div>
+  <div class="ctrl-grp"><span class="lbl">Contexte</span><div class="seg" id="ctxSeg"></div></div>
+  <div class="ctrl-grp"><span class="lbl">Mode</span>
+    <div class="seg" id="modeSeg">
+      <button data-mode="discrete" class="on">Discret<span class="badge disc">valeurs</span></button>
+      <button data-mode="classes">Classes<span class="badge cont">histo.</span></button>
+    </div>
+  </div>
+  <div class="ctrl-grp"><span class="lbl">Fréquences</span>
+    <div class="seg small" id="freqSeg">
+      <button data-freq="raw" class="on">f<sub>i</sub></button>
+      <button data-freq="pct">%</button>
+      <button data-freq="both">les deux</button>
+    </div>
+  </div>
+  <div class="ctrl-grp"><span class="lbl">Graphique</span>
+    <div class="seg small" id="chartSeg">
+      <button data-chart="bars" class="on">Bâtons</button>
+      <button data-chart="pie">Circulaire</button>
+    </div>
+  </div>
+  <span class="spacer"></span>
+  <button class="btn" id="btnReset">↺ Recommencer</button>
+  <button class="btn primary" id="btnSort">Trier</button>
+</div>
+
+<div class="kanban" id="kanban">
+  <div class="col" data-col="raw"><div class="colHd"><span class="n">1</span><h3>Données brutes</h3></div><div class="colBody" id="colRaw"></div></div>
+  <div class="col locked" data-col="eff"><div class="colHd"><span class="n">2</span><h3>Effectifs</h3></div><div class="colBody" id="colEff"></div></div>
+  <div class="col locked" data-col="freq"><div class="colHd"><span class="n">3</span><h3>Fréquences</h3></div><div class="colBody" id="colFreq"></div></div>
+  <div class="col locked" data-col="chart"><div class="colHd"><span class="n">4</span><h3>Représentation</h3></div><div class="colBody" id="colChart"></div></div>
+  <div class="col locked" data-col="param"><div class="colHd"><span class="n">5</span><h3>Paramètres</h3></div><div class="colBody" id="colParam"></div></div>
+</div>
+
+<footer>Statistiques · CAP · Datasets par secteur · variables quantitatives & qualitatives.</footer>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const INK='#1c2333',BLUE='#1450b4',RED='#cf2233',GREEN='#0f7b4f',AMBER='#d98e04',ORANGE='#e2571b',PURPLE='#6f42c1';
+const CATCOLS=[BLUE,ORANGE,GREEN,RED,PURPLE,AMBER,'#0ea5e9','#ec4899','#84cc16','#f59e0b'];
+const fmt=x=>(Math.round(x*100)/100).toLocaleString('fr-FR',{maximumFractionDigits:2}).replace('-','−');
+const fmtPct=x=>Math.round(x*1000)/10+'%';
+
+/* ================= DATASETS ================= */
+const DATASETS={
+  /* ---------- SÉCURITÉ ---------- */
+  'sec-incendie':{sector:'Sécurité',label:'🔥 Incendie',type:'continu',
+    var:'t',varLbl:'Temps d\'évacuation (en secondes)',unit:'s',
+    data:[42,78,55,66,91,105,48,72,88,60,115,130,50,65,80,95,140,52,70,108,125,45,62,85,150],
+    classes:[[30,60],[60,90],[90,120],[120,150],[150,180]],
+    story:'Lors d\'un exercice d\'évacuation, on a chronométré 25 salariés.'},
+  'sec-personnes':{sector:'Sécurité',label:'🦺 Personnes',type:'discret',
+    var:'x',varLbl:'Nombre d\'accidents par mois',unit:'',
+    data:[2,1,3,0,2,1,4,2,3,1,0,2,1,3,2,4,1,2,0,3,2,1,2,3,1,2,4,0,2,1],classes:null,
+    story:'Sur 30 mois, le nombre mensuel d\'accidents du travail dans un atelier.'},
+  'sec-biens':{sector:'Sécurité',label:'🔒 Biens',type:'discret',
+    var:'n',varLbl:'Incidents par semaine',unit:'',
+    data:[1,0,3,2,1,4,0,2,1,3,2,5,1,0,2,1,3,4,2,1,0,3,2,1],classes:null,
+    story:'Sur 24 semaines, le nombre d\'incidents (vols, dégradations) dans un entrepôt.'},
+  'sec-type':{sector:'Sécurité',label:'🚨 Type d\'incident',type:'qualitatif',
+    var:'cat',varLbl:'Type d\'incident',unit:'',
+    data:['vol','vandalisme','intrusion','vol','autre','vandalisme','vol','intrusion','vol','vandalisme','autre','vol','vol','vandalisme','intrusion','vol','autre','vandalisme','vol','vol','intrusion','vandalisme','vol','autre'],
+    classes:null,
+    story:'Sur 24 incidents relevés dans un centre commercial, on a noté le type d\'incident.'},
+  /* ---------- TERTIAIRE ---------- */
+  'ter-commerce':{sector:'Tertiaire',label:'🛒 Commerce',type:'discret',
+    var:'c',varLbl:'Nombre de clients par heure',unit:'',
+    data:[8,12,15,6,10,14,9,11,7,13,16,5,12,8,10,14,11,9,15,7,13,6,12,10,8,14,11,9,13,10],classes:null,
+    story:'À la caisse d\'un magasin, on a compté les clients pendant 30 heures.'},
+  'ter-standard':{sector:'Tertiaire',label:'☎️ Standard',type:'continu',
+    var:'d',varLbl:'Durée des appels (en secondes)',unit:'s',
+    data:[45,120,85,60,180,95,75,150,55,110,200,65,140,80,105,170,50,130,90,160,70,115,145,60,125],
+    classes:[[30,75],[75,120],[120,165],[165,210]],
+    story:'Sur 25 appels au standard, on a mesuré la durée de chaque conversation.'},
+  'ter-paiement':{sector:'Tertiaire',label:'💳 Paiement',type:'qualitatif',
+    var:'cat',varLbl:'Moyen de paiement',unit:'',
+    data:['CB','CB','espèces','CB','chèque','CB','espèces','CB','CB','titre-resto','espèces','CB','CB','chèque','CB','espèces','CB','CB','titre-resto','CB','espèces','CB','chèque','CB','espèces','CB','CB','espèces','CB','CB'],
+    classes:null,
+    story:'En caisse, on a relevé le moyen de paiement de 30 clients.'},
+  /* ---------- INDUSTRIE ---------- */
+  'ind-qualite':{sector:'Industrie',label:'🔧 Contrôle qualité',type:'discret',
+    var:'p',varLbl:'Pièces défectueuses par lot',unit:'',
+    data:[2,0,3,1,4,2,1,5,0,3,2,1,4,2,0,3,1,2,6,1],classes:null,
+    story:'Sur 20 lots de fabrication, on a compté les pièces défectueuses.'},
+  'ind-usinage':{sector:'Industrie',label:'⚙️ Usinage',type:'continu',
+    var:'d',varLbl:'Diamètre des pièces (en mm)',unit:'mm',
+    data:[19.95,20.02,19.98,20.05,19.92,20.01,19.97,20.04,19.99,20.03,19.96,20.00,19.94,20.06,19.98,20.02,19.95,20.01,19.99,20.04,19.97,20.00,19.93,20.05,19.98],
+    classes:[[19.90,19.95],[19.95,20.00],[20.00,20.05],[20.05,20.10]],
+    story:'Sur 25 pièces usinées, on a mesuré le diamètre (cible : 20 mm).'},
+  'ind-defaut':{sector:'Industrie',label:'🐞 Type de défaut',type:'qualitatif',
+    var:'cat',varLbl:'Type de défaut constaté',unit:'',
+    data:['rayure','choc','fissure','rayure','autre','choc','rayure','fissure','rayure','choc','autre','rayure','rayure','choc','fissure','rayure','autre','choc','rayure','rayure'],
+    classes:null,
+    story:'Au contrôle qualité, on a relevé le type de défaut de 20 pièces refusées.'},
+  /* ---------- SANITAIRE & SOCIAL ---------- */
+  'san-ehpad':{sector:'Sanitaire & Social',label:'👴 EHPAD',type:'discret',
+    var:'r',varLbl:'Résidents par activité',unit:'',
+    data:[5,8,6,4,7,9,5,6,8,3,7,5,6,8,4,7,5,9,6,5,7,4,8,6,5],classes:null,
+    story:'Sur 25 activités en EHPAD, on a compté les résidents participants.'},
+  'san-activite':{sector:'Sanitaire & Social',label:'🎲 Type d\'activité',type:'qualitatif',
+    var:'cat',varLbl:'Type d\'activité proposée',unit:'',
+    data:['jeu','lecture','marche','atelier','jeu','lecture','jeu','marche','atelier','jeu','lecture','marche','jeu','atelier','lecture','jeu','marche','jeu','atelier','lecture','jeu','marche','jeu','lecture','jeu'],
+    classes:null,
+    story:'Sur 25 activités proposées en EHPAD, on a relevé le type d\'activité.'},
+  /* ---------- HÔTELLERIE-RESTAURATION ---------- */
+  'hot-couverts':{sector:'Hôtellerie-Rest.',label:'🍴 Couverts',type:'discret',
+    var:'c',varLbl:'Couverts par service',unit:'',
+    data:[32,45,38,52,41,35,48,42,36,50,44,39,47,34,46,40,53,37,43,49,35,41,45,38,51,42,36,48,44,40],classes:null,
+    story:'Sur 30 services (midi et soir), on a compté le nombre de couverts.'},
+  'hot-plat':{sector:'Hôtellerie-Rest.',label:'🍕 Type de plat',type:'qualitatif',
+    var:'cat',varLbl:'Type de plat commandé',unit:'',
+    data:['entrée','plat','dessert','plat','plat','dessert','entrée','plat','dessert','plat','entrée','plat','dessert','plat','plat','entrée','dessert','plat','plat','dessert','entrée','plat','dessert','plat','entrée','plat','dessert','plat','plat','dessert'],
+    classes:null,
+    story:'Lors d\'un service, on a relevé le type de plat commandé (30 commandes).'},
+  /* ---------- BTP / MAINTENANCE ---------- */
+  'btp-interv':{sector:'BTP / Maintenance',label:'🔨 Interventions',type:'discret',
+    var:'i',varLbl:'Interventions par semaine',unit:'',
+    data:[3,1,4,2,0,5,3,2,1,4,2,3,0,5,1,3,2,4,1,3,2,0,4,2],classes:null,
+    story:'Sur 24 semaines, on a compté les interventions de maintenance.'},
+  'btp-type':{sector:'BTP / Maintenance',label:'🛠️ Type d\'intervention',type:'qualitatif',
+    var:'cat',varLbl:'Type d\'intervention',unit:'',
+    data:['plomberie','élec','maçonnerie','plomberie','autre','élec','plomberie','maçonnerie','plomberie','élec','autre','plomberie','plomberie','maçonnerie','élec','plomberie','autre','maçonnerie','plomberie','élec','plomberie','maçonnerie','plomberie','autre'],
+    classes:null,
+    story:'Sur 24 interventions de maintenance, on a relevé le type de travaux.'},
+};
+
+/* ================= état ================= */
+const S={sector:'Sécurité',ctx:'sec-incendie',mode:'discrete',freq:'raw',chart:'bars',
+  raw:[],sorted:false,values:[],effUser:{},freqUser:{},classesDef:[],done:new Set(['raw'])};
+
+const isQual=()=>DATASETS[S.ctx].type==='qualitatif';
+
+/* ================= navigation ================= */
+function getSectors(){return [...new Set(Object.values(DATASETS).map(d=>d.sector))];}
+function getContexts(sector){return Object.keys(DATASETS).filter(k=>DATASETS[k].sector===sector);}
+function buildSeg(id,items,onKey,cb,isCtx){
+  const el=$(id);el.innerHTML='';
+  items.forEach(k=>{
+    const b=document.createElement('button');b.dataset.k=k;
+    if(isCtx){const d=DATASETS[k];
+      const bd=d.type==='continu'?'cont':d.type==='qualitatif'?'quali':'disc';
+      b.innerHTML=`${d.label}<span class="badge ${bd}">${d.type}</span>`;
+    }else b.textContent=k;
+    if(k===onKey)b.classList.add('on');
+    b.onclick=()=>cb(k);
+    el.appendChild(b);
+  });
+}
+function refreshSegs(){
+  buildSeg('#sectSeg',getSectors(),S.sector,k=>{S.sector=k;S.ctx=getContexts(k)[0];refreshSegs();loadCtx(S.ctx);},false);
+  buildSeg('#ctxSeg',getContexts(S.sector),S.ctx,k=>{S.ctx=k;refreshSegs();loadCtx(k);},true);
+}
+
+/* ================= colonnes ================= */
+function setDone(col){
+  S.done.add(col);
+  $$('.col').forEach(c=>{
+    const key=c.dataset.col;
+    c.classList.toggle('done',S.done.has(key));
+    const order=['raw','eff','freq','chart','param'];
+    const i=order.indexOf(key);
+    c.classList.toggle('locked',i>0&&!S.done.has(order[i-1])&&!S.done.has(key));
+  });
+}
+function loadCtx(key){
+  S.ctx=key;const d=DATASETS[key];
+  S.raw=[...d.data];S.sorted=false;
+  if(d.type==='qualitatif'){
+    S.values=[...new Set(S.raw)].map(v=>({v,eff:0}));
+    S.mode='discrete';
+    $('#modeSeg').querySelector('[data-mode="classes"]').disabled=true;
+    $('#modeSeg').querySelector('[data-mode="discrete"]').classList.add('on');
+    $('#modeSeg').querySelector('[data-mode="classes"]').classList.remove('on');
+  }else{
+    $('#modeSeg').querySelector('[data-mode="classes"]').disabled=false;
+    if(S.mode==='classes'&&d.classes)S.classesDef=d.classes.map(([a,b])=>({a,b,eff:0,amp:b-a}));
+    else{S.mode='discrete';const uniq=[...new Set(S.raw)].sort((a,b)=>a-b);S.values=uniq.map(v=>({v,eff:0}));}
+  }
+  S.effUser={};S.freqUser={};S.done=new Set(['raw']);
+  renderAll();
+}
+function renderAll(){renderRaw();renderEff();renderFreq();renderChart();renderParam();setDone('raw');}
+
+/* ================= 1 · données brutes ================= */
+function renderRaw(){
+  const d=DATASETS[S.ctx];
+  let data;
+  if(S.sorted)data=isQual()?[...S.raw].sort((a,b)=>String(a).localeCompare(String(b))):[...S.raw].sort((a,b)=>a-b);
+  else data=S.raw;
+  const catIdx={};if(isQual())S.values.forEach((v,i)=>catIdx[v.v]=i);
+  $('#colRaw').innerHTML=`
+    <div class="info"><b>${d.story}</b><br>Variable : ${d.varLbl}${d.unit?' ('+d.unit+')':''}
+    ${isQual()?' · <b>qualitative</b> (catégories)':' · quantitative'}.</div>
+    <div class="info">Effectif total : <b>N = ${S.raw.length}</b></div>
+    <div class="rawchips">${data.map(v=>`<span class="chip ${S.sorted?'sorted':''} ${isQual()?'q'+(catIdx[v]%6):''}">${v}</span>`).join('')}</div>
+    <button class="btn" id="btnSort2">${S.sorted?'✓ Données triées':(isQual()?'Trier par ordre alphabétique (facultatif)':'Trier par ordre croissant')}</button>
+    <button class="btn primary" id="btnGoEff">Passer à l'étape suivante →</button>
+  `;
+  $('#btnSort2').onclick=()=>{S.sorted=true;renderAll();setDone('raw');};
+  $('#btnGoEff').onclick=()=>{
+    if(!S.sorted&&!isQual()){alert('Commence par trier les données.');return;}
+    setDone('eff');
+  };
+}
+
+/* ================= 2 · effectifs ================= */
+function renderEff(){
+  const d=DATASETS[S.ctx];
+  let rows='';
+  if(S.mode==='classes'&&S.classesDef){
+    S.classesDef.forEach((cl,i)=>{
+      const eff=S.raw.filter(v=>i===S.classesDef.length-1?(v>=cl.a&&v<=cl.b):(v>=cl.a&&v<cl.b)).length;
+      cl.eff=eff;
+      rows+=`<tr><td>[${cl.a} ; ${cl.b}${i===S.classesDef.length-1?']':'['}</td>
+        <td><input type="number" data-k="eff-${i}" value="${S.effUser['eff-'+i]??''}" placeholder="?"></td></tr>`;
+    });
+  }else{
+    S.values.forEach(v=>{
+      const eff=S.raw.filter(x=>x===v.v).length;v.eff=eff;
+      rows+=`<tr><td>${v.v}</td>
+        <td><input type="number" data-k="eff-${v.v}" value="${S.effUser['eff-'+v.v]??''}" placeholder="?"></td></tr>`;
+    });
+  }
+  $('#colEff').innerHTML=`
+    <div class="info">Remplis les effectifs <b>n<sub>i</sub></b> en comptant les occurrences.<br>
+    La somme doit être égale à <b>N = ${S.raw.length}</b>.</div>
+    <table class="efftbl">
+      <thead><tr><th>${S.mode==='classes'?'Classe [a ; b[':(isQual()?'Catégorie':d.var)}</th><th>n<sub>i</sub></th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr class="total"><td>Total</td><td id="totEff">—</td></tr></tfoot>
+    </table>
+    <button class="btn primary" id="btnCheckEff">Vérifier</button>
+    <div class="info" id="effMsg" style="display:none"></div>
+    <button class="btn" id="btnGoFreq">Passer aux fréquences →</button>
+  `;
+  updateTotEff();
+  $$('#colEff input[data-k^="eff-"]').forEach(inp=>{inp.oninput=()=>{S.effUser[inp.dataset.k]=+inp.value;updateTotEff();};});
+  $('#btnCheckEff').onclick=checkEff;
+  $('#btnGoFreq').onclick=()=>{if(!allEffOk()){alert('Complète correctement le tableau d\'abord.');return;}setDone('freq');};
+}
+function updateTotEff(){
+  let sum=0;
+  if(S.mode==='classes'&&S.classesDef)S.classesDef.forEach((c,i)=>{const v=S.effUser['eff-'+i];if(!isNaN(v))sum+=v;});
+  else S.values.forEach(v=>{const val=S.effUser['eff-'+v.v];if(!isNaN(val))sum+=val;});
+  const el=$('#totEff');if(el){el.textContent=sum||'—';el.style.color=sum===S.raw.length?GREEN:(sum>S.raw.length?RED:'');}
+}
+function allEffOk(){
+  if(S.mode==='classes'&&S.classesDef)return S.classesDef.every((c,i)=>S.effUser['eff-'+i]===c.eff);
+  return S.values.every(v=>S.effUser['eff-'+v.v]===v.eff);
+}
+function checkEff(){
+  let ok=0,ko=0;
+  const list=S.mode==='classes'&&S.classesDef?S.classesDef.map((c,i)=>({k:i,eff:c.eff})):S.values.map(v=>({k:v.v,eff:v.eff}));
+  list.forEach(it=>{
+    const inp=$(`#colEff input[data-k="eff-${it.k}"]`);
+    if(S.effUser['eff-'+it.k]===it.eff){inp.classList.add('ok');inp.classList.remove('ko');ok++;}
+    else{inp.classList.add('ko');inp.classList.remove('ok');ko++;}
+  });
+  const msg=$('#effMsg');msg.style.display='block';
+  if(ko===0){msg.className='info ok';msg.innerHTML=`<b>Bravo, tableau correct !</b>`;setDone('eff');}
+  else{msg.className='info err';msg.innerHTML=`<b>${ok} correct(s), ${ko} à corriger.</b> Compte à nouveau chaque ${isQual()?'catégorie':'valeur'}.`;}
+}
+
+/* ================= 3 · fréquences ================= */
+function renderFreq(){
+  const N=S.raw.length;
+  const list=S.mode==='classes'&&S.classesDef
+    ?S.classesDef.map((c,i)=>({k:i,label:`[${c.a};${c.b}${i===S.classesDef.length-1?']':'['}`,eff:c.eff}))
+    :S.values.map(v=>({k:v.v,label:v.v,eff:v.eff}));
+  const rows=list.map(it=>`<tr><td>${it.label}</td><td>${it.eff}</td>
+    <td><input type="text" data-k="freq-${it.k}" value="${S.freqUser['freq-'+it.k]??''}" placeholder="?"></td></tr>`).join('');
+  const freqLbl=S.freq==='pct'?'f<sub>i</sub> (%)':S.freq==='raw'?'f<sub>i</sub>':'f<sub>i</sub> & %';
+  const help=S.freq==='pct'?'Donne la fréquence en <b>pourcentage</b> (arrondi à 0,1% près).':
+            S.freq==='raw'?'Donne la fréquence décimale (arrondie à 0,01).':
+            'Donne les deux : décimale et % (séparés par un espace).';
+  $('#colFreq').innerHTML=`
+    <div class="info">${help}<br>Formule : <b>f<sub>i</sub> = n<sub>i</sub> / N</b> (avec N = ${N}).</div>
+    <table class="efftbl">
+      <thead><tr><th>${S.mode==='classes'?'Classe':(isQual()?'Catégorie':'Valeur')}</th><th>n<sub>i</sub></th><th>${freqLbl}</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <button class="btn primary" id="btnCheckFreq">Vérifier</button>
+    <div class="info" id="freqMsg" style="display:none"></div>
+    <button class="btn" id="btnGoChart">Passer au graphique →</button>
+  `;
+  $$('#colFreq input[data-k^="freq-"]').forEach(inp=>{inp.oninput=()=>{S.freqUser[inp.dataset.k]=inp.value.trim();};});
+  $('#btnCheckFreq').onclick=checkFreq;
+  $('#btnGoChart').onclick=()=>{if(!allFreqOk()){alert('Complète les fréquences d\'abord.');return;}setDone('chart');drawChart();};
+}
+function parseFreq(u,f){
+  if(!u)return false;
+  if(S.freq==='pct'){const n=parseFloat(String(u).replace(',','.'));return !isNaN(n)&&Math.abs(n-f*100)<0.15;}
+  if(S.freq==='raw'){const n=parseFloat(String(u).replace(',','.'));return !isNaN(n)&&Math.abs(n-f)<0.015;}
+  const m=u.match(/([0-9]+[,.]?[0-9]*)[^0-9]*([0-9]+[,.]?[0-9]*)/);
+  if(!m)return false;
+  const a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));
+  return (Math.abs(a-f)<0.015&&Math.abs(b-f*100)<0.15)||(Math.abs(b-f)<0.015&&Math.abs(a-f*100)<0.15);
+}
+function allFreqOk(){
+  const N=S.raw.length;
+  const list=S.mode==='classes'&&S.classesDef?S.classesDef.map((c,i)=>({k:i,eff:c.eff})):S.values.map(v=>({k:v.v,eff:v.eff}));
+  return list.every(it=>parseFreq(S.freqUser['freq-'+it.k],it.eff/N));
+}
+function checkFreq(){
+  const N=S.raw.length;
+  const list=S.mode==='classes'&&S.classesDef?S.classesDef.map((c,i)=>({k:i,eff:c.eff})):S.values.map(v=>({k:v.v,eff:v.eff}));
+  let ok=0,ko=0;
+  list.forEach(it=>{
+    const inp=$(`#colFreq input[data-k="freq-${it.k}"]`);
+    if(parseFreq(S.freqUser['freq-'+it.k],it.eff/N)){inp.classList.add('ok');inp.classList.remove('ko');ok++;}
+    else{inp.classList.add('ko');inp.classList.remove('ok');ko++;}
+  });
+  const msg=$('#freqMsg');msg.style.display='block';
+  if(ko===0){msg.className='info ok';msg.innerHTML=`<b>Parfait !</b>`;setDone('freq');drawChart();}
+  else{msg.className='info err';msg.innerHTML=`<b>${ok} correct(s), ${ko} à revoir.</b> Reprends f<sub>i</sub> = n<sub>i</sub> / N.`;}
+}
+
+/* ================= 4 · graphique ================= */
+function renderChart(){
+  $('#colChart').innerHTML=`
+    <div class="info" id="chartInfo">Le graphique se dessine quand tu arrives à cette étape.</div>
+    <canvas id="graphCv"></canvas>
+    <button class="btn primary" id="btnGoParam">Passer aux paramètres →</button>
+  `;
+  $('#btnGoParam').onclick=()=>{setDone('param');renderParam();};
+}
+function drawChart(){
+  const cv=$('#graphCv');if(!cv)return;
+  const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);
+  const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);
+  const W=r.width,H=r.height;
+  ctx.clearRect(0,0,W,H);
+  if(S.mode==='classes'&&S.classesDef)drawHistogram(ctx,W,H);
+  else if(S.chart==='pie')drawPie(ctx,W,H);
+  else drawBars(ctx,W,H);
+}
+function drawBars(c,W,H){
+  const list=S.values.map(v=>({label:String(v.v),eff:v.eff}));
+  const maxE=Math.max(...list.map(l=>l.eff));
+  const longLbl=list.some(l=>l.label.length>4);
+  const mL=40,mR=10,mT=20,mB=longLbl?64:36;
+  const bw=(W-mL-mR)/list.length*.7;
+  const gap=(W-mL-mR)/list.length*.3;
+  c.strokeStyle=INK;c.lineWidth=2;
+  c.beginPath();c.moveTo(mL,H-mB);c.lineTo(W-mR,H-mB);c.stroke();
+  c.beginPath();c.moveTo(mL,H-mB);c.lineTo(mL,mT);c.stroke();
+  c.fillStyle=INK;c.font='10px "IBM Plex Mono",monospace';c.textAlign='right';c.textBaseline='middle';
+  for(let i=0;i<=maxE;i+=Math.max(1,Math.ceil(maxE/5))){
+    const y=H-mB-i/(maxE+1)*(H-mB-mT);
+    c.strokeStyle='rgba(28,35,51,.15)';c.lineWidth=1;
+    c.beginPath();c.moveTo(mL,y);c.lineTo(W-mR,y);c.stroke();
+    c.fillText(String(i),mL-4,y);
+  }
+  list.forEach((l,i)=>{
+    const x=mL+i*(bw+gap)+gap/2;
+    const h=l.eff/(maxE+1)*(H-mB-mT);
+    const y=H-mB-h;
+    c.fillStyle=isQual()?CATCOLS[i%CATCOLS.length]:BLUE;
+    c.fillRect(x,y,bw,h);
+    c.strokeStyle=INK;c.lineWidth=1.5;c.strokeRect(x,y,bw,h);
+    c.fillStyle=INK;
+    if(longLbl){
+      c.save();c.translate(x+bw/2,H-mB+6);c.rotate(-Math.PI/6);
+      c.textAlign='right';c.textBaseline='top';c.font='600 10px "IBM Plex Mono",monospace';
+      c.fillText(l.label,0,0);c.restore();
+    }else{
+      c.textAlign='center';c.textBaseline='top';c.font='600 10px "IBM Plex Mono",monospace';
+      c.fillText(l.label,x+bw/2,H-mB+6);
+    }
+    c.fillStyle='#fff';c.textBaseline='bottom';c.textAlign='center';
+    if(h>16)c.fillText(String(l.eff),x+bw/2,y+h-3);
+  });
+  c.fillStyle=INK;c.textAlign='left';c.textBaseline='bottom';c.font='700 11px "IBM Plex Mono",monospace';
+  c.fillText('n_i',mL-35,mT+5);
+  if(isQual()){
+    const info=$('#chartInfo');
+    info.innerHTML=`<b>Variable qualitative :</b> diagramme en bâtons (hauteur = effectif). Chaque couleur = une catégorie.`;
+  }
+}
+function drawPie(c,W,H){
+  const cx=W/2,cy=H/2,r=Math.min(W,H)/2-30;
+  const N=S.raw.length;
+  let start=-Math.PI/2;
+  S.values.forEach((v,i)=>{
+    const a=v.eff/N*2*Math.PI;
+    c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,start,start+a);c.closePath();
+    c.fillStyle=isQual()?CATCOLS[i%CATCOLS.length]:CATCOLS[i%CATCOLS.length];
+    c.fill();
+    c.strokeStyle=INK;c.lineWidth=1.5;c.stroke();
+    const mid=start+a/2;
+    const lx=cx+Math.cos(mid)*(r+15),ly=cy+Math.sin(mid)*(r+15);
+    c.fillStyle=INK;c.font='600 11px "IBM Plex Mono",monospace';
+    c.textAlign=lx>cx?'left':'right';c.textBaseline='middle';
+    c.fillText(`${v.v} (${fmtPct(v.eff/N*100)})`,lx,ly);
+    start+=a;
+  });
+}
+function drawHistogram(c,W,H){
+  const cls=S.classesDef;
+  const mL=40,mR=10,mT=30,mB=40;
+  const refIdx=0;const ref=cls[refIdx];
+  const dens=cls.map(cl=>cl.eff/cl.amp);
+  const maxD=Math.max(...dens,1);
+  const unitX=(W-mL-mR)/cls.reduce((a,c)=>a+c.amp,0);
+  const unitY=(H-mB-mT)/maxD*.9;
+  c.strokeStyle=INK;c.lineWidth=2;
+  c.beginPath();c.moveTo(mL,H-mB);c.lineTo(W-mR,H-mB);c.stroke();
+  c.strokeStyle='rgba(28,35,51,.3)';c.lineWidth=1;c.setLineDash([3,3]);
+  c.beginPath();c.moveTo(mL,H-mB);c.lineTo(mL,mT);c.stroke();c.setLineDash([]);
+  c.fillStyle='rgba(28,35,51,.55)';c.font='600 10px "IBM Plex Mono",monospace';c.textAlign='center';
+  c.save();c.translate(mL-15,(H-mB+mT)/2);c.rotate(-Math.PI/2);
+  c.fillText('densité (pas d\'unité)',0,0);c.restore();
+  let x=mL;
+  cls.forEach((cl,i)=>{
+    const w=cl.amp*unitX,h=dens[i]*unitY;
+    const y=H-mB-h;
+    c.fillStyle=i===refIdx?'rgba(217,142,4,.35)':BLUE;c.globalAlpha=.7;
+    c.fillRect(x,y,w,h);c.globalAlpha=1;
+    c.strokeStyle=INK;c.lineWidth=1.5;c.strokeRect(x,y,w,h);
+    c.fillStyle=INK;c.textAlign='center';c.textBaseline='top';
+    c.font='600 10px "IBM Plex Mono",monospace';
+    c.fillText(`[${cl.a};${cl.b}${i===cls.length-1?']':'['}`,x+w/2,H-mB+6);
+    c.fillStyle='#fff';c.textBaseline='bottom';c.font='700 11px "IBM Plex Mono",monospace';
+    if(h>14)c.fillText(`n=${cl.eff}`,x+w/2,y+h-3);
+    x+=w;
+  });
+  const refX=mL;const refW=ref.amp*unitX;const refH=dens[refIdx]*unitY;
+  c.strokeStyle=AMBER;c.lineWidth=3;c.setLineDash([5,4]);
+  c.strokeRect(refX+1,H-mB-refH+1,refW-2,refH-2);
+  c.setLineDash([]);
+  const boxX=mL+10,boxY=mT+6;
+  c.fillStyle='rgba(217,142,4,.15)';c.fillRect(boxX,boxY,14,10);
+  c.strokeStyle=AMBER;c.lineWidth=2;c.strokeRect(boxX,boxY,14,10);
+  c.fillStyle=INK;c.textAlign='left';c.textBaseline='middle';c.font='600 10px "IBM Plex Mono",monospace';
+  c.fillText(`Aire de réf. = ${ref.eff} individus`,boxX+20,boxY+5);
+  const info=$('#chartInfo');
+  info.innerHTML=`<b>Histogramme :</b> l'<b>aire</b> de chaque barre est proportionnelle à l'effectif (et non la hauteur).
+  La zone hachurée orange représente ${ref.eff} individus sur la classe [${ref.a} ; ${ref.b}[.`;
+}
+
+/* ================= 5 · paramètres ================= */
+function renderParam(){
+  const N=S.raw.length;
+  const sorted=[...S.raw].sort((a,b)=>a-b);
+  const mean=S.raw.reduce((a,b)=>a+b,0)/N;
+  const range=sorted[N-1]-sorted[0];
+  const counts={};S.raw.forEach(v=>{counts[v]=(counts[v]||0)+1;});
+  const maxC=Math.max(...Object.values(counts));
+  const modes=Object.keys(counts).filter(k=>counts[k]===maxC);
+
+  if(isQual()){
+    $('#colParam').innerHTML=`
+      <div class="info"><b>Variable qualitative :</b> on ne calcule <b>ni moyenne ni étendue</b> (ce ne sont pas des nombres).
+      On retient le <b>mode</b> = catégorie la plus fréquente.</div>
+      <div class="paramRow"><label>Mode (catégorie)</label><input type="text" id="pMode" placeholder="?"></div>
+      <div class="paramRow"><label>Son effectif</label><input type="number" id="pModeEff" placeholder="?"></div>
+      <button class="btn primary" id="btnCheckParam">Vérifier</button>
+      <div class="info" id="paramResult" style="display:none"></div>
+    `;
+    $('#btnCheckParam').onclick=()=>{
+      const um=($('#pMode').value||'').trim().toLowerCase();
+      const ue=parseInt($('#pModeEff').value);
+      let ok=0;
+      if(modes.some(m=>m.toLowerCase()===um)){$('#pMode').classList.add('ok');$('#pMode').classList.remove('ko');ok++;}
+      else{$('#pMode').classList.add('ko');$('#pMode').classList.remove('ok');}
+      if(ue===maxC){$('#pModeEff').classList.add('ok');$('#pModeEff').classList.remove('ko');ok++;}
+      else{$('#pModeEff').classList.add('ko');$('#pModeEff').classList.remove('ok');}
+      const res=$('#paramResult');res.style.display='block';
+      if(ok===2){res.className='info ok';res.innerHTML=`<b>Bravo !</b><br>Mode = ${modes.join(', ')} (effectif ${maxC}).`;}
+      else{res.className='info err';res.innerHTML=`<b>${ok}/2 correct(s).</b> Regarde quelle catégorie revient le plus souvent.`;}
+    };
+    return;
+  }
+
+  if(S.mode==='classes'&&S.classesDef){
+    $('#colParam').innerHTML=`
+      <div class="info">En mode <b>classes</b>, on calcule une moyenne <b>approchée</b> : on utilise le centre de chaque classe.</div>
+      <div class="paramRow"><label>Moyenne x̄</label><input type="text" id="pMean" placeholder="?"></div>
+      <div class="paramRow"><label>Étendue</label><input type="text" id="pRange" placeholder="?"></div>
+      <div class="paramRow"><label>Classe modale</label><input type="text" id="pMode" placeholder="?"></div>
+      <div class="info" style="margin-top:10px">
+        <b>Aide :</b><br>
+        · Moyenne ≈ Σ(c<sub>i</sub>·n<sub>i</sub>)/N, c<sub>i</sub> = centre<br>
+        · Étendue = max − min (des bornes extrêmes)<br>
+        · Classe modale = celle de plus grand effectif
+      </div>
+      <button class="btn primary" id="btnCheckParam">Vérifier</button>
+      <div class="info" id="paramResult" style="display:none"></div>
+    `;
+    $('#btnCheckParam').onclick=()=>{
+      const centres=S.classesDef.map(cl=>(cl.a+cl.b)/2);
+      const approx=centres.reduce((s,c,i)=>s+c*S.classesDef[i].eff,0)/N;
+      const modIdx=S.classesDef.findIndex(c=>c.eff===Math.max(...S.classesDef.map(x=>x.eff)));
+      const modCl=`[${S.classesDef[modIdx].a} ; ${S.classesDef[modIdx].b}[`;
+      const um=parseFloat(($('#pMean').value||'').replace(',','.'));
+      const ur=parseFloat(($('#pRange').value||'').replace(',','.'));
+      const umod=($('#pMode').value||'').trim();
+      let ok=0;
+      if(Math.abs(um-approx)<0.5){$('#pMean').classList.add('ok');$('#pMean').classList.remove('ko');ok++;}else{$('#pMean').classList.add('ko');$('#pMean').classList.remove('ok');}
+      if(Math.abs(ur-range)<0.1){$('#pRange').classList.add('ok');$('#pRange').classList.remove('ko');ok++;}else{$('#pRange').classList.add('ko');$('#pRange').classList.remove('ok');}
+      if(umod.replace(/\s/g,'')===modCl.replace(/\s/g,'')){$('#pMode').classList.add('ok');$('#pMode').classList.remove('ko');ok++;}else{$('#pMode').classList.add('ko');$('#pMode').classList.remove('ok');}
+      const res=$('#paramResult');res.style.display='block';
+      if(ok===3){res.className='info ok';res.innerHTML=`<b>Bravo !</b><br>x̄ ≈ ${fmt(approx)} · Étendue = ${fmt(range)} · Classe modale : ${modCl}`;}
+      else{res.className='info err';res.innerHTML=`<b>${ok}/3 correct(s).</b> Reprends les formules.`;}
+    };
+  }else{
+    const modeNums=modes.map(m=>parseFloat(m));
+    $('#colParam').innerHTML=`
+      <div class="paramRow"><label>Moyenne x̄</label><input type="text" id="pMean" placeholder="?"></div>
+      <div class="paramRow"><label>Mode</label><input type="text" id="pMode" placeholder="?"></div>
+      <div class="paramRow"><label>Étendue</label><input type="text" id="pRange" placeholder="?"></div>
+      <div class="info" style="margin-top:10px">
+        <b>Rappels :</b><br>
+        · <b>Moyenne</b> = somme / N<br>
+        · <b>Mode</b> = valeur la plus fréquente<br>
+        · <b>Étendue</b> = max − min
+      </div>
+      <button class="btn primary" id="btnCheckParam">Vérifier</button>
+      <div class="info" id="paramResult" style="display:none"></div>
+    `;
+    $('#btnCheckParam').onclick=()=>{
+      const um=parseFloat(($('#pMean').value||'').replace(',','.'));
+      const umod=parseFloat(($('#pMode').value||'').replace(',','.'));
+      const ur=parseFloat(($('#pRange').value||'').replace(',','.'));
+      let ok=0;
+      if(Math.abs(um-mean)<0.05){$('#pMean').classList.add('ok');$('#pMean').classList.remove('ko');ok++;}else{$('#pMean').classList.add('ko');$('#pMean').classList.remove('ok');}
+      if(modeNums.some(m=>Math.abs(umod-m)<0.01)){$('#pMode').classList.add('ok');$('#pMode').classList.remove('ko');ok++;}else{$('#pMode').classList.add('ko');$('#pMode').classList.remove('ok');}
+      if(Math.abs(ur-range)<0.01){$('#pRange').classList.add('ok');$('#pRange').classList.remove('ko');ok++;}else{$('#pRange').classList.add('ko');$('#pRange').classList.remove('ok');}
+      const res=$('#paramResult');res.style.display='block';
+      if(ok===3){res.className='info ok';res.innerHTML=`<b>Bravo !</b><br>x̄ = ${fmt(mean)} · Mode = ${modes.join(', ')} · Étendue = ${fmt(range)}`;}
+      else{res.className='info err';res.innerHTML=`<b>${ok}/3 correct(s).</b> Reprends tes calculs.`;}
+    };
+  }
+}
+
+/* ================= contrôles globaux ================= */
+$('#modeSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  if(b.disabled)return;
+  $('#modeSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  S.mode=b.dataset.mode;
+  loadCtx(S.ctx);
+  if(S.mode==='classes'){$('#chartSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.chart==='bars'));S.chart='bars';}
+});
+$('#freqSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('#freqSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  S.freq=b.dataset.freq;renderFreq();
+});
+$('#chartSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('#chartSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  S.chart=b.dataset.chart;if(S.done.has('chart'))drawChart();
+});
+$('#btnReset').onclick=()=>loadCtx(S.ctx);
+$('#btnSort').onclick=()=>{S.sorted=true;renderAll();};
+
+refreshSegs();
+loadCtx(S.ctx);
+window.addEventListener('resize',()=>{if(S.done.has('chart'))drawChart();});
+</script>
+</body>
+</html>
