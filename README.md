@@ -2,9 +2,12 @@
 
 # SMS — SimMathsSciences
 
-Simulations interactives de **mathématiques** et **sciences** pour les filières **CAP**, **Bac Pro** (2BP, 1BP, Term BP) et **3PM**.
+Simulations interactives de **mathématiques** et **sciences** pour les filières **CAP**, **Bac Pro** (2BP, 1BP, Term BP, CAP et 3PM).
 
 Chaque simulation est un fichier HTML **autonome** : aucune dépendance, fonctionne hors-ligne dans le navigateur.
+
+## Téléchargement:
+Cliquer sur un fichier puis enregistrer le fichierdepuis le navigateur ou cliquer sur **Download sur raw file**.
 
 ## 🔬 Sciences
 
